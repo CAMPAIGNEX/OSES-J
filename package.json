@@ -8,7 +8,7 @@
     "pnpm": ">=9"
   },
   "scripts": {
-    "dev": "pnpm --filter @oses/web dev",
+    "dev": "pnpm --filter @oses/database generate && pnpm --filter @oses/web dev",
     "build": "pnpm --filter @oses/database generate && pnpm --filter @oses/web build",
     "start": "pnpm --filter @oses/database migrate:deploy && pnpm --filter @oses/web start",
     "worker": "pnpm --filter @oses/workers start",
@@ -24,7 +24,6 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:integration": "vitest run --project integration",
-    "postinstall": "pnpm --filter @oses/database generate",
     "test:unit": "vitest run --project unit",
     "start:web": "pnpm --filter @oses/web start"
   },
@@ -33,5 +32,14 @@
     "typescript": "5.9.3",
     "vitest": "5.0.0",
     "dotenv": "^17.0.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "prisma",
+      "@prisma/client",
+      "@prisma/engines",
+      "sharp"
+    ]
   }
 }
