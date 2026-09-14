@@ -1,0 +1,43 @@
+# dependencies
+node_modules/
+.pnpm-store/
+
+# env / secrets
+.env
+.env.*
+!.env.example
+
+# build output
+.next/
+out/
+dist/
+build/
+*.tsbuildinfo
+
+# prisma generated client (regenerated on install)
+packages/database/generated/
+
+# local storage / uploads
+storage/
+uploads/
+
+# logs
+*.log
+logs/
+
+# os / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# test
+coverage/
+.vitest/
+
+# local run artifacts
+.dev-server.log
+.test-storage/
+.cookies.txt
+.ext-token

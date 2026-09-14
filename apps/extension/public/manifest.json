@@ -1,0 +1,17 @@
+{
+  "manifest_version": 3,
+  "name": "OSES J Browser Automation",
+  "description": "Sends messages you approved in OSES J from your own logged-in Instagram/Facebook session.",
+  "version": "0.1.0",
+  "minimum_chrome_version": "116",
+  "permissions": ["storage", "alarms", "tabs", "scripting"],
+  "host_permissions": ["https://www.instagram.com/*", "https://www.facebook.com/*", "https://m.facebook.com/*"],
+  "optional_host_permissions": ["http://*/*", "https://*/*"],
+  "background": { "service_worker": "background.js", "type": "module" },
+  "action": { "default_popup": "popup.html", "default_title": "OSES J", "default_icon": { "16": "icons/icon16.png", "48": "icons/icon48.png", "128": "icons/icon128.png" } },
+  "icons": { "16": "icons/icon16.png", "48": "icons/icon48.png", "128": "icons/icon128.png" },
+  "content_scripts": [
+    { "matches": ["https://www.instagram.com/*"], "js": ["content-instagram.js"], "run_at": "document_idle" },
+    { "matches": ["https://www.facebook.com/*", "https://m.facebook.com/*"], "js": ["content-facebook.js"], "run_at": "document_idle" }
+  ]
+}

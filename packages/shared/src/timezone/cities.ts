@@ -1,0 +1,51 @@
+/** Major cities -> IANA timezone (normalized lowercase). Used when region is unknown or the country spans zones. */
+export const CITY_TZ: Record<string, string> = {
+  // United States
+  "new york": "America/New_York", "new york city": "America/New_York", nyc: "America/New_York", brooklyn: "America/New_York",
+  manhattan: "America/New_York", "los angeles": "America/Los_Angeles", "san francisco": "America/Los_Angeles",
+  "san diego": "America/Los_Angeles", "san jose": "America/Los_Angeles", seattle: "America/Los_Angeles", portland: "America/Los_Angeles",
+  "las vegas": "America/Los_Angeles", chicago: "America/Chicago", houston: "America/Chicago", dallas: "America/Chicago",
+  austin: "America/Chicago", "san antonio": "America/Chicago", minneapolis: "America/Chicago", "new orleans": "America/Chicago",
+  nashville: "America/Chicago", "kansas city": "America/Chicago", "st louis": "America/Chicago", denver: "America/Denver",
+  "salt lake city": "America/Denver", phoenix: "America/Phoenix", scottsdale: "America/Phoenix", miami: "America/New_York",
+  orlando: "America/New_York", tampa: "America/New_York", atlanta: "America/New_York", boston: "America/New_York",
+  philadelphia: "America/New_York", "washington dc": "America/New_York", detroit: "America/Detroit",
+  charlotte: "America/New_York", pittsburgh: "America/New_York", baltimore: "America/New_York", cleveland: "America/New_York",
+  columbus: "America/New_York", indianapolis: "America/Indiana/Indianapolis", honolulu: "Pacific/Honolulu", anchorage: "America/Anchorage",
+  // Canada
+  toronto: "America/Toronto", montreal: "America/Toronto", ottawa: "America/Toronto", vancouver: "America/Vancouver",
+  calgary: "America/Edmonton", edmonton: "America/Edmonton", winnipeg: "America/Winnipeg", halifax: "America/Halifax",
+  // Europe
+  london: "Europe/London", manchester: "Europe/London", birmingham: "Europe/London", glasgow: "Europe/London", edinburgh: "Europe/London",
+  leeds: "Europe/London", liverpool: "Europe/London", dublin: "Europe/Dublin", paris: "Europe/Paris", lyon: "Europe/Paris",
+  marseille: "Europe/Paris", berlin: "Europe/Berlin", munich: "Europe/Berlin", hamburg: "Europe/Berlin", frankfurt: "Europe/Berlin",
+  cologne: "Europe/Berlin", dusseldorf: "Europe/Berlin", stuttgart: "Europe/Berlin", amsterdam: "Europe/Amsterdam", rotterdam: "Europe/Amsterdam",
+  brussels: "Europe/Brussels", antwerp: "Europe/Brussels", madrid: "Europe/Madrid", barcelona: "Europe/Madrid", valencia: "Europe/Madrid",
+  lisbon: "Europe/Lisbon", porto: "Europe/Lisbon", rome: "Europe/Rome", milan: "Europe/Rome", florence: "Europe/Rome", naples: "Europe/Rome",
+  turin: "Europe/Rome", zurich: "Europe/Zurich", geneva: "Europe/Zurich", vienna: "Europe/Vienna", stockholm: "Europe/Stockholm",
+  gothenburg: "Europe/Stockholm", oslo: "Europe/Oslo", copenhagen: "Europe/Copenhagen", helsinki: "Europe/Helsinki", warsaw: "Europe/Warsaw",
+  krakow: "Europe/Warsaw", prague: "Europe/Prague", budapest: "Europe/Budapest", athens: "Europe/Athens", istanbul: "Europe/Istanbul",
+  ankara: "Europe/Istanbul", moscow: "Europe/Moscow", "saint petersburg": "Europe/Moscow", kyiv: "Europe/Kyiv", kiev: "Europe/Kyiv",
+  bucharest: "Europe/Bucharest", sofia: "Europe/Sofia", belgrade: "Europe/Belgrade", zagreb: "Europe/Zagreb", reykjavik: "Atlantic/Reykjavik",
+  // Middle East & Africa
+  dubai: "Asia/Dubai", "abu dhabi": "Asia/Dubai", sharjah: "Asia/Dubai", riyadh: "Asia/Riyadh", jeddah: "Asia/Riyadh", doha: "Asia/Qatar",
+  "kuwait city": "Asia/Kuwait", manama: "Asia/Bahrain", muscat: "Asia/Muscat", amman: "Asia/Amman", "tel aviv": "Asia/Jerusalem",
+  jerusalem: "Asia/Jerusalem", cairo: "Africa/Cairo", casablanca: "Africa/Casablanca", lagos: "Africa/Lagos", nairobi: "Africa/Nairobi",
+  johannesburg: "Africa/Johannesburg", "cape town": "Africa/Johannesburg", durban: "Africa/Johannesburg", accra: "Africa/Accra",
+  // Asia Pacific
+  karachi: "Asia/Karachi", lahore: "Asia/Karachi", sialkot: "Asia/Karachi", islamabad: "Asia/Karachi", faisalabad: "Asia/Karachi",
+  mumbai: "Asia/Kolkata", delhi: "Asia/Kolkata", "new delhi": "Asia/Kolkata", bangalore: "Asia/Kolkata", bengaluru: "Asia/Kolkata",
+  chennai: "Asia/Kolkata", kolkata: "Asia/Kolkata", hyderabad: "Asia/Kolkata", dhaka: "Asia/Dhaka", colombo: "Asia/Colombo",
+  kathmandu: "Asia/Kathmandu", bangkok: "Asia/Bangkok", "ho chi minh city": "Asia/Ho_Chi_Minh", saigon: "Asia/Ho_Chi_Minh",
+  hanoi: "Asia/Ho_Chi_Minh", "kuala lumpur": "Asia/Kuala_Lumpur", singapore: "Asia/Singapore", jakarta: "Asia/Jakarta", bali: "Asia/Makassar",
+  manila: "Asia/Manila", "hong kong": "Asia/Hong_Kong", shanghai: "Asia/Shanghai", beijing: "Asia/Shanghai", shenzhen: "Asia/Shanghai",
+  guangzhou: "Asia/Shanghai", taipei: "Asia/Taipei", seoul: "Asia/Seoul", tokyo: "Asia/Tokyo", osaka: "Asia/Tokyo",
+  sydney: "Australia/Sydney", melbourne: "Australia/Melbourne", brisbane: "Australia/Brisbane", perth: "Australia/Perth",
+  adelaide: "Australia/Adelaide", "gold coast": "Australia/Brisbane", canberra: "Australia/Sydney", auckland: "Pacific/Auckland",
+  wellington: "Pacific/Auckland", christchurch: "Pacific/Auckland",
+  // Latin America
+  "mexico city": "America/Mexico_City", guadalajara: "America/Mexico_City", monterrey: "America/Monterrey", tijuana: "America/Tijuana",
+  cancun: "America/Cancun", "sao paulo": "America/Sao_Paulo", "rio de janeiro": "America/Sao_Paulo", "belo horizonte": "America/Sao_Paulo",
+  "buenos aires": "America/Argentina/Buenos_Aires", santiago: "America/Santiago", bogota: "America/Bogota", medellin: "America/Bogota",
+  lima: "America/Lima", "panama city": "America/Panama", "san juan": "America/Puerto_Rico", montevideo: "America/Montevideo",
+};

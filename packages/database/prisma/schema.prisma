@@ -1,0 +1,1637 @@
+// OSES J database schema (MySQL / MariaDB).
+//
+// Conventions
+// - Every business-owned table carries organizationId (multi-tenancy). Queries must always scope by it.
+// - Soft deletes use deletedAt; Trash rows (TrashItem) index what can be restored/purged.
+// - Provider raw output is kept separate (raw Json / ProviderRun) from normalized business fields.
+// - Contact fields carry source + confidence so inferred data is never presented as verified.
+
+generator client {
+  provider            = "prisma-client"
+  output              = "../generated/prisma"
+  moduleFormat        = "esm"
+  importFileExtension = ""
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+// ---------------------------------------------------------------------------
+// Enums
+// ---------------------------------------------------------------------------
+
+enum MemberRole {
+  OWNER
+  ADMIN
+  MEMBER
+}
+
+enum Platform {
+  INSTAGRAM
+  FACEBOOK
+}
+
+enum MessagingMode {
+  MANUAL
+  COPILOT
+  AUTOPILOT
+}
+
+enum LeadStatus {
+  DISCOVERED
+  SAVED
+  ADDED
+  ARCHIVED
+}
+
+enum EnrichmentStatus {
+  NONE
+  PENDING
+  RUNNING
+  COMPLETED
+  PARTIAL
+  FAILED
+}
+
+enum ContactType {
+  EMAIL
+  PHONE
+  WHATSAPP
+  WEBSITE
+  ADDRESS
+}
+
+enum ContactSource {
+  PROFILE
+  WEBSITE
+  FACEBOOK_PAGE
+  INSTAGRAM_BIO
+  SEARCH_ENGINE
+  MANUAL
+  AI_INFERRED
+}
+
+enum ContactConfidence {
+  VERIFIED
+  PUBLIC
+  INFERRED
+}
+
+enum ClientStatus {
+  NEW
+  CONTACTED
+  REPLIED
+  INTERESTED
+  NEGOTIATING
+  CUSTOMER
+  NOT_INTERESTED
+  DO_NOT_CONTACT
+  ARCHIVED
+}
+
+enum MessagingEligibility {
+  DISCOVERED
+  MESSAGEABLE
+  NOT_MESSAGEABLE
+  REQUIRES_USER
+  PROVIDER_ERROR
+}
+
+enum SearchRunStatus {
+  QUEUED
+  RUNNING
+  ENRICHING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+enum ProviderRunStatus {
+  CREATED
+  RUNNING
+  SUCCEEDED
+  FAILED
+  TIMED_OUT
+  ABORTED
+}
+
+enum ConversationStatus {
+  OPEN
+  CLOSED
+  ARCHIVED
+}
+
+enum MessageDirection {
+  INBOUND
+  OUTBOUND
+}
+
+enum MessageAuthorType {
+  USER
+  AI
+  SYSTEM
+  CLIENT
+}
+
+enum MessageStatus {
+  DRAFT
+  PENDING_APPROVAL
+  QUEUED
+  SENDING
+  SENT
+  DELIVERED
+  SEEN
+  FAILED
+  UNAVAILABLE
+  CANCELLED
+}
+
+enum ApprovalStatus {
+  NONE
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum ScheduledMessageStatus {
+  PENDING_APPROVAL
+  SCHEDULED
+  QUEUED
+  SENT
+  CANCELLED
+  FAILED
+}
+
+enum MessageJobStatus {
+  QUEUED
+  CLAIMED
+  OPENING_TARGET
+  TARGET_FOUND
+  COMPOSER_FOUND
+  SENDING
+  SENT
+  FAILED
+  RETRYING
+  BLOCKED
+  REQUIRES_USER
+  CANCELLED
+}
+
+enum MessageJobProvider {
+  EXTENSION
+  APIFY
+  META
+}
+
+enum ConnectionStatus {
+  CONNECTED
+  EXPIRED
+  DISCONNECTED
+  ERROR
+}
+
+enum ExtensionDeviceStatus {
+  PENDING
+  ONLINE
+  OFFLINE
+  REVOKED
+}
+
+enum WebhookEventStatus {
+  RECEIVED
+  PROCESSED
+  FAILED
+  IGNORED
+}
+
+enum CampaignStatus {
+  DRAFT
+  SCHEDULED
+  RUNNING
+  PAUSED
+  COMPLETED
+  CANCELLED
+}
+
+enum CampaignLeadStatus {
+  PENDING
+  SCHEDULED
+  CONTACTED
+  REPLIED
+  STOPPED
+  COMPLETED
+  FAILED
+}
+
+enum AIInstructionKind {
+  COMPANY
+  PRODUCTS
+  TONE
+  RULES
+  PROHIBITED
+  ESCALATION
+  WORKING_HOURS
+  CUSTOM
+}
+
+enum KnowledgeSourceType {
+  TEXT
+  FILE
+}
+
+enum KnowledgeStatus {
+  PENDING
+  PROCESSING
+  READY
+  FAILED
+}
+
+enum AIActionType {
+  ANALYZE_LEAD
+  GENERATE_FIRST_MESSAGE
+  GENERATE_REPLY
+  GENERATE_FOLLOW_UP
+  CLASSIFY_INTENT
+  SUMMARIZE_CONVERSATION
+  RECOMMEND_NEXT_ACTION
+  VALIDATE_RULES
+  RESOLVE_DUPLICATE
+  PARSE_QUERY
+  COMPETITOR_ANALYSIS
+  TREND_ANALYSIS
+  AUTOPILOT_DECISION
+}
+
+enum AIActionStatus {
+  SUCCESS
+  FAILED
+  BLOCKED
+}
+
+enum ActorType {
+  USER
+  AI
+  SYSTEM
+}
+
+enum JobType {
+  DISCOVERY_JOB
+  ENRICHMENT_JOB
+  MESSAGE_JOB
+  FOLLOWUP_JOB
+  AI_REPLY_JOB
+  AI_FIRST_MESSAGE_JOB
+  EXPORT_JOB
+  DOCUMENT_PROCESSING_JOB
+  TRASH_CLEANUP_JOB
+  CAMPAIGN_STEP_JOB
+  SCHEDULED_MESSAGE_JOB
+  COMPETITOR_ANALYSIS_JOB
+  TREND_ANALYSIS_JOB
+  WEBHOOK_EVENT_JOB
+}
+
+enum JobStatus {
+  QUEUED
+  RUNNING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+enum ErrorClass {
+  TEMPORARY
+  PERMANENT
+  AUTHENTICATION
+  RATE_LIMIT
+  TARGET_UNAVAILABLE
+  USER_ACTION_REQUIRED
+}
+
+enum UsageMetric {
+  SEARCHES
+  LEADS_DISCOVERED
+  ENRICHMENT_REQUESTS
+  AI_REQUESTS
+  AI_TOKENS_IN
+  AI_TOKENS_OUT
+  MESSAGES_SENT
+  AUTOMATION_JOBS
+  EXPORTS
+  STORAGE_BYTES
+}
+
+enum DocumentKind {
+  CATALOG
+  PRICE_LIST
+  COMPANY_PROFILE
+  MOQ_SHEET
+  SIZE_CHART
+  PRODUCTION_INFO
+  KNOWLEDGE
+  EXPORT
+  OTHER
+}
+
+enum TrashEntityType {
+  CLIENT
+  DOCUMENT
+  LEAD
+  CAMPAIGN
+  NOTE
+  CONVERSATION
+  SAVED_SEARCH
+}
+
+enum ProviderDomain {
+  DISCOVERY
+  ENRICHMENT
+  MESSAGING
+  CONTENT
+}
+
+enum AnalysisStatus {
+  QUEUED
+  RUNNING
+  COMPLETED
+  FAILED
+}
+
+// ---------------------------------------------------------------------------
+// Identity & tenancy
+// ---------------------------------------------------------------------------
+
+model User {
+  id           String   @id @default(uuid(7)) @db.Char(36)
+  email        String   @unique @db.VarChar(191)
+  name         String   @db.VarChar(120)
+  passwordHash String   @db.VarChar(255)
+  timezone     String?  @db.VarChar(64)
+  isActive     Boolean  @default(true)
+  lastLoginAt  DateTime? @db.DateTime(3)
+  createdAt    DateTime @default(now()) @db.DateTime(3)
+  updatedAt    DateTime @updatedAt @db.DateTime(3)
+
+  sessions    Session[]
+  memberships OrganizationMember[]
+  auditLogs   AuditLog[]
+  devices     ExtensionDevice[]
+
+  @@map("users")
+}
+
+model Session {
+  id                   String   @id @default(uuid(7)) @db.Char(36)
+  userId               String   @db.Char(36)
+  tokenHash            String   @unique @db.VarChar(64)
+  activeOrganizationId String?  @db.Char(36)
+  userAgent            String?  @db.VarChar(255)
+  ip                   String?  @db.VarChar(64)
+  expiresAt            DateTime @db.DateTime(3)
+  lastSeenAt           DateTime @default(now()) @db.DateTime(3)
+  createdAt            DateTime @default(now()) @db.DateTime(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("sessions")
+}
+
+model Organization {
+  id                 String  @id @default(uuid(7)) @db.Char(36)
+  name               String  @db.VarChar(160)
+  slug               String  @unique @db.VarChar(80)
+  // Company profile (used by the AI as verified company facts)
+  description        String? @db.Text
+  website            String? @db.VarChar(500)
+  country            String? @db.VarChar(80)
+  city               String? @db.VarChar(80)
+  address            String? @db.VarChar(300)
+  products           String? @db.Text
+  moq                String? @db.VarChar(300)
+  certifications     String? @db.Text
+  shippingInfo       String? @db.Text
+  productionCapacity String? @db.VarChar(500)
+  contactEmail       String? @db.VarChar(254)
+  contactPhone       String? @db.VarChar(40)
+  timezone           String  @default("Asia/Karachi") @db.VarChar(64)
+  createdAt          DateTime @default(now()) @db.DateTime(3)
+  updatedAt          DateTime @updatedAt @db.DateTime(3)
+  deletedAt          DateTime? @db.DateTime(3)
+
+  members            OrganizationMember[]
+  counters           OrganizationCounter[]
+  settings           OrganizationSettings?
+  searchRuns         SearchRun[]
+  savedSearches      SavedSearch[]
+  providerRuns       ProviderRun[]
+  leads              Lead[]
+  clients            Client[]
+  tags               Tag[]
+  notes              Note[]
+  activities         Activity[]
+  socialConnections  SocialConnection[]
+  conversations      Conversation[]
+  messages           Message[]
+  scheduledMessages  ScheduledMessage[]
+  messageJobs        MessageJob[]
+  extensionDevices   ExtensionDevice[]
+  extensionPairings  ExtensionPairing[]
+  campaigns          Campaign[]
+  aiInstructions     AIInstruction[]
+  knowledgeDocuments KnowledgeDocument[]
+  knowledgeChunks    KnowledgeChunk[]
+  aiActionLogs       AIActionLog[]
+  automationJobs     AutomationJob[]
+  auditLogs          AuditLog[]
+  usageRecords       UsageRecord[]
+  documents          Document[]
+  trashItems         TrashItem[]
+  providerConfigs    ProviderConfig[]
+  competitorSearches CompetitorSearch[]
+  trendSearches      TrendSearch[]
+  contentItems       ContentItem[]
+
+  @@map("organizations")
+}
+
+model OrganizationMember {
+  id             String     @id @default(uuid(7)) @db.Char(36)
+  organizationId String     @db.Char(36)
+  userId         String     @db.Char(36)
+  role           MemberRole @default(MEMBER)
+  createdAt      DateTime   @default(now()) @db.DateTime(3)
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, userId])
+  @@index([userId])
+  @@map("organization_members")
+}
+
+/// Atomic per-organization sequences (e.g. client CIDs).
+model OrganizationCounter {
+  organizationId String @db.Char(36)
+  key            String @db.VarChar(40)
+  value          Int    @default(0)
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@id([organizationId, key])
+  @@map("organization_counters")
+}
+
+model OrganizationSettings {
+  organizationId              String        @id @db.Char(36)
+  messagingMode               MessagingMode @default(MANUAL)
+  autopilotEnabled            Boolean       @default(false)
+  autopilotEnabledAt          DateTime?     @db.DateTime(3)
+  defaultChannel              Platform      @default(INSTAGRAM)
+  workingHours                Json?
+  followUpDays                Json?
+  messagesPerHour             Int           @default(20)
+  messagesPerDay              Int           @default(100)
+  minMinutesBetweenMessages   Int           @default(2)
+  // AI
+  aiProvider                  String?       @db.VarChar(40)
+  aiModel                     String?       @db.VarChar(120)
+  aiBaseUrl                   String?       @db.VarChar(500)
+  aiApiKeyEncrypted           String?       @db.Text
+  aiTemperature               Float         @default(0.7)
+  aiTone                      String?       @db.VarChar(200)
+  aiLanguage                  String?       @db.VarChar(40)
+  autoReply                   Boolean       @default(false)
+  autoFollowUp                Boolean       @default(false)
+  autoFirstMessage            Boolean       @default(false)
+  requireApprovalFirstMessage Boolean       @default(true)
+  requireApprovalAttachments  Boolean       @default(true)
+  confidenceThreshold         Float         @default(0.75)
+  escalatePricing             Boolean       @default(true)
+  escalateNegotiation         Boolean       @default(true)
+  escalateComplaints          Boolean       @default(true)
+  escalateUnusual             Boolean       @default(true)
+  // Automation
+  apifyTokenEncrypted         String?       @db.Text
+  apifyEnabled                Boolean       @default(true)
+  maxConcurrentJobs           Int           @default(2)
+  maxRetries                  Int           @default(3)
+  jobTimeoutSec               Int           @default(600)
+  extensionEnabled            Boolean       @default(true)
+  preferredProvider           String        @default("auto") @db.VarChar(20)
+  extra                       Json?
+  updatedAt                   DateTime      @updatedAt @db.DateTime(3)
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@map("organization_settings")
+}
+
+// ---------------------------------------------------------------------------
+// Discovery
+// ---------------------------------------------------------------------------
+
+model SearchRun {
+  id              String          @id @default(uuid(7)) @db.Char(36)
+  organizationId  String          @db.Char(36)
+  userId          String?         @db.Char(36)
+  savedSearchId   String?         @db.Char(36)
+  query           String          @db.VarChar(300)
+  criteria        Json
+  strategy        String?         @db.VarChar(40)
+  status          SearchRunStatus @default(QUEUED)
+  stage           String?         @db.VarChar(40)
+  providerSummary Json?
+  totalRaw        Int             @default(0)
+  totalNormalized Int             @default(0)
+  totalDeduped    Int             @default(0)
+  totalNew        Int             @default(0)
+  totalEnriched   Int             @default(0)
+  error           String?         @db.Text
+  jobId           String?         @db.Char(36)
+  startedAt       DateTime?       @db.DateTime(3)
+  completedAt     DateTime?       @db.DateTime(3)
+  createdAt       DateTime        @default(now()) @db.DateTime(3)
+  updatedAt       DateTime        @updatedAt @db.DateTime(3)
+
+  organization Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  savedSearch  SavedSearch?    @relation(fields: [savedSearchId], references: [id], onDelete: SetNull)
+  providerRuns ProviderRun[]
+  leads        SearchRunLead[]
+
+  @@index([organizationId, createdAt])
+  @@index([organizationId, status])
+  @@map("search_runs")
+}
+
+model SavedSearch {
+  id             String    @id @default(uuid(7)) @db.Char(36)
+  organizationId String    @db.Char(36)
+  userId         String?   @db.Char(36)
+  name           String    @db.VarChar(120)
+  criteria       Json
+  lastRunAt      DateTime? @db.DateTime(3)
+  runCount       Int       @default(0)
+  deletedAt      DateTime? @db.DateTime(3)
+  createdAt      DateTime  @default(now()) @db.DateTime(3)
+  updatedAt      DateTime  @updatedAt @db.DateTime(3)
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  runs         SearchRun[]
+
+  @@index([organizationId, deletedAt])
+  @@map("saved_searches")
+}
+
+/// One external provider execution (e.g. an Apify Actor run). Raw metadata and errors live here.
+model ProviderRun {
+  id             String            @id @default(uuid(7)) @db.Char(36)
+  organizationId String            @db.Char(36)
+  searchRunId    String?           @db.Char(36)
+  purpose        String            @db.VarChar(40)
+  provider       String            @db.VarChar(40)
+  actorId        String            @db.VarChar(200)
+  adapter        String?           @db.VarChar(80)
+  externalRunId  String?           @db.VarChar(120)
+  datasetId      String?           @db.VarChar(120)
+  status         ProviderRunStatus @default(CREATED)
+  input          Json?
+  itemCount      Int?
+  costUsd        Decimal?          @db.Decimal(10, 4)
+  error          String?           @db.Text
+  startedAt      DateTime?         @db.DateTime(3)
+  finishedAt     DateTime?         @db.DateTime(3)
+  createdAt      DateTime          @default(now()) @db.DateTime(3)
+  updatedAt      DateTime          @updatedAt @db.DateTime(3)
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  searchRun    SearchRun?   @relation(fields: [searchRunId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId, createdAt])
+  @@index([externalRunId])
+  @@map("provider_runs")
+}
+
+/// Normalized lead entity. Denormalized "primary" fields exist for fast list rendering;
+/// the authoritative detail lives in LeadSocialAccount / LeadContact.
+model Lead {
+  id               String           @id @default(uuid(7)) @db.Char(36)
+  organizationId   String           @db.Char(36)
+  dedupeKey        String           @db.VarChar(191)
+  brandName        String           @db.VarChar(191)
+  name             String?          @db.VarChar(191)
+  primaryPlatform  Platform?
+  username         String?          @db.VarChar(120)
+  profileUrl       String?          @db.VarChar(500)
+  inboxUrl         String?          @db.VarChar(500)
+  externalId       String?          @db.VarChar(120)
+  followers        Int?
+  following        Int?
+  postsCount       Int?
+  bio              String?          @db.Text
+  website          String?          @db.VarChar(500)
+  websiteDomain    String?          @db.VarChar(191)
+  email            String?          @db.VarChar(254)
+  phone            String?          @db.VarChar(40)
+  whatsapp         String?          @db.VarChar(40)
+  country          String?          @db.VarChar(80)
+  region           String?          @db.VarChar(80)
+  city             String?          @db.VarChar(80)
+  address          String?          @db.VarChar(300)
+  category         String?          @db.VarChar(120)
+  source           String?          @db.VarChar(40)
+  sourceActor      String?          @db.VarChar(200)
+  sourceTimestamp  DateTime?        @db.DateTime(3)
+  timezone         String?          @db.VarChar(64)
+  leadScore        Int              @default(0)
+  scoreBreakdown   Json?
+  status           LeadStatus       @default(DISCOVERED)
+  isSaved          Boolean          @default(false)
+  savedAt          DateTime?        @db.DateTime(3)
+  savedByUserId    String?          @db.Char(36)
+  clientId         String?          @unique @db.Char(36)
+  enrichmentStatus EnrichmentStatus @default(NONE)
+  enrichedAt       DateTime?        @db.DateTime(3)
+  enrichmentError  String?          @db.Text
+  notes            String?          @db.Text
+  firstSearchRunId String?          @db.Char(36)
+  discoveredAt     DateTime         @default(now()) @db.DateTime(3)
+  lastSeenAt       DateTime         @default(now()) @db.DateTime(3)
+  deletedAt        DateTime?        @db.DateTime(3)
+  createdAt        DateTime         @default(now()) @db.DateTime(3)
+  updatedAt        DateTime         @updatedAt @db.DateTime(3)
+
+  organization   Organization        @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  client         Client?             @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  socialAccounts LeadSocialAccount[]
+  contacts       LeadContact[]
+  searchRuns     SearchRunLead[]
+  tags           LeadTag[]
+  notesList      Note[]
+
+  @@unique([organizationId, dedupeKey])
+  @@index([organizationId, status, deletedAt])
+  @@index([organizationId, isSaved])
+  @@index([organizationId, leadScore])
+  @@index([organizationId, followers])
+  @@index([organizationId, websiteDomain])
+  @@index([organizationId, email])
+  @@index([organizationId, phone])
+  @@index([organizationId, username])
+  @@index([organizationId, createdAt])
+  @@fulltext([brandName, bio])
+  @@map("leads")
+}
+
+model LeadSocialAccount {
+  id             String    @id @default(uuid(7)) @db.Char(36)
+  organizationId String    @db.Char(36)
+  leadId         String    @db.Char(36)
+  platform       Platform
+  username       String?   @db.VarChar(120)
+  profileUrl     String    @db.VarChar(500)
+  externalId     String?   @db.VarChar(120)
+  inboxUrl       String?   @db.VarChar(500)
+  externalThreadId String? @db.VarChar(120)
+  displayName    String?   @db.VarChar(191)
+  followers      Int?
+  following      Int?
+  postsCount     Int?
+  bio            String?   @db.Text
+  category       String?   @db.VarChar(120)
+  isBusiness     Boolean?
+  isVerified     Boolean?
+  isPrivate      Boolean?
+  website        String?   @db.VarChar(500)
+  email          String?   @db.VarChar(254)
+  phone          String?   @db.VarChar(40)
+  lastPostAt     DateTime? @db.DateTime(3)
+  raw            Json?
+  sourceProvider String    @db.VarChar(40)
+  sourceActor    String?   @db.VarChar(200)
+  providerRunId  String?   @db.Char(36)
+  fetchedAt      DateTime  @default(now()) @db.DateTime(3)
+  createdAt      DateTime  @default(now()) @db.DateTime(3)
+  updatedAt      DateTime  @updatedAt @db.DateTime(3)
+
+  lead Lead @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, platform, username])
+  @@index([organizationId, platform, externalId])
+  @@index([leadId])
+  @@map("lead_social_accounts")
+}
+
+model LeadContact {
+  id              String            @id @default(uuid(7)) @db.Char(36)
+  organizationId  String            @db.Char(36)
+  leadId          String            @db.Char(36)
+  type            ContactType
+  value           String            @db.VarChar(500)
+  normalizedValue String            @db.VarChar(191)
+  source          ContactSource
+  sourceUrl       String?           @db.VarChar(500)
+  confidence      ContactConfidence @default(PUBLIC)
+  label           String?           @db.VarChar(80)
+  isPrimary       Boolean           @default(false)
+  createdAt       DateTime          @default(now()) @db.DateTime(3)
+
+  lead Lead @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  @@unique([leadId, type, normalizedValue])
+  @@index([organizationId, type, normalizedValue])
+  @@map("lead_contacts")
+}
+
+model SearchRunLead {
+  id            String   @id @default(uuid(7)) @db.Char(36)
+  searchRunId   String   @db.Char(36)
+  leadId        String   @db.Char(36)
+  rank          Int      @default(0)
+  matchedExisting Boolean @default(false)
+  matchedBy     String?  @db.VarChar(60)
+  createdAt     DateTime @default(now()) @db.DateTime(3)
+
+  searchRun SearchRun @relation(fields: [searchRunId], references: [id], onDelete: Cascade)
+  lead      Lead      @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  @@unique([searchRunId, leadId])
+  @@index([leadId])
+  @@map("search_run_leads")
+}
+
+// ---------------------------------------------------------------------------
+// CRM
+// ---------------------------------------------------------------------------
+
+model Client {
+  id              String       @id @default(uuid(7)) @db.Char(36)
+  organizationId  String       @db.Char(36)
+  cid             String       @db.VarChar(20)
+  cidSequence     Int
+  brandName       String       @db.VarChar(191)
+  companyName     String?      @db.VarChar(191)
+  category        String?      @db.VarChar(120)
+  website         String?      @db.VarChar(500)
+  websiteDomain   String?      @db.VarChar(191)
+  email           String?      @db.VarChar(254)
+  phone           String?      @db.VarChar(40)
+  whatsapp        String?      @db.VarChar(40)
+  country         String?      @db.VarChar(80)
+  region          String?      @db.VarChar(80)
+  city            String?      @db.VarChar(80)
+  address         String?      @db.VarChar(300)
+  timezone        String?      @db.VarChar(64)
+  timezoneSource  String?      @db.VarChar(20)
+  followers       Int?
+  bio             String?      @db.Text
+  source          String?      @db.VarChar(40)
+  leadScore       Int          @default(0)
+  status          ClientStatus @default(NEW)
+  doNotContact    Boolean      @default(false)
+  doNotContactReason String?   @db.VarChar(300)
+  ownerUserId     String?      @db.Char(36)
+  createdByUserId String?      @db.Char(36)
+  lastContactedAt DateTime?    @db.DateTime(3)
+  lastReplyAt     DateTime?    @db.DateTime(3)
+  lastActivityAt  DateTime?    @db.DateTime(3)
+  aiSummary       String?      @db.Text
+  aiAnalysis      Json?
+  deletedAt       DateTime?    @db.DateTime(3)
+  createdAt       DateTime     @default(now()) @db.DateTime(3)
+  updatedAt       DateTime     @updatedAt @db.DateTime(3)
+
+  organization      Organization          @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  lead              Lead?
+  socialAccounts    ClientSocialAccount[]
+  contacts          ClientContact[]
+  tags              ClientTag[]
+  notes             Note[]
+  activities        Activity[]
+  conversations     Conversation[]
+  messages          Message[]
+  scheduledMessages ScheduledMessage[]
+  messageJobs       MessageJob[]
+  campaignLeads     CampaignLead[]
+  aiActionLogs      AIActionLog[]
+  documents         Document[]
+
+  @@unique([organizationId, cid])
+  @@unique([organizationId, cidSequence])
+  @@index([organizationId, status, deletedAt])
+  @@index([organizationId, createdAt])
+  @@index([organizationId, websiteDomain])
+  @@index([organizationId, email])
+  @@index([organizationId, phone])
+  @@index([organizationId, lastActivityAt])
+  @@map("clients")
+}
+
+model ClientSocialAccount {
+  id                   String               @id @default(uuid(7)) @db.Char(36)
+  organizationId       String               @db.Char(36)
+  clientId             String               @db.Char(36)
+  platform             Platform
+  username             String?              @db.VarChar(120)
+  profileUrl           String               @db.VarChar(500)
+  externalId           String?              @db.VarChar(120)
+  inboxUrl             String?              @db.VarChar(500)
+  externalThreadId     String?              @db.VarChar(120)
+  /// Page-scoped / Instagram-scoped user id assigned by Meta once the client has messaged the connected account.
+  scopedUserId         String?              @db.VarChar(120)
+  displayName          String?              @db.VarChar(191)
+  followers            Int?
+  following            Int?
+  postsCount           Int?
+  bio                  String?              @db.Text
+  category             String?              @db.VarChar(120)
+  isBusiness           Boolean?
+  isVerified           Boolean?
+  isPrivate            Boolean?
+  messagingEligibility MessagingEligibility @default(DISCOVERED)
+  eligibilityReason    String?              @db.VarChar(300)
+  eligibilityCheckedAt DateTime?            @db.DateTime(3)
+  raw                  Json?
+  sourceProvider       String?              @db.VarChar(40)
+  createdAt            DateTime             @default(now()) @db.DateTime(3)
+  updatedAt            DateTime             @updatedAt @db.DateTime(3)
+
+  client        Client         @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  conversations Conversation[]
+
+  @@unique([organizationId, platform, username])
+  @@index([organizationId, platform, externalId])
+  @@index([organizationId, platform, scopedUserId])
+  @@index([clientId])
+  @@map("client_social_accounts")
+}
+
+model ClientContact {
+  id              String            @id @default(uuid(7)) @db.Char(36)
+  organizationId  String            @db.Char(36)
+  clientId        String            @db.Char(36)
+  type            ContactType
+  value           String            @db.VarChar(500)
+  normalizedValue String            @db.VarChar(191)
+  source          ContactSource
+  sourceUrl       String?           @db.VarChar(500)
+  confidence      ContactConfidence @default(PUBLIC)
+  label           String?           @db.VarChar(80)
+  isPrimary       Boolean           @default(false)
+  createdAt       DateTime          @default(now()) @db.DateTime(3)
+
+  client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@unique([clientId, type, normalizedValue])
+  @@index([organizationId, type, normalizedValue])
+  @@map("client_contacts")
+}
+
+model Tag {
+  id             String   @id @default(uuid(7)) @db.Char(36)
+  organizationId String   @db.Char(36)
+  name           String   @db.VarChar(60)
+  color          String?  @db.VarChar(7)
+  createdAt      DateTime @default(now()) @db.DateTime(3)
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  clients      ClientTag[]
+  leads        LeadTag[]
+
+  @@unique([organizationId, name])
+  @@map("tags")
+}
+
+model ClientTag {
+  clientId String @db.Char(36)
+  tagId    String @db.Char(36)
+
+  client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  tag    Tag    @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([clientId, tagId])
+  @@index([tagId])
+  @@map("client_tags")
+}
+
+model LeadTag {
+  leadId String @db.Char(36)
+  tagId  String @db.Char(36)
+
+  lead Lead @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  tag  Tag  @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([leadId, tagId])
+  @@index([tagId])
+  @@map("lead_tags")
+}
+
+model Note {
+  id             String    @id @default(uuid(7)) @db.Char(36)
+  organizationId String    @db.Char(36)
+  clientId       String?   @db.Char(36)
+  leadId         String?   @db.Char(36)
+  userId         String?   @db.Char(36)
+  body           String    @db.Text
+  deletedAt      DateTime? @db.DateTime(3)
+  createdAt      DateTime  @default(now()) @db.DateTime(3)
+  updatedAt      DateTime  @updatedAt @db.DateTime(3)
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  client       Client?      @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  lead         Lead?        @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  @@index([clientId, deletedAt])
+  @@index([leadId, deletedAt])
+  @@map("notes")
+}
+
+model Activity {
+  id             String    @id @default(uuid(7)) @db.Char(36)
+  organizationId String    @db.Char(36)
+  clientId       String    @db.Char(36)
+  type           String    @db.VarChar(60)
+  title          String    @db.VarChar(200)
+  description    String?   @db.Text
+  meta           Json?
+  actorType      ActorType @default(SYSTEM)
+  userId         String?   @db.Char(36)
+  createdAt      DateTime  @default(now()) @db.DateTime(3)
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  client       Client       @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@index([clientId, createdAt])
+  @@index([organizationId, createdAt])
+  @@map("activities")
+}
+
+// ---------------------------------------------------------------------------
+// Messaging
+// ---------------------------------------------------------------------------
+
+/// Official (OAuth) connection to a Meta asset: a Facebook Page and/or the Instagram professional account linked to it.
+model SocialConnection {
+  id                   String           @id @default(uuid(7)) @db.Char(36)
+  organizationId       String           @db.Char(36)
+  platform             Platform
+  provider             String           @default("meta") @db.VarChar(40)
+  externalAccountId    String           @db.VarChar(120)
+  pageId               String?          @db.VarChar(120)
+  username             String?          @db.VarChar(120)
+  displayName          String?          @db.VarChar(191)
+  accessTokenEncrypted String?          @db.Text
+  tokenExpiresAt       DateTime?        @db.DateTime(3)
+  scopes               Json?
+  status               ConnectionStatus @default(CONNECTED)
+  lastError            String?          @db.Text
+  meta                 Json?
+  connectedByUserId    String?          @db.Char(36)
+  lastSyncedAt         DateTime?        @db.DateTime(3)
+  createdAt            DateTime         @default(now()) @db.DateTime(3)
+  updatedAt            DateTime         @updatedAt @db.DateTime(3)
+
+  organization  Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  conversations Conversation[]
+
+  @@unique([organizationId, platform, externalAccountId])
+  @@index([platform, externalAccountId])
+  @@map("social_connections")
+}
+
+model Conversation {
+  id                    String             @id @default(uuid(7)) @db.Char(36)
+  organizationId        String             @db.Char(36)
+  clientId              String             @db.Char(36)
+  channel               Platform
+  clientSocialAccountId String?            @db.Char(36)
+  socialConnectionId    String?            @db.Char(36)
+  externalThreadId      String?            @db.VarChar(120)
+  status                ConversationStatus @default(OPEN)
+  lastMessageAt         DateTime?          @db.DateTime(3)
+  lastInboundAt         DateTime?          @db.DateTime(3)
+  lastOutboundAt        DateTime?          @db.DateTime(3)
+  lastMessagePreview    String?            @db.VarChar(300)
+  messageCount          Int                @default(0)
+  unreadCount           Int                @default(0)
+  assignedUserId        String?            @db.Char(36)
+  aiStatus              String             @default("idle") @db.VarChar(30)
+  lastIntent            String?            @db.VarChar(40)
+  lastIntentConfidence  Float?
+  summary               String?            @db.Text
+  summaryUpdatedAt      DateTime?          @db.DateTime(3)
+  needsHumanReview      Boolean            @default(false)
+  needsHumanReason      String?            @db.VarChar(300)
+  campaignId            String?            @db.Char(36)
+  deletedAt             DateTime?          @db.DateTime(3)
+  createdAt             DateTime           @default(now()) @db.DateTime(3)
+  updatedAt             DateTime           @updatedAt @db.DateTime(3)
+
+  organization        Organization         @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  client              Client               @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  clientSocialAccount ClientSocialAccount? @relation(fields: [clientSocialAccountId], references: [id], onDelete: SetNull)
+  socialConnection    SocialConnection?    @relation(fields: [socialConnectionId], references: [id], onDelete: SetNull)
+  messages            Message[]
+  scheduledMessages   ScheduledMessage[]
+  messageJobs         MessageJob[]
+  documents           Document[]
+
+  @@unique([organizationId, channel, externalThreadId])
+  @@index([organizationId, lastMessageAt])
+  @@index([organizationId, status, deletedAt])
+  @@index([clientId, channel])
+  @@map("conversations")
+}
+
+model Message {
+  id                 String            @id @default(uuid(7)) @db.Char(36)
+  organizationId     String            @db.Char(36)
+  conversationId     String            @db.Char(36)
+  clientId           String            @db.Char(36)
+  channel            Platform
+  direction          MessageDirection
+  authorType         MessageAuthorType
+  userId             String?           @db.Char(36)
+  body               String            @db.Text
+  status             MessageStatus     @default(DRAFT)
+  approvalStatus     ApprovalStatus    @default(NONE)
+  approvedByUserId   String?           @db.Char(36)
+  approvedAt         DateTime?         @db.DateTime(3)
+  providerKey        String?           @db.VarChar(40)
+  providerMessageId  String?           @db.VarChar(191)
+  externalMessageId  String?           @db.VarChar(191)
+  aiGenerated        Boolean           @default(false)
+  aiModel            String?           @db.VarChar(120)
+  aiActionLogId      String?           @db.Char(36)
+  campaignId         String?           @db.Char(36)
+  scheduledMessageId String?           @db.Char(36)
+  sentAt             DateTime?         @db.DateTime(3)
+  deliveredAt        DateTime?         @db.DateTime(3)
+  seenAt             DateTime?         @db.DateTime(3)
+  failedAt           DateTime?         @db.DateTime(3)
+  failureReason      String?           @db.Text
+  errorClass         ErrorClass?
+  meta               Json?
+  createdAt          DateTime          @default(now()) @db.DateTime(3)
+  updatedAt          DateTime          @updatedAt @db.DateTime(3)
+
+  organization Organization        @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  conversation Conversation        @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  client       Client              @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  attachments  MessageAttachment[]
+  job          MessageJob?
+
+  @@unique([organizationId, channel, externalMessageId])
+  @@index([conversationId, createdAt])
+  @@index([organizationId, createdAt])
+  @@index([organizationId, direction, status])
+  @@index([campaignId])
+  @@map("messages")
+}
+
+model MessageAttachment {
+  id         String   @id @default(uuid(7)) @db.Char(36)
+  messageId  String   @db.Char(36)
+  documentId String?  @db.Char(36)
+  name       String   @db.VarChar(255)
+  mimeType   String?  @db.VarChar(120)
+  sizeBytes  Int?
+  url        String?  @db.VarChar(1000)
+  createdAt  DateTime @default(now()) @db.DateTime(3)
+
+  message  Message   @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  document Document? @relation(fields: [documentId], references: [id], onDelete: SetNull)
+
+  @@index([messageId])
+  @@map("message_attachments")
+}
+
+model ScheduledMessage {
+  id              String                 @id @default(uuid(7)) @db.Char(36)
+  organizationId  String                 @db.Char(36)
+  clientId        String                 @db.Char(36)
+  conversationId  String?                @db.Char(36)
+  channel         Platform
+  body            String                 @db.Text
+  scheduledAt     DateTime               @db.DateTime(3)
+  timezone        String                 @db.VarChar(64)
+  timezoneMode    String                 @default("client") @db.VarChar(20)
+  status          ScheduledMessageStatus @default(SCHEDULED)
+  createdByType   ActorType              @default(USER)
+  createdByUserId String?                @db.Char(36)
+  campaignId      String?                @db.Char(36)
+  campaignLeadId  String?                @db.Char(36)
+  followUpStep    Int?
+  messageId       String?                @db.Char(36)
+  aiActionLogId   String?                @db.Char(36)
+  jobId           String?                @db.Char(36)
+  error           String?                @db.Text
+  sentAt          DateTime?              @db.DateTime(3)
+  cancelledAt     DateTime?              @db.DateTime(3)
+  createdAt       DateTime               @default(now()) @db.DateTime(3)
+  updatedAt       DateTime               @updatedAt @db.DateTime(3)
+
+  organization Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  client       Client        @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  conversation Conversation? @relation(fields: [conversationId], references: [id], onDelete: SetNull)
+  campaign     Campaign?     @relation(fields: [campaignId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId, status, scheduledAt])
+  @@index([clientId, status])
+  @@map("scheduled_messages")
+}
+
+/// Browser/Apify/Meta delivery job for one outbound message.
+model MessageJob {
+  id                String             @id @default(uuid(7)) @db.Char(36)
+  organizationId    String             @db.Char(36)
+  messageId         String             @unique @db.Char(36)
+  conversationId    String             @db.Char(36)
+  clientId          String             @db.Char(36)
+  provider          MessageJobProvider
+  status            MessageJobStatus   @default(QUEUED)
+  target            Json
+  payload           Json
+  priority          Int                @default(5)
+  attempts          Int                @default(0)
+  maxAttempts       Int                @default(3)
+  scheduledAt       DateTime           @default(now()) @db.DateTime(3)
+  claimedAt         DateTime?          @db.DateTime(3)
+  claimedByDeviceId String?            @db.Char(36)
+  leaseExpiresAt    DateTime?          @db.DateTime(3)
+  lastHeartbeatAt   DateTime?          @db.DateTime(3)
+  progressDetail    String?            @db.VarChar(500)
+  result            Json?
+  errorCode         String?            @db.VarChar(60)
+  errorMessage      String?            @db.Text
+  errorClass        ErrorClass?
+  providerRunId     String?            @db.Char(36)
+  completedAt       DateTime?          @db.DateTime(3)
+  cancelledAt       DateTime?          @db.DateTime(3)
+  createdAt         DateTime           @default(now()) @db.DateTime(3)
+  updatedAt         DateTime           @updatedAt @db.DateTime(3)
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  message      Message      @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  client       Client       @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, provider, status, scheduledAt])
+  @@index([organizationId, createdAt])
+  @@map("message_jobs")
+}
+
+model ExtensionDevice {
+  id                    String                @id @default(uuid(7)) @db.Char(36)
+  organizationId        String                @db.Char(36)
+  userId                String                @db.Char(36)
+  name                  String                @db.VarChar(120)
+  browser               String?               @db.VarChar(120)
+  extensionVersion      String?               @db.VarChar(40)
+  status                ExtensionDeviceStatus @default(PENDING)
+  accessTokenHash       String?               @unique @db.VarChar(64)
+  accessTokenExpiresAt  DateTime?             @db.DateTime(3)
+  refreshTokenHash      String?               @unique @db.VarChar(64)
+  refreshTokenExpiresAt DateTime?             @db.DateTime(3)
+  lastSeenAt            DateTime?             @db.DateTime(3)
+  lastStatus            String?               @db.VarChar(30)
+  capabilities          Json?
+  revokedAt             DateTime?             @db.DateTime(3)
+  createdAt             DateTime              @default(now()) @db.DateTime(3)
+  updatedAt             DateTime              @updatedAt @db.DateTime(3)
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, status])
+  @@map("extension_devices")
+}
+
+model ExtensionPairing {
+  id             String    @id @default(uuid(7)) @db.Char(36)
+  organizationId String    @db.Char(36)
+  userId         String    @db.Char(36)
+  codeHash       String    @unique @db.VarChar(64)
+  expiresAt      DateTime  @db.DateTime(3)
+  usedAt         DateTime? @db.DateTime(3)
+  deviceId       String?   @db.Char(36)
+  createdAt      DateTime  @default(now()) @db.DateTime(3)
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, expiresAt])
+  @@map("extension_pairings")
+}
+
+/// Idempotency store for inbound webhook events.
+model WebhookEvent {
+  id              String             @id @default(uuid(7)) @db.Char(36)
+  provider        String             @db.VarChar(40)
+  externalEventId String             @db.VarChar(191)
+  objectType      String?            @db.VarChar(40)
+  organizationId  String?            @db.Char(36)
+  payload         Json
+  status          WebhookEventStatus @default(RECEIVED)
+  error           String?            @db.Text
+  receivedAt      DateTime           @default(now()) @db.DateTime(3)
+  processedAt     DateTime?          @db.DateTime(3)
+
+  @@unique([provider, externalEventId])
+  @@index([status, receivedAt])
+  @@map("webhook_events")
+}
+
+// ---------------------------------------------------------------------------
+// Campaigns
+// ---------------------------------------------------------------------------
+
+model Campaign {
+  id               String         @id @default(uuid(7)) @db.Char(36)
+  organizationId   String         @db.Char(36)
+  name             String         @db.VarChar(140)
+  status           CampaignStatus @default(DRAFT)
+  channel          Platform       @default(INSTAGRAM)
+  audienceType     String         @default("CLIENTS") @db.VarChar(20)
+  audienceFilter   Json?
+  firstMessageMode String         @default("AI") @db.VarChar(20)
+  template         String?        @db.Text
+  followUps        Json?
+  workingHours     Json?
+  timezoneMode     String         @default("client") @db.VarChar(20)
+  customTimezone   String?        @db.VarChar(64)
+  messagesPerDay   Int            @default(30)
+  requireApproval  Boolean        @default(true)
+  startAt          DateTime?      @db.DateTime(3)
+  startedAt        DateTime?      @db.DateTime(3)
+  pausedAt         DateTime?      @db.DateTime(3)
+  completedAt      DateTime?      @db.DateTime(3)
+  stats            Json?
+  createdByUserId  String?        @db.Char(36)
+  deletedAt        DateTime?      @db.DateTime(3)
+  createdAt        DateTime       @default(now()) @db.DateTime(3)
+  updatedAt        DateTime       @updatedAt @db.DateTime(3)
+
+  organization      Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  leads             CampaignLead[]
+  scheduledMessages ScheduledMessage[]
+  documents         Document[]
+
+  @@index([organizationId, status, deletedAt])
+  @@map("campaigns")
+}
+
+model CampaignLead {
+  id             String             @id @default(uuid(7)) @db.Char(36)
+  campaignId     String             @db.Char(36)
+  clientId       String             @db.Char(36)
+  status         CampaignLeadStatus @default(PENDING)
+  currentStep    Int                @default(0)
+  nextActionAt   DateTime?          @db.DateTime(3)
+  conversationId String?            @db.Char(36)
+  lastMessageAt  DateTime?          @db.DateTime(3)
+  stopReason     String?            @db.VarChar(200)
+  createdAt      DateTime           @default(now()) @db.DateTime(3)
+  updatedAt      DateTime           @updatedAt @db.DateTime(3)
+
+  campaign Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  client   Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@unique([campaignId, clientId])
+  @@index([campaignId, status, nextActionAt])
+  @@map("campaign_leads")
+}
+
+// ---------------------------------------------------------------------------
+// AI
+// ---------------------------------------------------------------------------
+
+model AIInstruction {
+  id             String            @id @default(uuid(7)) @db.Char(36)
+  organizationId String            @db.Char(36)
+  kind           AIInstructionKind @default(CUSTOM)
+  title          String            @db.VarChar(140)
+  content        String            @db.Text
+  enabled        Boolean           @default(true)
+  sortOrder      Int               @default(0)
+  createdAt      DateTime          @default(now()) @db.DateTime(3)
+  updatedAt      DateTime          @updatedAt @db.DateTime(3)
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, enabled, sortOrder])
+  @@map("ai_instructions")
+}
+
+model KnowledgeDocument {
+  id             String              @id @default(uuid(7)) @db.Char(36)
+  organizationId String              @db.Char(36)
+  documentId     String?             @unique @db.Char(36)
+  title          String              @db.VarChar(200)
+  sourceType     KnowledgeSourceType @default(TEXT)
+  status         KnowledgeStatus     @default(PENDING)
+  contentText    String?             @db.LongText
+  charCount      Int                 @default(0)
+  chunkCount     Int                 @default(0)
+  error          String?             @db.Text
+  deletedAt      DateTime?           @db.DateTime(3)
+  createdAt      DateTime            @default(now()) @db.DateTime(3)
+  updatedAt      DateTime            @updatedAt @db.DateTime(3)
+
+  organization Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  document     Document?        @relation(fields: [documentId], references: [id], onDelete: SetNull)
+  chunks       KnowledgeChunk[]
+
+  @@index([organizationId, status, deletedAt])
+  @@map("knowledge_documents")
+}
+
+model KnowledgeChunk {
+  id                  String   @id @default(uuid(7)) @db.Char(36)
+  organizationId      String   @db.Char(36)
+  knowledgeDocumentId String   @db.Char(36)
+  chunkIndex          Int
+  content             String   @db.Text
+  tokenEstimate       Int      @default(0)
+  embedding           Json?
+  embeddingModel      String?  @db.VarChar(120)
+  createdAt           DateTime @default(now()) @db.DateTime(3)
+
+  organization      Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  knowledgeDocument KnowledgeDocument @relation(fields: [knowledgeDocumentId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, knowledgeDocumentId, chunkIndex])
+  @@fulltext([content])
+  @@map("knowledge_chunks")
+}
+
+model AIActionLog {
+  id             String         @id @default(uuid(7)) @db.Char(36)
+  organizationId String         @db.Char(36)
+  clientId       String?        @db.Char(36)
+  conversationId String?        @db.Char(36)
+  messageId      String?        @db.Char(36)
+  campaignId     String?        @db.Char(36)
+  action         AIActionType
+  status         AIActionStatus @default(SUCCESS)
+  triggeredBy    ActorType      @default(USER)
+  userId         String?        @db.Char(36)
+  provider       String?        @db.VarChar(40)
+  model          String?        @db.VarChar(120)
+  inputContext   Json?
+  output         Json?
+  decision       Json?
+  confidence     Float?
+  tokensIn       Int?
+  tokensOut      Int?
+  durationMs     Int?
+  error          String?        @db.Text
+  createdAt      DateTime       @default(now()) @db.DateTime(3)
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  client       Client?      @relation(fields: [clientId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId, createdAt])
+  @@index([organizationId, action, createdAt])
+  @@index([clientId, createdAt])
+  @@index([conversationId])
+  @@map("ai_action_logs")
+}
+
+// ---------------------------------------------------------------------------
+// Jobs, audit, usage
+// ---------------------------------------------------------------------------
+
+model AutomationJob {
+  id             String      @id @default(uuid(7)) @db.Char(36)
+  organizationId String?     @db.Char(36)
+  type           JobType
+  status         JobStatus   @default(QUEUED)
+  priority       Int         @default(5)
+  payload        Json
+  result         Json?
+  attempts       Int         @default(0)
+  maxAttempts    Int         @default(3)
+  scheduledAt    DateTime    @default(now()) @db.DateTime(3)
+  startedAt      DateTime?   @db.DateTime(3)
+  completedAt    DateTime?   @db.DateTime(3)
+  lockedAt       DateTime?   @db.DateTime(3)
+  lockedBy       String?     @db.VarChar(120)
+  lockExpiresAt  DateTime?   @db.DateTime(3)
+  error          String?     @db.Text
+  errorClass     ErrorClass?
+  dedupeKey      String?     @unique @db.VarChar(191)
+  parentJobId    String?     @db.Char(36)
+  entityType     String?     @db.VarChar(40)
+  entityId       String?     @db.Char(36)
+  createdAt      DateTime    @default(now()) @db.DateTime(3)
+  updatedAt      DateTime    @updatedAt @db.DateTime(3)
+
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([status, scheduledAt, priority])
+  @@index([organizationId, type, status])
+  @@index([entityType, entityId])
+  @@map("automation_jobs")
+}
+
+model AuditLog {
+  id             String    @id @default(uuid(7)) @db.Char(36)
+  organizationId String?   @db.Char(36)
+  userId         String?   @db.Char(36)
+  actorType      ActorType @default(USER)
+  action         String    @db.VarChar(80)
+  entityType     String?   @db.VarChar(40)
+  entityId       String?   @db.VarChar(64)
+  meta           Json?
+  ip             String?   @db.VarChar(64)
+  userAgent      String?   @db.VarChar(255)
+  createdAt      DateTime  @default(now()) @db.DateTime(3)
+
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId, createdAt])
+  @@index([organizationId, entityType, entityId])
+  @@map("audit_logs")
+}
+
+model UsageRecord {
+  id             String      @id @default(uuid(7)) @db.Char(36)
+  organizationId String      @db.Char(36)
+  metric         UsageMetric
+  day            DateTime    @db.Date
+  quantity       Int         @default(0)
+  meta           Json?
+  updatedAt      DateTime    @updatedAt @db.DateTime(3)
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, metric, day])
+  @@map("usage_records")
+}
+
+// ---------------------------------------------------------------------------
+// Documents & trash
+// ---------------------------------------------------------------------------
+
+model Document {
+  id               String       @id @default(uuid(7)) @db.Char(36)
+  organizationId   String       @db.Char(36)
+  name             String       @db.VarChar(255)
+  originalName     String       @db.VarChar(255)
+  mimeType         String       @db.VarChar(120)
+  sizeBytes        Int
+  storageKey       String       @db.VarChar(500)
+  storageDriver    String       @default("local") @db.VarChar(20)
+  kind             DocumentKind @default(OTHER)
+  clientId         String?      @db.Char(36)
+  conversationId   String?      @db.Char(36)
+  campaignId       String?      @db.Char(36)
+  uploadedByUserId String?      @db.Char(36)
+  checksum         String?      @db.VarChar(64)
+  deletedAt        DateTime?    @db.DateTime(3)
+  createdAt        DateTime     @default(now()) @db.DateTime(3)
+  updatedAt        DateTime     @updatedAt @db.DateTime(3)
+
+  organization       Organization        @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  client             Client?             @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  conversation       Conversation?       @relation(fields: [conversationId], references: [id], onDelete: SetNull)
+  campaign           Campaign?           @relation(fields: [campaignId], references: [id], onDelete: SetNull)
+  knowledgeDocument  KnowledgeDocument?
+  messageAttachments MessageAttachment[]
+
+  @@index([organizationId, kind, deletedAt])
+  @@index([clientId])
+  @@map("documents")
+}
+
+model TrashItem {
+  id              String          @id @default(uuid(7)) @db.Char(36)
+  organizationId  String          @db.Char(36)
+  entityType      TrashEntityType
+  entityId        String          @db.Char(36)
+  label           String          @db.VarChar(255)
+  deletedByUserId String?         @db.Char(36)
+  deletedAt       DateTime        @default(now()) @db.DateTime(3)
+  purgeAt         DateTime        @db.DateTime(3)
+  restoredAt      DateTime?       @db.DateTime(3)
+  purgedAt        DateTime?       @db.DateTime(3)
+  meta            Json?
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([entityType, entityId])
+  @@index([organizationId, restoredAt, purgedAt])
+  @@index([purgeAt])
+  @@map("trash_items")
+}
+
+/// Configurable external provider (e.g. which Apify Actor handles Instagram discovery).
+/// organizationId = null means a platform-wide default.
+model ProviderConfig {
+  id             String         @id @default(uuid(7)) @db.Char(36)
+  organizationId String?        @db.Char(36)
+  domain         ProviderDomain
+  provider       String         @db.VarChar(40)
+  platform       String         @db.VarChar(20)
+  actorId        String         @db.VarChar(200)
+  adapter        String         @db.VarChar(80)
+  enabled        Boolean        @default(true)
+  priority       Int            @default(1)
+  costLimitUsd   Decimal?       @db.Decimal(10, 2)
+  timeoutSec     Int            @default(600)
+  settings       Json?
+  createdAt      DateTime       @default(now()) @db.DateTime(3)
+  updatedAt      DateTime       @updatedAt @db.DateTime(3)
+
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, domain, platform, enabled, priority])
+  @@map("provider_configs")
+}
+
+// ---------------------------------------------------------------------------
+// Competitor & trend analysis
+// ---------------------------------------------------------------------------
+
+model CompetitorSearch {
+  id              String         @id @default(uuid(7)) @db.Char(36)
+  organizationId  String         @db.Char(36)
+  name            String?        @db.VarChar(140)
+  criteria        Json
+  status          AnalysisStatus @default(QUEUED)
+  resultSummary   Json?
+  aiReport        String?        @db.Text
+  itemCount       Int            @default(0)
+  jobId           String?        @db.Char(36)
+  error           String?        @db.Text
+  createdByUserId String?        @db.Char(36)
+  deletedAt       DateTime?      @db.DateTime(3)
+  createdAt       DateTime       @default(now()) @db.DateTime(3)
+  updatedAt       DateTime       @updatedAt @db.DateTime(3)
+
+  organization Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  items        ContentItem[]
+
+  @@index([organizationId, createdAt])
+  @@map("competitor_searches")
+}
+
+model TrendSearch {
+  id              String         @id @default(uuid(7)) @db.Char(36)
+  organizationId  String         @db.Char(36)
+  name            String?        @db.VarChar(140)
+  criteria        Json
+  status          AnalysisStatus @default(QUEUED)
+  resultSummary   Json?
+  aiReport        String?        @db.Text
+  itemCount       Int            @default(0)
+  jobId           String?        @db.Char(36)
+  error           String?        @db.Text
+  createdByUserId String?        @db.Char(36)
+  deletedAt       DateTime?      @db.DateTime(3)
+  createdAt       DateTime       @default(now()) @db.DateTime(3)
+  updatedAt       DateTime       @updatedAt @db.DateTime(3)
+
+  organization Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  items        ContentItem[]
+
+  @@index([organizationId, createdAt])
+  @@map("trend_searches")
+}
+
+/// Normalized public post/content item collected for analysis.
+model ContentItem {
+  id                 String    @id @default(uuid(7)) @db.Char(36)
+  organizationId     String    @db.Char(36)
+  competitorSearchId String?   @db.Char(36)
+  trendSearchId      String?   @db.Char(36)
+  platform           Platform
+  accountUsername    String?   @db.VarChar(120)
+  accountName        String?   @db.VarChar(191)
+  accountUrl         String?   @db.VarChar(500)
+  postUrl            String?   @db.VarChar(500)
+  externalId         String?   @db.VarChar(120)
+  postedAt           DateTime? @db.DateTime(3)
+  caption            String?   @db.Text
+  hashtags           Json?
+  likes              Int?
+  comments           Int?
+  views              Int?
+  mediaType          String?   @db.VarChar(30)
+  location           String?   @db.VarChar(191)
+  category           String?   @db.VarChar(120)
+  raw                Json?
+  createdAt          DateTime  @default(now()) @db.DateTime(3)
+
+  organization     Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  competitorSearch CompetitorSearch? @relation(fields: [competitorSearchId], references: [id], onDelete: Cascade)
+  trendSearch      TrendSearch?      @relation(fields: [trendSearchId], references: [id], onDelete: Cascade)
+
+  @@index([competitorSearchId])
+  @@index([trendSearchId])
+  @@index([organizationId, platform, postedAt])
+  @@map("content_items")
+}

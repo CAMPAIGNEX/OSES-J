@@ -1,0 +1,18 @@
+{
+  "name": "@oses/workers",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "tsx src/index.ts",
+    "dev": "tsx watch src/index.ts",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@oses/automation": "workspace:*",
+    "@oses/database": "workspace:*",
+    "@oses/shared": "workspace:*",
+    "dotenv": "^17.0.0"
+  },
+  "devDependencies": { "@types/node": "^24.0.0", "tsx": "4.23.13", "typescript": "5.9.3" }
+}

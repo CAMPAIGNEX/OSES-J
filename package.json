@@ -1,0 +1,36 @@
+{
+  "name": "oses-j",
+  "version": "0.1.0",
+  "private": true,
+  "description": "OSES J — AI-powered social export sales system",
+  "packageManager": "pnpm@9.15.9",
+  "engines": {
+    "node": ">=20.9.0"
+  },
+  "scripts": {
+    "dev": "pnpm --filter @oses/web dev",
+    "build": "pnpm --filter @oses/database generate && pnpm --filter @oses/web build",
+    "start": "pnpm --filter @oses/web start",
+    "worker": "pnpm --filter @oses/workers start",
+    "extension:build": "pnpm --filter @oses/extension build",
+    "db:generate": "pnpm --filter @oses/database generate",
+    "db:migrate": "pnpm --filter @oses/database migrate:dev",
+    "db:deploy": "pnpm --filter @oses/database migrate:deploy",
+    "db:push": "pnpm --filter @oses/database push",
+    "db:seed": "pnpm --filter @oses/database seed",
+    "db:studio": "pnpm --filter @oses/database studio",
+    "typecheck": "pnpm -r --parallel --workspace-concurrency=4 typecheck",
+    "lint": "pnpm --filter @oses/web lint",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:integration": "vitest run --project integration",
+    "postinstall": "pnpm --filter @oses/database generate",
+    "test:unit": "vitest run --project unit"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "typescript": "5.9.3",
+    "vitest": "5.0.0",
+    "dotenv": "^17.0.0"
+  }
+}
