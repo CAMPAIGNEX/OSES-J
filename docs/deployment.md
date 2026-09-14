@@ -5,7 +5,7 @@ OSES J is one Next.js application plus an optional worker process, backed by MyS
 ## Runtime requirements (read first)
 
 - **Node.js 22** (LTS). Prisma 7 needs `^20.19 || ^22.12 || >=24` and Next.js 16 needs `>=20.9`; an older runtime fails the build with `TypeError: A dynamic import callback was not specified`. The repo pins this in `.nvmrc`, `.node-version` and `package.json#engines`; select the same version in the hosting panel.
-- **pnpm 9** (workspace protocol). `package.json#packageManager` lets corepack install it: `corepack enable && corepack prepare pnpm@9.15.9 --activate`. If the host reports a corepack signature error, update it first: `npm install -g corepack@latest`.
+- **pnpm 9, 10 or 11** (workspace protocol). The repo deliberately does not pin a pnpm version (`package-manager-strict=false`, `minimum-release-age=0` in `.npmrc` / `pnpm-workspace.yaml`) so hosts that ship a newer pnpm can install the committed lockfile.
 - A MySQL 8 / MariaDB 10.6+ database and the environment variables from `.env.example` (set them in the panel or in a root `.env`).
 
 ## Common steps
@@ -23,7 +23,7 @@ Production `.env` essentials: `NODE_ENV=production`, `APP_URL=https://your-domai
 
 1. Create a MySQL database in hPanel; put its credentials in `DATABASE_URL` (add `?connection_limit=5` to stay within shared limits).
 2. Upload the repository (or `git clone`) into the app directory and set the Node.js version to **22** in hPanel.
-3. Build command: `corepack enable && pnpm install --frozen-lockfile && pnpm build` (no database needed at build time). Start command: `pnpm start` (applies pending migrations, then starts Next on `$PORT`). Application root: the repository root (not `apps/web`).
+3. Panel settings: framework preset **Other**, package manager **pnpm**, Node **22.x**, root directory `./`, build command `pnpm run build` (no database needed at build time), output directory empty, **entry file `server.js`** (applies pending migrations, then starts Next on `$PORT`). On a plain shell the equivalent is `pnpm install && pnpm build && node server.js`.
 4. Job execution — choose one:
    - `JOB_RUNNER_MODE=inline`: jobs run inside the web process right after the request that created them, and a timer in the web process (`apps/web/instrumentation.ts`) runs the scheduler plus a small job batch every minute while the app is up. Simplest; fine for one exporter as long as the host keeps the Node process alive.
    - `JOB_RUNNER_MODE=cron`: add an hPanel cron job every minute:

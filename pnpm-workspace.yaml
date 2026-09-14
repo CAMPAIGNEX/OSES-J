@@ -3,3 +3,12 @@ packages:
   - "packages/*"
   - "workers"
   - "tests"
+
+# pnpm 10+/11 settings (older pnpm ignores these keys)
+minimumReleaseAge: 0
+onlyBuiltDependencies:
+  - esbuild
+  - prisma
+  - "@prisma/client"
+  - "@prisma/engines"
+  - sharp

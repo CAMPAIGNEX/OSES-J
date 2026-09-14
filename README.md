@@ -125,7 +125,7 @@ See [docs/testing.md](docs/testing.md).
 
 ## Deployment
 
-Hostinger Business (shared hosting) runs the web app with `JOB_RUNNER_MODE=inline` or `cron`; a VPS runs the same web app plus `pnpm worker`. Step-by-step instructions, cron examples and the reverse-proxy notes are in [docs/deployment.md](docs/deployment.md).
+Git-based Node.js hosting (Hostinger and similar): Node 22, package manager pnpm, build `pnpm run build`, entry file `server.js` (runs migrations, then `next start` on `$PORT`), `JOB_RUNNER_MODE=inline`. A VPS runs the same web app plus `pnpm worker`. Step-by-step instructions, cron examples and the reverse-proxy notes are in [docs/deployment.md](docs/deployment.md).
 
 ## Troubleshooting
 

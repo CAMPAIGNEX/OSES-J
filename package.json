@@ -3,7 +3,6 @@
   "version": "0.1.0",
   "private": true,
   "description": "OSES J — AI-powered social export sales system",
-  "packageManager": "pnpm@9.15.9",
   "engines": {
     "node": ">=22.12.0",
     "pnpm": ">=9"
