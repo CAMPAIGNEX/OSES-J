@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ArrowLeft, Bot, Check, ExternalLink, FileText, Sparkles, User, X, Cpu, AlertTriangle, Clock } from "lucide-react";
+import { ArrowLeft, Bot, Check, ExternalLink, FileText, Sparkles, User, X, Cpu, AlertTriangle, Clock } from "@/components/ui/icons";
 import { api } from "@/lib/api-client";
 import { useQuery } from "@/lib/hooks/use-query";
 import { formatDateTime, platformName, titleCase } from "@/lib/format";

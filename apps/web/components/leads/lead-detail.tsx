@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Bookmark, BookmarkCheck, Building2, ExternalLink, Info, Trash2 } from "lucide-react";
+import { Bookmark, BookmarkCheck, Building2, ExternalLink, Info, Trash2 } from "@/components/ui/icons";
 import { api } from "@/lib/api-client";
 import { useQuery } from "@/lib/hooks/use-query";
 import { formatCompact, formatDateTime, platformName, titleCase } from "@/lib/format";

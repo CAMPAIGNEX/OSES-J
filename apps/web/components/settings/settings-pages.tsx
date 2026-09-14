@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
-import { Globe, Copy, Link2, Plug, RefreshCw, Trash2, Unplug, CheckCircle2, AlertTriangle, KeyRound } from "lucide-react";
+import { Globe, Copy, Link2, Plug, RefreshCw, Trash2, Unplug, CheckCircle2, AlertTriangle, KeyRound } from "@/components/ui/icons";
 import { api, ApiError } from "@/lib/api-client";
 import { useQuery } from "@/lib/hooks/use-query";
 import { formatDateTime, timeAgo, titleCase } from "@/lib/format";
@@ -14,6 +14,7 @@ import { useToast } from "@/components/ui/overlay";
 const SECTIONS = [
   { href: "/settings", label: "Account" },
   { href: "/settings/company", label: "Company" },
+  { href: "/settings/appearance", label: "Appearance" },
   { href: "/settings/social", label: "Social accounts" },
   { href: "/settings/messaging", label: "Messaging" },
   { href: "/settings/ai", label: "AI" },
@@ -31,7 +32,7 @@ export function SettingsLayout({ children }: { children: ReactNode }) {
           {SECTIONS.map((s) => {
             const active = pathname === s.href;
             return (
-              <Link key={s.href} href={s.href} className={cn("whitespace-nowrap rounded-lg px-3 py-2 text-[13px] font-medium", active ? "bg-brand-50 text-brand-700 dark:bg-brand-900/40 dark:text-brand-100" : "text-muted hover:bg-surface-2 hover:text-body")}>
+              <Link key={s.href} href={s.href} data-ui="nav-link" aria-current={active ? "page" : undefined} className={cn("whitespace-nowrap rounded-lg px-3 py-2 text-[13px] font-medium", active ? "nav-active" : "text-muted hover:bg-surface-2 hover:text-body")}>
                 {s.label}
               </Link>
             );

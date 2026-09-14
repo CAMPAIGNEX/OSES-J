@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Building2, ExternalLink, Sparkles, TrendingUp } from "lucide-react";
+import { Building2, ExternalLink, Sparkles, TrendingUp } from "@/components/ui/icons";
 import { api } from "@/lib/api-client";
 import { useQuery } from "@/lib/hooks/use-query";
 import { formatDateTime, formatCompact } from "@/lib/format";

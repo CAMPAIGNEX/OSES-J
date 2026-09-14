@@ -2,7 +2,7 @@
 
 import { useSearchParams } from "next/navigation";
 import { useState } from "react";
-import { Download, FileText, Trash2, Upload } from "lucide-react";
+import { Download, FileText, Trash2, Upload } from "@/components/ui/icons";
 import { api, qs } from "@/lib/api-client";
 import { useQuery } from "@/lib/hooks/use-query";
 import { formatDateTime, titleCase } from "@/lib/format";

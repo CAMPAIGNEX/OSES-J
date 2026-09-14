@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { AlertTriangle, Bot, CalendarClock, ExternalLink, Send, Sparkles, Wand2 } from "lucide-react";
+import { AlertTriangle, Bot, CalendarClock, ExternalLink, Send, Sparkles, Wand2 } from "@/components/ui/icons";
 import { api } from "@/lib/api-client";
 import { Badge, Button, Select, Textarea, cn } from "@/components/ui/primitives";
 import { useToast } from "@/components/ui/overlay";

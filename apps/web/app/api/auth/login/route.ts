@@ -3,7 +3,8 @@ import { db, writeAudit } from "@oses/database";
 import { AuthError, verifyPassword } from "@oses/shared";
 import { loginSchema } from "@oses/validation";
 import { withApi } from "@/lib/server/api";
-import { createSession, SESSION_COOKIE, sessionCookieOptions } from "@/lib/server/session";
+import { createSession, isBootstrapSuperAdmin, SESSION_COOKIE, sessionCookieOptions } from "@/lib/server/session";
+import { normalizeTemplate, TEMPLATE_COOKIE } from "@/lib/templates";
 
 export const POST = withApi(
   async ({ body, req, ip }) => {
@@ -15,10 +16,13 @@ export const POST = withApi(
     }
     const orgId = user.memberships[0]?.organizationId ?? null;
     const { token, expiresAt } = await createSession({ userId: user.id, organizationId: orgId, userAgent: req.headers.get("user-agent"), ip });
-    await db.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } });
+    const grantOperator = !user.isSuperAdmin && isBootstrapSuperAdmin(user.email);
+    await db.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date(), ...(grantOperator ? { isSuperAdmin: true } : {}) } });
+    const settings = orgId ? await db.organizationSettings.findUnique({ where: { organizationId: orgId }, select: { uiTemplate: true } }) : null;
     await writeAudit(db, { organizationId: orgId, userId: user.id, action: "auth.login", ip, userAgent: req.headers.get("user-agent") });
     const res = NextResponse.json({ ok: true });
     res.cookies.set(SESSION_COOKIE, token, sessionCookieOptions(expiresAt));
+    res.cookies.set(TEMPLATE_COOKIE, normalizeTemplate(settings?.uiTemplate), { path: "/", sameSite: "lax", maxAge: 60 * 60 * 24 * 365 });
     return res;
   },
   { auth: false, body: loginSchema, rateLimit: { key: "login", limit: 15, windowMs: 60_000 } },

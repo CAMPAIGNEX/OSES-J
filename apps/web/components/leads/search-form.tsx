@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
-import { Search, Sparkles, Bookmark, History, Trash2, AlertTriangle } from "lucide-react";
+import { Search, Sparkles, Bookmark, History, Trash2, AlertTriangle } from "@/components/ui/icons";
 import { api, ApiError } from "@/lib/api-client";
 import { useQuery } from "@/lib/hooks/use-query";
 import { formatDateTime } from "@/lib/format";

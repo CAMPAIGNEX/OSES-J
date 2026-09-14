@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Inbox, Search } from "lucide-react";
+import { Inbox, Search } from "@/components/ui/icons";
 import { qs } from "@/lib/api-client";
 import { useQuery } from "@/lib/hooks/use-query";
 import { timeAgo } from "@/lib/format";

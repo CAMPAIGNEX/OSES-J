@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "@/components/ui/icons";
 import type { ReactNode } from "react";
 import { Button, cn, Skeleton } from "./primitives";
 
@@ -70,7 +70,7 @@ export function DataTable<T>({ columns, rows, rowKey, loading, empty, onRowClick
               })}
         </tbody>
       </table>
-      {!loading && rows.length === 0 && <div className="py-10">{empty ?? <p className="text-center text-sm text-muted">No results</p>}</div>}
+      {!loading && rows.length === 0 && <div className="px-4 py-8">{empty ?? <p className="text-center text-sm text-muted">No results</p>}</div>}
     </div>
   );
 }
@@ -103,13 +103,13 @@ export function Pagination({ page, totalPages, total, pageSize, onPage, classNam
 export function StatCard({ label, value, hint, icon, href, tone = "neutral", loading }: { label: string; value: ReactNode; hint?: ReactNode; icon?: ReactNode; href?: string; tone?: "neutral" | "brand" | "success" | "warning" | "danger"; loading?: boolean }) {
   const toneClass = { neutral: "text-muted", brand: "text-brand-600", success: "text-emerald-600", warning: "text-amber-600", danger: "text-red-600" }[tone];
   const inner = (
-    <div className={cn("card flex h-full flex-col justify-between p-4 transition-shadow", href && "hover:shadow-[var(--shadow-pop)]")}>
+    <div data-ui="stat" className={cn("card flex h-full flex-col justify-between p-4 transition-shadow", href && "hover:shadow-[var(--shadow-pop)]")}>
       <div className="flex items-center justify-between gap-2">
         <span className="text-[12px] font-medium uppercase tracking-wide text-muted">{label}</span>
         {icon && <span className={cn("shrink-0", toneClass)}>{icon}</span>}
       </div>
       <div className="mt-2">
-        {loading ? <Skeleton className="h-7 w-20" /> : <span className="text-2xl font-semibold tabular text-body">{value}</span>}
+        {loading ? <Skeleton className="h-7 w-20" /> : <span data-ui="stat-value" className="text-2xl font-semibold tabular text-body">{value}</span>}
         {hint && <p className="mt-1 text-xs text-faint">{hint}</p>}
       </div>
     </div>

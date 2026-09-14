@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Megaphone, Pause, Play, Plus, Square, Trash2 } from "lucide-react";
+import { Megaphone, Pause, Play, Plus, Square, Trash2 } from "@/components/ui/icons";
 import { api } from "@/lib/api-client";
 import { useQuery } from "@/lib/hooks/use-query";
 import { formatDateTime, titleCase } from "@/lib/format";

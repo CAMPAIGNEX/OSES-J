@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState, type FormEvent } from "react";
-import { Plus, Search, Users } from "lucide-react";
+import { Plus, Search, Users } from "@/components/ui/icons";
 import { api, ApiError, qs } from "@/lib/api-client";
 import { useQuery } from "@/lib/hooks/use-query";
 import { formatCompact, timeAgo } from "@/lib/format";

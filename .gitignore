@@ -41,3 +41,6 @@ coverage/
 .test-storage/
 .cookies.txt
 .ext-token
+
+# design source files (logos are copied into apps/web/public/brand)
+Sample Things/

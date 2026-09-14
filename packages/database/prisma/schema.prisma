@@ -369,6 +369,8 @@ model User {
   passwordHash String   @db.VarChar(255)
   timezone     String?  @db.VarChar(64)
   isActive     Boolean  @default(true)
+  /** Platform operator (CNEX AI team): grants access to the OS-Panel across all organizations. */
+  isSuperAdmin Boolean  @default(false)
   lastLoginAt  DateTime? @db.DateTime(3)
   createdAt    DateTime @default(now()) @db.DateTime(3)
   updatedAt    DateTime @updatedAt @db.DateTime(3)
@@ -399,6 +401,11 @@ model Session {
   @@map("sessions")
 }
 
+enum OrganizationStatus {
+  ACTIVE
+  SUSPENDED
+}
+
 model Organization {
   id                 String  @id @default(uuid(7)) @db.Char(36)
   name               String  @db.VarChar(160)
@@ -417,6 +424,12 @@ model Organization {
   contactEmail       String? @db.VarChar(254)
   contactPhone       String? @db.VarChar(40)
   timezone           String  @default("Asia/Karachi") @db.VarChar(64)
+  // Platform management (OS-Panel)
+  status             OrganizationStatus @default(ACTIVE)
+  plan               String  @default("standard") @db.VarChar(40)
+  suspendedAt        DateTime? @db.DateTime(3)
+  suspendedReason    String? @db.VarChar(300)
+  internalNotes      String? @db.Text
   createdAt          DateTime @default(now()) @db.DateTime(3)
   updatedAt          DateTime @updatedAt @db.DateTime(3)
   deletedAt          DateTime? @db.DateTime(3)
@@ -487,6 +500,8 @@ model OrganizationCounter {
 model OrganizationSettings {
   organizationId              String        @id @db.Char(36)
   messagingMode               MessagingMode @default(MANUAL)
+  /// UI template for the workspace (Settings > Appearance): classic | bauhaus
+  uiTemplate                  String        @default("classic") @db.VarChar(32)
   autopilotEnabled            Boolean       @default(false)
   autopilotEnabledAt          DateTime?     @db.DateTime(3)
   defaultChannel              Platform      @default(INSTAGRAM)

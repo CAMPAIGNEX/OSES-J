@@ -2,7 +2,7 @@ import "server-only";
 import { NextResponse } from "next/server";
 import type { ZodType } from "zod";
 import { db, type PrismaClient } from "@oses/database";
-import { AppError, AuthError, createLogger, errorMessage, ForbiddenError, getEnv, RateLimitError, ValidationError } from "@oses/shared";
+import { AppError, AuthError, NotFoundError, createLogger, errorMessage, ForbiddenError, getEnv, RateLimitError, ValidationError } from "@oses/shared";
 import { getSessionFromRequest, type SessionContext } from "./session";
 
 const log = createLogger("api");
@@ -29,6 +29,10 @@ export interface ApiOptions<TBody> {
   query?: ZodType;
   /** Require OWNER/ADMIN role */
   adminOnly?: boolean;
+  /** Require a platform operator (OS-Panel); ignores organization scoping */
+  superAdminOnly?: boolean;
+  /** Allow the request even when the active organization is suspended (default false) */
+  allowSuspended?: boolean;
   /** Skip the same-origin check (only for endpoints authenticated by bearer tokens or signatures) */
   skipCsrf?: boolean;
   /** Simple per-IP limit for unauthenticated endpoints */
@@ -141,6 +145,10 @@ export function withApi<TBody = unknown>(handler: (ctx: ApiContext<TBody>) => Pr
         session = await getSessionFromRequest(req);
         if (!session) throw new AuthError();
         if (options.adminOnly && session.organization.role === "MEMBER") throw new ForbiddenError("Administrator access required");
+        if (options.superAdminOnly && !session.user.isSuperAdmin) throw new NotFoundError("Page");
+        if (!options.superAdminOnly && !options.allowSuspended && session.organization.status === "SUSPENDED" && !session.user.isSuperAdmin) {
+          throw new AppError("ORG_SUSPENDED", `This workspace is suspended${session.organization.suspendedReason ? `: ${session.organization.suspendedReason}` : ""}. Contact support.`, { status: 403, errorClass: "PERMANENT" });
+        }
       }
       const body = await parseBody<TBody>(req, options.body);
       if (options.query) parseQuery(url.searchParams, options.query);

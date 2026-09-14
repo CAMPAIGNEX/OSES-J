@@ -9,7 +9,8 @@ AI-powered social export sales system (lead discovery on Instagram/Facebook, CRM
 - `packages/*` — domain packages: `shared`, `validation`, `database` (Prisma 7 + MariaDB adapter), `apify`, `discovery`, `enrichment`, `crm`, `messaging`, `ai`, `automation`. Dependencies only point downwards (see `docs/architecture.md`).
 - `workers/` — standalone job worker (`pnpm worker`).
 - `tests/` — Vitest unit + integration suites; `vitest.config.mts` at the root.
-- `docs/` — architecture, database, discovery, enrichment, messaging, browser-extension, meta-integration, apify, ai-agent, deployment, security, testing.
+- `docs/` — architecture, database, discovery, enrichment, messaging, browser-extension, meta-integration, apify, ai-agent, deployment, security, testing, os-panel.
+- `apps/web/content/` — public website content: `features.ts` (feature registry) and `docs/*.md` (the user manual, rendered at `/docs`). **When a feature is added or changed, update the matching manual page, `features.ts` and `changelog.md` in the same change.**
 
 ## Commands
 
@@ -35,6 +36,8 @@ Local DB is XAMPP MariaDB (`oses_j_dev`, test DB `oses_j_test`); credentials in 
 - Test hooks for injecting fakes: `setAIProviderForTests`, `setDiscoveryProvidersForTests`, `setProfileProvidersForTests`.
 - Route handlers in `apps/web/app/api/**` are thin: validate, call a service, enqueue jobs through `lib/server/jobs.ts`.
 - Keep file comments in the existing style (JSDoc on exported functions, short inline notes for non-obvious decisions).
+- Icons come from `@/components/ui/icons` (Heroicons solid behind lucide-style names); never import lucide. UI templates are token-based: `html[data-template]` (cookie `oses_template`, per-workspace `OrganizationSettings.uiTemplate`) and CSS in `app/globals.css`; components expose `data-ui` hooks for template styling. Never put text on top of the halftone pattern.
+- OS-Panel (`app/(os-panel)`, `app/api/os-panel`) is operators-only: `withApi({ superAdminOnly: true })` and a layout guard that returns 404; every mutation goes through `osAudit`.
 
 ## Gotchas
 

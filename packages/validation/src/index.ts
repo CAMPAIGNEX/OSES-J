@@ -9,3 +9,4 @@ export * from "./ai";
 export * from "./extension";
 export * from "./analysis";
 export * from "./documents";
+export * from "./os-panel";

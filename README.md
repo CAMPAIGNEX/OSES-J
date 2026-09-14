@@ -41,6 +41,9 @@ Domains are separated (Discovery → Enrichment → Lead management → CRM → 
 - **Meta integration** — OAuth connection of Pages/Instagram professional accounts, signed webhooks, idempotent inbound sync, delivery/read receipts, outbound replies where Meta permits.
 - **Analytics** — dashboard, performance page with presets/custom ranges and interactive charts, competitor and trend analysis with observed data separated from AI interpretation.
 - **Platform** — multi-tenant organizations, session auth, encrypted secrets, audit log, usage metering, job system with retries and error classes, Hostinger-friendly deployment modes.
+- **Design** — solid icon set, self-hosted type, and two workspace templates: *Classic* and *Bauhaus Mix* (Bauhaus geometry + graffiti + mixed media + pop art), switchable in Settings → Appearance.
+- **Public website & manual** — landing, features, how it works, a markdown-driven manual (`apps/web/content/docs`), changelog, about, contact and legal pages.
+- **OS-Panel** — platform control room for the CNEX AI team at `/os-panel` (organizations, users, jobs, audit, system); hidden from everyone else. See [docs/os-panel.md](docs/os-panel.md).
 
 ## Technology stack
 
@@ -83,6 +86,7 @@ All configuration lives in one `.env` at the repository root (see [.env.example]
 | `APP_URL`, `PORT` | Public URL (OAuth callbacks, CSRF origin checks) |
 | `JOB_RUNNER_MODE` | `inline` (jobs run inside the web app), `cron` (POST `/api/internal/jobs/tick`), `worker` (`pnpm worker`) |
 | `INTERNAL_JOB_SECRET` | Bearer secret for the cron tick endpoint |
+| `SUPER_ADMIN_EMAILS` | Comma-separated emails granted OS-Panel (platform operator) access |
 | `AI_PROVIDER`, `AI_API_KEY`, `AI_MODEL` | Platform-default AI (`anthropic` → `claude-opus-5`); organizations can override in Settings |
 | `APIFY_API_TOKEN`, `APIFY_*_ACTOR` | Discovery / enrichment / messaging Actors (organization overrides in Settings → Providers) |
 | `META_APP_ID`, `META_APP_SECRET`, `META_WEBHOOK_VERIFY_TOKEN` | Official Meta integration |

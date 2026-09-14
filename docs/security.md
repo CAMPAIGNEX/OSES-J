@@ -6,6 +6,10 @@
 - Sessions are opaque random tokens stored **hashed** (`Session.tokenHash`); the cookie is `HttpOnly`, `SameSite=Lax`, `Secure` in production, 30-day sliding expiry.
 - Login is rate limited per IP (15 attempts per minute, in-memory window; add a reverse-proxy limit for multi-instance deployments) and failed attempts are audited.
 
+## Platform operators
+
+Users with `isSuperAdmin` (bootstrapped from `SUPER_ADMIN_EMAILS`) can open the OS-Panel across all organizations. Non-operators receive 404s for the panel and its API; every operator action is audited with the operator email. Suspended organizations are blocked at the API layer (`ORG_SUSPENDED`), not only in the UI.
+
 ## Multi-tenancy
 
 Every service takes `{ organizationId, userId }` from the session (`withApi`). Organization ids are never read from the request body or query. Roles (`OWNER`, `ADMIN`, `MEMBER`) gate settings, providers, exports and automation controls.

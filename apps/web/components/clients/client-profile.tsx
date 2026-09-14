@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Bot, ExternalLink, Globe, Mail, MessageSquare, Phone, RefreshCw, Sparkles, Trash2, Pencil, ShieldOff } from "lucide-react";
+import { Bot, ExternalLink, Globe, Mail, MessageSquare, Phone, RefreshCw, Sparkles, Trash2, Pencil, ShieldOff } from "@/components/ui/icons";
 import { api } from "@/lib/api-client";
 import { useQuery } from "@/lib/hooks/use-query";
 import { formatCompact, formatDateTime, platformName, timeAgo, titleCase } from "@/lib/format";

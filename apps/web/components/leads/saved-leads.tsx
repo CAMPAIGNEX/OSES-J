@@ -2,7 +2,7 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Bookmark, Download, Search, SlidersHorizontal } from "lucide-react";
+import { Bookmark, Download, Search, SlidersHorizontal } from "@/components/ui/icons";
 import { api, qs } from "@/lib/api-client";
 import { useQuery } from "@/lib/hooks/use-query";
 import { PageHeader } from "@/components/layout/app-shell";

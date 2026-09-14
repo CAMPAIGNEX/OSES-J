@@ -14,6 +14,8 @@ export interface SessionUser {
   email: string;
   name: string;
   timezone: string | null;
+  /** Platform operator (CNEX AI team): OS-Panel access across all organizations. */
+  isSuperAdmin: boolean;
 }
 
 export interface SessionOrganization {
@@ -22,6 +24,9 @@ export interface SessionOrganization {
   slug: string;
   role: MemberRole;
   timezone: string;
+  status: "ACTIVE" | "SUSPENDED";
+  suspendedReason: string | null;
+  uiTemplate: string;
 }
 
 export interface SessionContext {
@@ -29,6 +34,14 @@ export interface SessionContext {
   user: SessionUser;
   organization: SessionOrganization;
   memberships: Array<{ id: string; name: string; slug: string; role: MemberRole }>;
+}
+
+/** Emails listed in SUPER_ADMIN_EMAILS are operators even before the flag is persisted (bootstrap). */
+export function isBootstrapSuperAdmin(email: string): boolean {
+  const list = getEnv().SUPER_ADMIN_EMAILS;
+  if (!list) return false;
+  const wanted = email.trim().toLowerCase();
+  return list.split(",").map((e) => e.trim().toLowerCase()).filter(Boolean).includes(wanted);
 }
 
 export function sessionCookieOptions(expires: Date) {
@@ -51,18 +64,19 @@ export async function destroySession(token: string | undefined | null): Promise<
 
 async function loadSession(token: string | undefined | null): Promise<SessionContext | null> {
   if (!token) return null;
-  const session = await db.session.findUnique({ where: { tokenHash: sha256Hex(token) }, include: { user: { include: { memberships: { include: { organization: true } } } } } });
+  const session = await db.session.findUnique({ where: { tokenHash: sha256Hex(token) }, include: { user: { include: { memberships: { include: { organization: { include: { settings: { select: { uiTemplate: true } } } } } } } } } });
   if (!session || session.expiresAt < new Date() || !session.user.isActive) return null;
   const memberships = session.user.memberships.filter((m) => !m.organization.deletedAt);
   if (!memberships.length) return null;
+  const isSuperAdmin = session.user.isSuperAdmin || isBootstrapSuperAdmin(session.user.email);
   const active = memberships.find((m) => m.organizationId === session.activeOrganizationId) ?? memberships[0]!;
   if (session.activeOrganizationId !== active.organizationId || Date.now() - session.lastSeenAt.getTime() > RENEW_AFTER_MS) {
     await db.session.update({ where: { id: session.id }, data: { activeOrganizationId: active.organizationId, lastSeenAt: new Date(), expiresAt: addDays(new Date(), SESSION_DAYS) } }).catch(() => undefined);
   }
   return {
     sessionId: session.id,
-    user: { id: session.user.id, email: session.user.email, name: session.user.name, timezone: session.user.timezone },
-    organization: { id: active.organization.id, name: active.organization.name, slug: active.organization.slug, role: active.role, timezone: active.organization.timezone },
+    user: { id: session.user.id, email: session.user.email, name: session.user.name, timezone: session.user.timezone, isSuperAdmin },
+    organization: { id: active.organization.id, name: active.organization.name, slug: active.organization.slug, role: active.role, timezone: active.organization.timezone, status: active.organization.status, suspendedReason: active.organization.suspendedReason, uiTemplate: active.organization.settings?.uiTemplate ?? "classic" },
     memberships: memberships.map((m) => ({ id: m.organization.id, name: m.organization.name, slug: m.organization.slug, role: m.role })),
   };
 }

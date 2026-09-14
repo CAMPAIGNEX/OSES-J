@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { Bot, CalendarClock, Inbox, MessageSquare, Search, Sparkles, UserPlus, Users, Eye, Reply, Megaphone, AlertCircle, Bookmark } from "lucide-react";
+import { Bot, CalendarClock, Inbox, MessageSquare, Search, Sparkles, UserPlus, Users, Eye, Reply, Megaphone, AlertCircle, Bookmark } from "@/components/ui/icons";
 import { useQuery } from "@/lib/hooks/use-query";
 import { formatDateTime, formatNumber, timeAgo, titleCase } from "@/lib/format";
 import { PageHeader } from "@/components/layout/app-shell";

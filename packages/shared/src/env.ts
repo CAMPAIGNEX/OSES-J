@@ -34,6 +34,8 @@ export const envSchema = z.object({
   DATABASE_URL: optionalString,
   TEST_DATABASE_URL: optionalString,
 
+  /** Comma-separated emails that are granted platform operator (OS-Panel) access on login. */
+  SUPER_ADMIN_EMAILS: optionalString,
   JOB_RUNNER_MODE: z.enum(["inline", "cron", "worker"]).default("inline"),
   INTERNAL_JOB_SECRET: optionalString,
   QUEUE_DRIVER: z.enum(["mysql", "redis"]).default("mysql"),

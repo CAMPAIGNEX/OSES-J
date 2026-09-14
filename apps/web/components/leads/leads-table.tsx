@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useMemo, useState } from "react";
-import { Bookmark, BookmarkCheck, Building2, Download, ExternalLink, Globe, Mail, MessageCircle, Phone, Tag, Trash2, Eye } from "lucide-react";
+import { Bookmark, BookmarkCheck, Building2, Download, ExternalLink, Globe, Mail, MessageCircle, Phone, Tag, Trash2, Eye } from "@/components/ui/icons";
 import { api } from "@/lib/api-client";
 import { formatCompact } from "@/lib/format";
 import { Badge, Button, StatusBadge, cn } from "@/components/ui/primitives";
