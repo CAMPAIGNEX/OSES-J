@@ -1,5 +1,5 @@
 /**
- * OSES J standalone worker.
+ * OSES-J standalone worker.
  *
  * Runs the job runner and the scheduler loop outside the web process (VPS / container deployment).
  * Start with `pnpm worker` (JOB_RUNNER_MODE=worker keeps the web app from processing jobs inline).

@@ -19,7 +19,6 @@ const SECTIONS = [
   { href: "/settings/messaging", label: "Messaging" },
   { href: "/settings/ai", label: "AI" },
   { href: "/settings/automation", label: "Automation" },
-  { href: "/settings/providers", label: "Providers" },
 ];
 
 export function SettingsLayout({ children }: { children: ReactNode }) {
@@ -91,8 +90,22 @@ export function AccountSettings() {
         <Button className="mt-3" variant="outline" loading={pwSaver.saving} onClick={() => void pwSaver.save(async () => { await api("/api/settings/password", { body: pw }); setPw({ currentPassword: "", newPassword: "" }); }, "Password changed")}>Change password</Button>
       </Card>
       <Card>
-        <CardHeader title="Organization" />
-        <p className="text-[13px] text-muted">You are <b>{session.organization.role.toLowerCase()}</b> of <b>{session.organization.name}</b>.</p>
+        <CardHeader title="Workspace" description={`You are ${session.organization.role.toLowerCase()} of ${session.organization.name}.`} />
+        {session.memberships.length > 1 ? (
+          <div className="flex flex-wrap items-end gap-2">
+            <Field label="Switch workspace" className="min-w-[240px]">
+              <Select value={session.organization.id} onChange={(e) => void api("/api/auth/switch-org", { body: { organizationId: e.target.value } }).then(() => window.location.assign("/dashboard"))}>
+                {session.memberships.map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.name} · {m.role.toLowerCase()}
+                  </option>
+                ))}
+              </Select>
+            </Field>
+          </div>
+        ) : (
+          <p className="text-[13px] text-muted">Company details, facts and appearance are under Company and Appearance.</p>
+        )}
       </Card>
     </>
   );
@@ -154,7 +167,7 @@ export function SocialSettings() {
   return (
     <>
       <Card>
-        <CardHeader title="Meta (Instagram & Facebook)" description="Connect Facebook Pages and the Instagram professional accounts linked to them through the official Meta API. OSES J never asks for your Facebook password." actions={list.data?.metaConfigured ? <Button href="/api/social/meta/connect" icon={<Plug className="h-4 w-4" />}>Connect with Facebook</Button> : undefined} />
+        <CardHeader title="Meta (Instagram & Facebook)" description="Connect Facebook Pages and the Instagram professional accounts linked to them through the official Meta API. OSES-J never asks for your Facebook password." actions={list.data?.metaConfigured ? <Button href="/api/social/meta/connect" icon={<Plug className="h-4 w-4" />}>Connect with Facebook</Button> : undefined} />
         {list.data && !list.data.metaConfigured && (
           <div className="mb-3 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[13px] text-amber-800 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-200">
             <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
@@ -178,7 +191,7 @@ export function SocialSettings() {
         ) : (
           <p className="text-[13px] text-muted">{list.loading ? "Loading…" : "No accounts connected."}</p>
         )}
-        <p className="mt-3 text-xs text-faint">The official API can reply to people who message your Page/Instagram account. It cannot cold-message arbitrary profiles — for first contact OSES J uses the browser extension, Apify automation, or manual sending.</p>
+        <p className="mt-3 text-xs text-faint">The official API can reply to people who message your Page/Instagram account. It cannot cold-message arbitrary profiles — for first contact OSES-J uses the browser extension, Apify automation, or manual sending.</p>
       </Card>
       <Card>
         <CardHeader title="Webhooks" description="Incoming messages, delivery and read receipts arrive through the Meta webhook." />
@@ -240,34 +253,38 @@ export function MessagingSettingsPage() {
 
 // ---------- Automation ----------
 
-interface Status { mode: string; queueDriver: string; jobs: Record<string, number>; messageJobs: Record<string, number>; extension: { enabled: boolean; online: boolean; devices: Array<{ id: string; name: string; browser: string | null; extensionVersion: string | null; status: string; lastSeenAt: string | null; lastStatus: string | null }> }; apify: { configured: boolean; origin: string | null; tokenPreview: string | null; enabled: boolean; providerConfigs: number }; ai: { provider: string | null; model: string | null; configured: boolean }; limits: { maxConcurrentJobs: number; maxRetries: number; jobTimeoutSec: number; preferredProvider: string } }
+interface Status { jobs: Record<string, number>; messageJobs: Record<string, number>; extension: { enabled: boolean; online: boolean; devices: Array<{ id: string; name: string; browser: string | null; extensionVersion: string | null; status: string; lastSeenAt: string | null; lastStatus: string | null }> }; apify: { configured: boolean; enabled: boolean; providerConfigs: number }; ai: { configured: boolean } }
 
+/** Member-facing automation page: the browser extension they pair themselves, plus service readiness. Keys, Actors and job limits live in the OS-Panel. */
 export function AutomationSettings() {
   const toast = useToast();
   const status = useQuery<Status>("/api/automation/status", { refreshInterval: 10_000 });
-  const { save, saving } = useSaver();
+  const social = useQuery<{ items: Array<{ id: string; status: string }> }>("/api/social");
+  const { save } = useSaver();
   const [pairing, setPairing] = useState<{ code: string; expiresAt: string } | null>(null);
-  const [apifyToken, setApifyToken] = useState("");
-  const [test, setTest] = useState<{ ok: boolean; account?: string; error?: string } | null>(null);
-  const [limits, setLimits] = useState<Status["limits"] | null>(null);
-  useEffect(() => {
-    if (status.data && !limits) setLimits(status.data.limits);
-  }, [status.data, limits]);
   const s = status.data;
+  const metaConnected = (social.data?.items ?? []).some((c) => c.status === "CONNECTED");
+  const services: Array<{ name: string; ready: boolean | null; detail: string }> = [
+    { name: "Lead discovery & enrichment", ready: s ? s.apify.configured : null, detail: s?.apify.configured ? "Ready. Searches run through the discovery providers." : "Not active yet. Ask the CNEX AI team to activate discovery for your workspace." },
+    { name: "AI sales agent", ready: s ? s.ai.configured : null, detail: s?.ai.configured ? "Ready. Configure tone and behaviour in AI Assistant." : "Not active yet. Ask the CNEX AI team to activate AI for your workspace." },
+    { name: "Browser extension", ready: s ? s.extension.online : null, detail: s?.extension.online ? "Connected. Automatic sends can use your logged-in browser." : "Offline. Pair your browser above to send automatically." },
+    { name: "Instagram / Facebook (official)", ready: social.data ? metaConnected : null, detail: metaConnected ? "Connected. Replies go through the official Meta API." : "Connect your Pages in Social accounts to reply through the official API." },
+  ];
   return (
     <>
       <Card>
-        <CardHeader title="Browser automation" description="The OSES J Chrome extension sends messages from your own logged-in browser. Nothing about your Instagram/Facebook login is shared with the server." actions={<Switch checked={s?.extension.enabled ?? true} onChange={(v) => void save(async () => { await api("/api/settings/automation", { method: "PUT", body: { extensionEnabled: v } }); await status.refetch(); })} label="Enabled" />} />
+        <CardHeader title="Browser extension" description="The OSES-J Chrome extension sends approved messages from your own logged-in browser. Nothing about your Instagram or Facebook login is shared with OSES-J." actions={<Switch checked={s?.extension.enabled ?? true} onChange={(v) => void save(async () => { await api("/api/settings/automation", { method: "PUT", body: { extensionEnabled: v } }); await status.refetch(); }, v ? "Extension enabled" : "Extension disabled")} label="Enabled" />} />
         <div className="flex flex-wrap items-center gap-3 text-[13px]">
           <span className={cn("inline-flex items-center gap-2 font-medium", s?.extension.online ? "text-emerald-600" : "text-muted")}>
-            <span className={cn("h-2.5 w-2.5 rounded-full", s?.extension.online ? "bg-emerald-500" : "bg-slate-400")} /> Extension: {s?.extension.online ? "Connected" : "Offline"}
+            <span className={cn("h-2.5 w-2.5 rounded-full", s?.extension.online ? "bg-emerald-500" : "bg-slate-400")} /> {s?.extension.online ? "Connected" : "Offline"}
           </span>
-          <Button size="sm" variant="outline" onClick={() => void api<{ code: string; expiresAt: string }>("/api/extension/pairing", { method: "POST" }).then(setPairing)} icon={<Link2 className="h-3.5 w-3.5" />}>{s?.extension.devices.length ? "Pair another browser" : "Pair extension"}</Button>
+          <Button size="sm" onClick={() => void api<{ code: string; expiresAt: string }>("/api/extension/pairing", { method: "POST" }).then(setPairing)} icon={<Link2 className="h-3.5 w-3.5" />}>{s?.extension.devices.length ? "Pair another browser" : "Pair this browser"}</Button>
           <Button size="sm" variant="ghost" onClick={() => void status.refetch()} icon={<RefreshCw className="h-3.5 w-3.5" />}>Refresh</Button>
+          <a href="/docs/browser-extension" target="_blank" rel="noreferrer" className="text-[13px] font-medium text-brand-600 hover:underline">How to install</a>
         </div>
         {pairing && (
           <div className="mt-3 rounded-lg border border-brand-200 bg-brand-50/60 p-3 text-[13px] dark:border-brand-800 dark:bg-brand-900/20">
-            <p>Open the OSES J extension, enter the server URL <code className="rounded bg-surface px-1">{typeof window !== "undefined" ? window.location.origin : ""}</code> and this pairing code (valid 10 minutes):</p>
+            <p>Open the OSES-J extension, enter the address <code className="rounded bg-surface px-1">{typeof window !== "undefined" ? window.location.origin : ""}</code> and this pairing code (valid 10 minutes):</p>
             <div className="mt-2 flex items-center gap-2">
               <code className="rounded-md bg-surface px-3 py-1.5 font-mono text-lg tracking-[0.3em]">{pairing.code}</code>
               <Button size="xs" variant="ghost" onClick={() => { void navigator.clipboard.writeText(pairing.code); toast.info("Copied"); }} icon={<Copy className="h-3.5 w-3.5" />}>Copy</Button>
@@ -288,45 +305,25 @@ export function AutomationSettings() {
             ))}
           </ul>
         ) : (
-          <p className="mt-3 text-[13px] text-muted">No browser paired yet. Build the extension (`pnpm extension:build`), load `apps/extension/dist` in Chrome, then pair it here.</p>
+          <p className="mt-3 text-[13px] text-muted">No browser paired yet. Install the OSES-J extension in Chrome, then click Pair this browser.</p>
         )}
       </Card>
 
       <Card>
-        <CardHeader title="Apify" description="Used for lead discovery, profile enrichment and (optionally) DM automation." actions={<Switch checked={s?.apify.enabled ?? true} onChange={(v) => void save(async () => { await api("/api/settings/automation", { method: "PUT", body: { apifyEnabled: v } }); await status.refetch(); })} label="Enabled" />} />
-        <p className="text-[13px] text-muted">
-          Token: {s?.apify.configured ? <span className="text-emerald-600"><CheckCircle2 className="mr-1 inline h-3.5 w-3.5" />configured ({s.apify.origin === "organization" ? "organization key" : "platform key"} {s.apify.tokenPreview})</span> : <span className="text-amber-600">not configured</span>} · {s?.apify.providerConfigs ?? 0} provider configuration{s?.apify.providerConfigs === 1 ? "" : "s"} · <Link href="/settings/providers" className="text-brand-600 hover:underline">manage Actors</Link>
-        </p>
-        <div className="mt-3 flex flex-wrap items-end gap-2">
-          <Field label="Organization Apify token" description="Stored encrypted. Overrides the platform token." className="min-w-[260px] flex-1"><Input type="password" value={apifyToken} onChange={(e) => setApifyToken(e.target.value)} placeholder="apify_api_…" autoComplete="off" /></Field>
-          <Button loading={saving} disabled={!apifyToken} onClick={() => void save(async () => { await api("/api/settings/automation", { method: "PUT", body: { apifyToken } }); setApifyToken(""); await status.refetch(); }, "Apify token saved")} icon={<KeyRound className="h-4 w-4" />}>Save token</Button>
-          <Button variant="outline" onClick={() => void api<typeof test>("/api/settings/providers/test", { body: {} }).then(setTest)}>Test connection</Button>
-        </div>
-        {test && <p className={cn("mt-2 text-[13px]", test.ok ? "text-emerald-600" : "text-red-600")}>{test.ok ? `Connected as ${test.account}` : test.error}</p>}
-      </Card>
-
-      <Card>
-        <CardHeader title="Job system" description={`Mode: ${s?.mode ?? "…"} · queue driver: ${s?.queueDriver ?? "…"}`} />
-        <div className="grid gap-3 text-[13px] sm:grid-cols-2">
-          <div>
-            <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-faint">Automation jobs</p>
-            <p className="text-muted">{s ? Object.entries(s.jobs).map(([k, v]) => `${k.toLowerCase()} ${v}`).join(" · ") : "…"}</p>
-          </div>
-          <div>
-            <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-faint">Message delivery jobs</p>
-            <p className="text-muted">{s && Object.keys(s.messageJobs).length ? Object.entries(s.messageJobs).map(([k, v]) => `${k.toLowerCase()} ${v}`).join(" · ") : "none yet"}</p>
-          </div>
-        </div>
-        {limits && (
-          <div className="mt-4 grid gap-3 sm:grid-cols-4">
-            <Field label="Preferred provider"><Select value={limits.preferredProvider} onChange={(e) => setLimits({ ...limits, preferredProvider: e.target.value })}><option value="auto">Auto (official → extension → Apify)</option><option value="meta">Official Meta API only</option><option value="extension">Browser extension only</option><option value="apify">Apify only</option><option value="manual">Manual only</option></Select></Field>
-            <Field label="Concurrent jobs"><Input type="number" min={1} value={limits.maxConcurrentJobs} onChange={(e) => setLimits({ ...limits, maxConcurrentJobs: Number(e.target.value) })} /></Field>
-            <Field label="Retries"><Input type="number" min={0} value={limits.maxRetries} onChange={(e) => setLimits({ ...limits, maxRetries: Number(e.target.value) })} /></Field>
-            <Field label="Job timeout (s)"><Input type="number" min={30} value={limits.jobTimeoutSec} onChange={(e) => setLimits({ ...limits, jobTimeoutSec: Number(e.target.value) })} /></Field>
-            <div className="sm:col-span-4"><Button loading={saving} onClick={() => void save(async () => { await api("/api/settings/automation", { method: "PUT", body: limits }); await status.refetch(); })}>Save job settings</Button></div>
-          </div>
-        )}
-        <p className="mt-3 text-xs text-faint">In <b>inline</b> mode jobs run inside the web app right after they are created. On shared hosting you can also call <code>POST /api/internal/jobs/tick</code> from cron; on a VPS run <code>pnpm worker</code>.</p>
+        <CardHeader title="Services" description="What is active for your workspace. Discovery, AI and delivery providers are set up and maintained by the CNEX AI team; you never need to handle keys or technical settings." />
+        <ul className="divide-y divide-[var(--border)]">
+          {services.map((item) => (
+            <li key={item.name} className="flex items-start gap-3 py-3">
+              <span className={cn("mt-1 h-2.5 w-2.5 shrink-0 rounded-full", item.ready === null ? "bg-slate-300" : item.ready ? "bg-emerald-500" : "bg-amber-400")} aria-hidden />
+              <div className="min-w-0">
+                <p className="text-[13px] font-medium text-body">{item.name}</p>
+                <p className="text-[12px] text-muted">{item.detail}</p>
+              </div>
+              <Badge tone={item.ready === null ? "neutral" : item.ready ? "success" : "warning"} className="ml-auto shrink-0">{item.ready === null ? "…" : item.ready ? "Ready" : "Not active"}</Badge>
+            </li>
+          ))}
+        </ul>
+        <p className="mt-3 text-[12px] text-faint">Need something activated or changed? Email <a href="mailto:info@cnexai.com" className="underline">info@cnexai.com</a> or WhatsApp +92 312 7233047.</p>
       </Card>
     </>
   );
@@ -337,9 +334,11 @@ export function AutomationSettings() {
 interface ProviderRow { id: string; domain: string; platform: string; actorId: string; adapter: string; enabled: boolean; priority: number; timeoutSec: number; costLimitUsd: number | null; scope: string; settings: Record<string, unknown> | null }
 interface ProvidersData { items: ProviderRow[]; environmentDefaults: Array<{ domain: string; platform: string; actorId: string; adapter: string; priority: number }>; adapters: Array<{ key: string; platform: string; purposes: string[]; defaultActorId: string; description: string }> }
 
-export function ProvidersSettings() {
+/** Discovery Actor configuration. Operators only: rendered inside the OS-Panel for a target workspace. */
+export function ProvidersSettings({ organizationId }: { organizationId: string }) {
   const toast = useToast();
-  const data = useQuery<ProvidersData>("/api/settings/providers");
+  const scope = `?organizationId=${encodeURIComponent(organizationId)}`;
+  const data = useQuery<ProvidersData>(`/api/settings/providers${scope}`);
   const [form, setForm] = useState({ domain: "DISCOVERY", platform: "INSTAGRAM", adapter: "search-engine-instagram", actorId: "apify/google-search-scraper", priority: 1, timeoutSec: 600, settings: "" });
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState<string | null>(null);
@@ -349,7 +348,7 @@ export function ProvidersSettings() {
     try {
       let settings: Record<string, unknown> = {};
       if (form.settings.trim()) settings = JSON.parse(form.settings) as Record<string, unknown>;
-      await api("/api/settings/providers", { body: { domain: form.domain, provider: "apify", platform: form.platform, actorId: form.actorId, adapter: form.adapter, enabled: true, priority: form.priority, timeoutSec: form.timeoutSec, settings } });
+      await api(`/api/settings/providers${scope}`, { body: { domain: form.domain, provider: "apify", platform: form.platform, actorId: form.actorId, adapter: form.adapter, enabled: true, priority: form.priority, timeoutSec: form.timeoutSec, settings } });
       toast.success("Provider added");
       await data.refetch();
     } catch (err) {
@@ -361,7 +360,7 @@ export function ProvidersSettings() {
   async function testActor(actorId: string) {
     setTesting(actorId);
     try {
-      const r = await api<{ ok: boolean; actor?: { name: string; deprecated: boolean } | null; error?: string }>("/api/settings/providers/test", { body: { actorId } });
+      const r = await api<{ ok: boolean; actor?: { name: string; deprecated: boolean } | null; error?: string }>(`/api/settings/providers/test${scope}`, { body: { actorId } });
       setTestResult((t) => ({ ...t, [actorId]: r.ok ? `OK: ${r.actor?.name ?? actorId}${r.actor?.deprecated ? " (deprecated!)" : ""}` : r.error ?? "failed" }));
     } finally {
       setTesting(null);
@@ -385,7 +384,7 @@ export function ProvidersSettings() {
                   <td><Badge tone={p.scope === "organization" ? "brand" : "neutral"}>{p.scope}</Badge>{!p.enabled && <Badge tone="warning" className="ml-1">disabled</Badge>}</td>
                   <td className="text-right">
                     <Button size="xs" variant="ghost" loading={testing === p.actorId} onClick={() => void testActor(p.actorId)}>Test</Button>
-                    {p.scope === "organization" && <Button size="xs" variant="ghost" onClick={() => void api(`/api/settings/providers/${p.id}`, { method: "DELETE" }).then(() => data.refetch())} icon={<Trash2 className="h-3.5 w-3.5" />} aria-label="Delete" />}
+                    {p.scope === "organization" && <Button size="xs" variant="ghost" onClick={() => void api(`/api/settings/providers/${p.id}${scope}`, { method: "DELETE" }).then(() => data.refetch())} icon={<Trash2 className="h-3.5 w-3.5" />} aria-label="Delete" />}
                     {testResult[p.actorId] && <p className="text-xs text-muted">{testResult[p.actorId]}</p>}
                   </td>
                 </tr>

@@ -8,6 +8,7 @@ import { useQuery } from "@/lib/hooks/use-query";
 import { formatDateTime, formatNumber, timeAgo } from "@/lib/format";
 import { useToast } from "@/components/ui/overlay";
 import { OsBadge, OsButton, OsInput, OsPageHeader, OsPanel, OsSelect, OsStat, OsTable } from "./os-shell";
+import { OsOrgOperations } from "./os-org-operations";
 
 interface Detail {
   organization: {
@@ -216,6 +217,11 @@ export function OsOrganizationDetail({ id }: { id: string }) {
             </div>
           </div>
         </OsPanel>
+      </div>
+
+      <div className="mt-6">
+        <h2 className="mb-3 font-mono text-[11px] font-bold uppercase tracking-[0.16em] text-[#9ca3af]">Operations · providers, keys, limits (never visible to members)</h2>
+        <OsOrgOperations organizationId={id} />
       </div>
 
       <OsPanel title="Recent audit events" className="mt-4">

@@ -43,9 +43,9 @@ $("pairBtn").addEventListener("click", async () => {
     } catch {
       throw new Error("Enter the full server URL, e.g. https://app.example.com");
     }
-    // Host permission for the OSES J server lets the worker call the API without CORS (asked once, on this click).
+    // Host permission for the OSES-J server lets the worker call the API without CORS (asked once, on this click).
     const granted = await chrome.permissions.request({ origins: [`${origin}/*`] });
-    if (!granted) throw new Error("Permission to contact the OSES J server was not granted");
+    if (!granted) throw new Error("Permission to contact the OSES-J server was not granted");
     await pair(serverUrl, $<HTMLInputElement>("code").value.trim().toUpperCase());
     await chrome.runtime.sendMessage({ type: "OSES_TICK_NOW" }).catch(() => undefined);
     await render();
@@ -72,7 +72,7 @@ $("checkBtn").addEventListener("click", async () => {
 });
 
 $("disconnectBtn").addEventListener("click", async () => {
-  if (!confirm("Disconnect this browser from OSES J?")) return;
+  if (!confirm("Disconnect this browser from OSES-J?")) return;
   await saveConfig(null);
   await updateState({ currentJobId: null, lastHeartbeatAt: null, activity: [] });
   await render();

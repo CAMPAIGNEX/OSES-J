@@ -16,13 +16,13 @@ Tiles for new leads, saved leads, clients, messages sent, replies, interested cl
 
 ## Competitor analysis
 
-**Competitor Analysis → New**: enter competitor Instagram or Facebook accounts. The content provider fetches recent public posts; OSES J aggregates posting cadence, hashtags, engagement and content themes, then asks the AI for an interpretation.
+**Competitor Analysis → New**: enter competitor Instagram or Facebook accounts. The content provider fetches recent public posts; OSES-J aggregates posting cadence, hashtags, engagement and content themes, then asks the AI for an interpretation.
 
 The result page separates **Observed data** (numbers from the posts) from **AI interpretation** (opinion). Nothing from the analysis changes your sales rules automatically.
 
 ## Trend analysis
 
-**Trend Analysis → New**: choose hashtags or product categories. OSES J discovers related hashtags, aggregates engagement and asks the AI for pitch ideas grounded in the observed content.
+**Trend Analysis → New**: choose hashtags or product categories. OSES-J discovers related hashtags, aggregates engagement and asks the AI for pitch ideas grounded in the observed content.
 
 ## Exports
 

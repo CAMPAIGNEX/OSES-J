@@ -1,6 +1,6 @@
 # Apify
 
-Apify is the default external provider for discovery, profile enrichment and (optionally) DM automation. OSES J talks to the Apify REST API directly (`packages/apify`), no SDK, and nothing in the business logic knows Actor specifics; each Actor sits behind an adapter.
+Apify is the default external provider for discovery, profile enrichment and (optionally) DM automation. OSES-J talks to the Apify REST API directly (`packages/apify`), no SDK, and nothing in the business logic knows Actor specifics; each Actor sits behind an adapter.
 
 ## Configuration
 

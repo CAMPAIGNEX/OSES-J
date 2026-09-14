@@ -4,10 +4,9 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import Image from "next/image";
-import { BarChart3, Bot, Building2, FileText, Inbox, LayoutDashboard, LogOut, Megaphone, Menu as MenuIcon, Moon, Search, Settings, Sun, Trash2, TrendingUp, Users, Bookmark, ChevronsUpDown, ShieldCheck } from "@/components/ui/icons";
+import { BarChart3, Bot, Building2, FileText, Inbox, LayoutDashboard, LogOut, Megaphone, Menu as MenuIcon, Moon, Search, Settings, Sun, Trash2, TrendingUp, Users, Bookmark, ShieldCheck } from "@/components/ui/icons";
 import { api } from "@/lib/api-client";
 import { Avatar, cn } from "@/components/ui/primitives";
-import { Menu } from "@/components/ui/overlay";
 
 export interface ShellSession {
   user: { id: string; email: string; name: string; isSuperAdmin?: boolean };
@@ -66,17 +65,13 @@ export function AppShell({ session, children }: { session: ShellSession; childre
     router.replace("/login");
     router.refresh();
   }
-  async function switchOrg(id: string) {
-    await api("/api/auth/switch-org", { body: { organizationId: id } });
-    router.refresh();
-  }
 
   const nav = (
     <nav className="flex flex-1 flex-col gap-0.5 px-3" aria-label="Main">
       {NAV.map((item) => {
         const active = item.match ? item.match(pathname) : pathname === item.href || pathname.startsWith(item.href + "/");
         return (
-          <Link key={item.href} href={item.href} data-ui="nav-link" className={cn("flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-[13px] font-medium transition-colors", active ? "nav-active" : "text-muted hover:bg-surface-2 hover:text-body")} aria-current={active ? "page" : undefined}>
+          <Link key={item.href} href={item.href} data-ui="nav-link" className={cn("flex min-h-[44px] items-center gap-3 rounded-lg px-3 py-2 text-[14px] font-medium transition-colors lg:min-h-0 lg:gap-2.5 lg:px-2.5 lg:text-[13px]", active ? "nav-active" : "text-muted hover:bg-surface-2 hover:text-body")} aria-current={active ? "page" : undefined}>
             <span className={cn(active ? "text-current" : "text-faint")}>{item.icon}</span>
             {item.label}
           </Link>
@@ -88,28 +83,12 @@ export function AppShell({ session, children }: { session: ShellSession; childre
   const sidebar = (
     <aside data-ui="sidebar" className="flex h-full w-[248px] flex-col border-r border-default bg-surface">
       <div className="flex h-14 items-center gap-2.5 px-5">
-        <Link href="/dashboard" className="flex items-center gap-2.5" aria-label="OSES J home">
+        <Link href="/dashboard" className="flex items-center gap-2.5" aria-label="OSES-J home">
           <span data-ui="brand-mark" className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-500 text-white">
             <Image src="/brand/oses-j-mark.svg" alt="" width={20} height={20} className="h-5 w-5 brightness-0 invert" priority />
           </span>
-          <Image src="/brand/oses-j-wordmark.svg" alt="OSES J" width={118} height={16} className="h-4 w-auto dark:brightness-0 dark:invert" priority />
+          <Image src="/brand/oses-j-wordmark.svg" alt="OSES-J" width={118} height={16} className="h-4 w-auto dark:brightness-0 dark:invert" priority />
         </Link>
-      </div>
-      <div className="px-3 pb-3">
-        <Menu
-          align="left"
-          trigger={
-            <button type="button" data-ui="org-switch" className="flex w-full items-center gap-2 rounded-lg border border-default bg-surface-2 px-2.5 py-2 text-left hover:border-strong">
-              <Avatar name={session.organization.name} size={26} />
-              <span className="min-w-0 flex-1">
-                <span className="block truncate text-[13px] font-medium">{session.organization.name}</span>
-                <span className="block text-[11px] text-faint capitalize">{session.organization.role.toLowerCase()}</span>
-              </span>
-              <ChevronsUpDown className="h-3.5 w-3.5 text-faint" />
-            </button>
-          }
-          items={[...session.memberships.map((m) => ({ label: `${m.id === session.organization.id ? "✓ " : ""}${m.name}`, onSelect: () => void switchOrg(m.id), disabled: m.id === session.organization.id })), "separator", { label: "Company settings", onSelect: () => router.push("/settings/company") }]}
-        />
       </div>
       {nav}
       {session.user.isSuperAdmin && (
@@ -140,26 +119,66 @@ export function AppShell({ session, children }: { session: ShellSession; childre
 
   return (
     <SessionContext.Provider value={session}>
-      <div className="relative flex min-h-screen">
+      <div className="relative flex min-h-[100dvh]">
         <div className="app-backdrop" aria-hidden />
         <div className="hidden lg:block lg:fixed lg:inset-y-0 lg:left-0 lg:z-10">{sidebar}</div>
         {mobileOpen && (
-          <div className="fixed inset-0 z-40 lg:hidden">
-            <div className="absolute inset-0 bg-black/40" onClick={() => setMobileOpen(false)} />
-            <div className="absolute inset-y-0 left-0 animate-in">{sidebar}</div>
+          <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true" aria-label="Menu">
+            <div className="absolute inset-0 bg-black/45 backdrop-blur-[2px]" onClick={() => setMobileOpen(false)} />
+            <div className="absolute inset-y-0 left-0 max-w-[85vw] animate-in pb-[env(safe-area-inset-bottom)]">{sidebar}</div>
           </div>
         )}
         <div className="relative z-[1] flex min-w-0 flex-1 flex-col lg:pl-[248px]">
-          <header data-ui="topbar" className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-default bg-surface/90 px-4 backdrop-blur lg:hidden">
-            <button type="button" onClick={() => setMobileOpen(true)} className="rounded-md p-1.5 text-muted hover:bg-surface-2" aria-label="Open navigation">
-              <MenuIcon className="h-5 w-5" />
+          <header data-ui="topbar" className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-default bg-surface/90 px-3 pt-[env(safe-area-inset-top)] backdrop-blur lg:hidden">
+            <button type="button" onClick={() => setMobileOpen(true)} className="flex h-11 w-11 items-center justify-center rounded-lg text-muted active:bg-surface-2" aria-label="Open menu">
+              <MenuIcon className="h-6 w-6" />
             </button>
-            <Image src="/brand/oses-j-wordmark.svg" alt="OSES J" width={104} height={14} className="h-3.5 w-auto dark:brightness-0 dark:invert" />
+            <Link href="/dashboard" className="flex items-center" aria-label="Dashboard">
+              <Image src="/brand/oses-j-wordmark.svg" alt="OSES-J" width={104} height={14} className="h-3.5 w-auto dark:brightness-0 dark:invert" />
+            </Link>
+            <span className="ml-auto truncate text-[12px] text-faint">{session.organization.name}</span>
           </header>
-          <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8">{children}</main>
+          <main className="flex-1 px-4 pb-[calc(84px+env(safe-area-inset-bottom))] pt-4 sm:px-6 lg:px-8 lg:py-6">{children}</main>
         </div>
+        <MobileTabBar pathname={pathname} onMore={() => setMobileOpen(true)} />
       </div>
     </SessionContext.Provider>
+  );
+}
+
+const TABS: Array<{ href: string; label: string; icon: ReactNode; match: (p: string) => boolean }> = [
+  { href: "/dashboard", label: "Home", icon: <LayoutDashboard className="h-5 w-5" />, match: (p) => p.startsWith("/dashboard") },
+  { href: "/leads/search", label: "Leads", icon: <Search className="h-5 w-5" />, match: (p) => p.startsWith("/leads") },
+  { href: "/clients", label: "Clients", icon: <Users className="h-5 w-5" />, match: (p) => p.startsWith("/clients") },
+  { href: "/inbox", label: "Inbox", icon: <Inbox className="h-5 w-5" />, match: (p) => p.startsWith("/inbox") },
+];
+
+/** Phone navigation: an app-style bottom tab bar (the drawer holds everything else). */
+function MobileTabBar({ pathname, onMore }: { pathname: string; onMore: () => void }) {
+  return (
+    <nav data-ui="tabbar" className="fixed inset-x-0 bottom-0 z-40 border-t border-default bg-surface/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden" aria-label="Primary">
+      <ul className="grid grid-cols-5">
+        {TABS.map((t) => {
+          const active = t.match(pathname);
+          return (
+            <li key={t.href}>
+              <Link href={t.href} data-ui="tab" aria-current={active ? "page" : undefined} className={cn("flex h-16 flex-col items-center justify-center gap-1 text-[11px] font-medium", active ? "text-brand-600 dark:text-brand-200" : "text-faint active:text-body")}>
+                <span className={cn("flex h-7 w-12 items-center justify-center rounded-full transition-colors", active && "bg-brand-50 dark:bg-brand-900/40")}>{t.icon}</span>
+                {t.label}
+              </Link>
+            </li>
+          );
+        })}
+        <li>
+          <button type="button" onClick={onMore} data-ui="tab" className="flex h-16 w-full flex-col items-center justify-center gap-1 text-[11px] font-medium text-faint active:text-body" aria-label="More">
+            <span className="flex h-7 w-12 items-center justify-center rounded-full">
+              <MenuIcon className="h-5 w-5" />
+            </span>
+            More
+          </button>
+        </li>
+      </ul>
+    </nav>
   );
 }
 

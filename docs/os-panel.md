@@ -20,6 +20,16 @@ The OS-Panel is the control room for the CNEX AI team. It lives at `/os-panel` i
 | Audit log | Every audit event platform-wide with filters; OS-Panel operations are prefixed `os.` and carry the operator email |
 | System | Configuration check (variable names only), runtime, database latency, queue depth, platform provider defaults, devices and Meta connections |
 
+## Operations (providers, keys, limits)
+
+Every workspace detail page has an **Operations** section that is never visible to members:
+
+- Discovery provider (Apify): workspace token (stored encrypted), enable/disable discovery, test the connection, and the discovery Actor configurations (workspace overrides over platform defaults).
+- AI provider: platform default or a workspace-specific provider (Anthropic, OpenAI, OpenAI-compatible), model, base URL, key and temperature.
+- Delivery and job limits: preferred delivery provider, concurrent jobs, retries, timeout, browser extension on/off.
+
+Members only see a **Services** readiness list in Settings → Automation. The underlying APIs (`/api/settings/providers*`, provider/key fields of `/api/settings/automation` and `/api/ai/settings`) reject non-operators; operators act on another workspace by passing `?organizationId=`.
+
 ## Suspension
 
 Suspending a workspace sets `Organization.status = SUSPENDED`, pauses automation (mode Manual, autopilot off, running campaigns paused, queued jobs cancelled) and makes every app API call for its members fail with `403 ORG_SUSPENDED`; the app shows a notice with the reason. Operators can still open the workspace. Activating restores access; automation stays off until the workspace turns it on again.

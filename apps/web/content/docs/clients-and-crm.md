@@ -12,7 +12,7 @@ updated: 2026-09-14
 
 ## Add to Business
 
-Select leads and click **Add to Business**. For each lead OSES J:
+Select leads and click **Add to Business**. For each lead OSES-J:
 
 1. Checks for an existing client with the same profile, website, email or phone. If one exists you get that client back (no duplicate).
 2. Allocates the next **CID** in your workspace: `CX-000001`, `CX-000002`, and so on.

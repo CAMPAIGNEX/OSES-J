@@ -1,4 +1,4 @@
-# OSES J — working notes for Claude Code
+# OSES-J — working notes for Claude Code
 
 AI-powered social export sales system (lead discovery on Instagram/Facebook, CRM, AI-assisted messaging) for apparel exporters. pnpm monorepo, TypeScript everywhere.
 
@@ -37,6 +37,10 @@ Local DB is XAMPP MariaDB (`oses_j_dev`, test DB `oses_j_test`); credentials in 
 - Route handlers in `apps/web/app/api/**` are thin: validate, call a service, enqueue jobs through `lib/server/jobs.ts`.
 - Keep file comments in the existing style (JSDoc on exported functions, short inline notes for non-obvious decisions).
 - Icons come from `@/components/ui/icons` (Heroicons solid behind lucide-style names); never import lucide. UI templates are token-based: `html[data-template]` (cookie `oses_template`, per-workspace `OrganizationSettings.uiTemplate`) and CSS in `app/globals.css`; components expose `data-ui` hooks for template styling. Never put text on top of the halftone pattern.
+- Backend/operations settings (provider keys, Actors, AI provider/model/key, job limits) are operator-only: never expose them on member screens; members see readiness only (Settings > Automation > Services). Operator-scoped calls use `?organizationId=` with `operatorOrgOverride: true`.
+- Product name in copy is always `OSES-J` (with the hyphen). Contact: info@cnexai.com, +92 312 7233047, admin@cnexai.com.
+- Mobile is a first-class target: bottom tab bar + drawer in `app-shell.tsx`, PWA manifest/service worker (`app/manifest.ts`, `public/sw.js`), 44px touch targets, 16px inputs below `lg`, bottom-sheet dialogs. Check phone width before shipping UI.
+- Templates: Classic, Bauhaus Mix (`bauhaus`), Neo (`neo`); element rules live in `@scope` blocks so previews nest correctly; register new ones in `lib/templates.ts`, the validation enum and the Appearance preview.
 - OS-Panel (`app/(os-panel)`, `app/api/os-panel`) is operators-only: `withApi({ superAdminOnly: true })` and a layout guard that returns 404; every mutation goes through `osAudit`.
 
 ## Gotchas

@@ -3,7 +3,7 @@ import { logManualMessageSchema } from "@oses/validation";
 import { serviceContext, withApi } from "@/lib/server/api";
 import { enqueueJob } from "@/lib/server/jobs";
 
-/** Record a message exchanged outside OSES J. Inbound entries trigger the AI reply pipeline. */
+/** Record a message exchanged outside OSES-J. Inbound entries trigger the AI reply pipeline. */
 export const POST = withApi(
   async (ctx) => {
     const message = await logManualMessage(ctx.db, serviceContext(ctx), { conversationId: ctx.body.conversationId, direction: ctx.body.direction, body: ctx.body.body, sentAt: ctx.body.sentAt ? new Date(ctx.body.sentAt) : undefined });

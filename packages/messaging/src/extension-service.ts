@@ -36,7 +36,7 @@ export async function createPairingCode(db: DbClient, organizationId: string, us
   return { code, expiresAt };
 }
 
-/** Step 2 (extension): exchange the pairing code for device tokens. The OSES J password never reaches the extension. */
+/** Step 2 (extension): exchange the pairing code for device tokens. The OSES-J password never reaches the extension. */
 export async function pairDevice(db: DbClient, input: { pairingCode: string; deviceName: string; browser?: string; extensionVersion?: string }): Promise<{ device: ExtensionDevice; tokens: DeviceTokens }> {
   const pairing = await db.extensionPairing.findUnique({ where: { codeHash: sha256Hex(input.pairingCode.trim().toUpperCase()) } });
   if (!pairing || pairing.usedAt || pairing.expiresAt < new Date()) throw new AuthError("Pairing code is invalid or expired");

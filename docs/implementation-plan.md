@@ -1,4 +1,4 @@
-# OSES J — Implementation Plan
+# OSES-J — Implementation Plan
 
 _Status: living document. Created at project start (repository was empty)._
 

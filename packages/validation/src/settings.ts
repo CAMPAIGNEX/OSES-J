@@ -93,6 +93,6 @@ export const providerConfigSchema = z.object({
 export type ProviderConfigInput = z.infer<typeof providerConfigSchema>;
 
 export const appearanceSettingsSchema = z.object({
-  template: z.enum(["classic", "bauhaus"]),
+  template: z.enum(["classic", "bauhaus", "neo"]),
 });
 export type AppearanceSettingsInput = z.infer<typeof appearanceSettingsSchema>;

@@ -24,7 +24,7 @@ Mutating API calls must carry an `Origin` (or `Referer`) matching `APP_URL` / th
 
 ## Extension
 
-Pairing codes are single-use, hashed, valid for 10 minutes. Access tokens are short-lived (1 h) and refresh tokens (30 days) are rotated on every refresh; both are stored as SHA-256 hashes. Devices can be disabled from Settings > Automation. The extension never receives the OSES J password or any social-media credential.
+Pairing codes are single-use, hashed, valid for 10 minutes. Access tokens are short-lived (1 h) and refresh tokens (30 days) are rotated on every refresh; both are stored as SHA-256 hashes. Devices can be disabled from Settings > Automation. The extension never receives the OSES-J password or any social-media credential.
 
 ## Webhooks
 

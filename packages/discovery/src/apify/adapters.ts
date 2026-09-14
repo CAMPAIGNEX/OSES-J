@@ -26,7 +26,7 @@ export interface AdapterSettings {
 
 /**
  * An ActorAdapter knows how to talk to one family of Apify Actors: how to build its input from
- * OSES J criteria and how to turn its dataset items into normalized results.
+ * OSES-J criteria and how to turn its dataset items into normalized results.
  *
  * Field names below reflect the public schemas of the referenced Actors at the time of writing.
  * Because Actors evolve, every adapter tolerates missing fields and operators can patch the input

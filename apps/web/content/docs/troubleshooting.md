@@ -3,17 +3,16 @@ title: Troubleshooting & FAQ
 section: Help
 order: 1
 summary: Common messages you may see and what to do about them.
-updated: 2026-09-14
+updated: 2026-09-15
 ---
 
-## "AI is not configured"
+## "AI is not configured" / AI shows *Not active*
 
-Add an AI provider and API key in **AI Assistant → Behaviour & limits**, or ask your administrator to set a platform default.
+The AI agent has not been activated for your workspace yet. Email info@cnexai.com (or WhatsApp +92 312 7233047) and the CNEX AI team will switch it on; nothing needs to be configured on your side.
 
 ## Search completed with 0 results and a warning
 
-- *Apify API token is not configured*: add it in **Settings → Automation**.
-- *No discovery provider is configured for the requested platform*: configure an Actor in **Settings → Providers**.
+- *Discovery is not active*: **Settings → Automation → Services** shows it as *Not active*; contact CNEX AI to activate it.
 - Otherwise broaden the query or remove filters.
 
 ## "Message cannot be sent automatically"
@@ -22,7 +21,7 @@ Open the message: the provider decision lists why each option was skipped (no Me
 
 ## Extension shows "Waiting for heartbeat"
 
-Pair again from **Settings → Automation**; make sure the OSES J address is reachable from the browser and that the extension is enabled for the workspace.
+Pair again from **Settings → Automation**; make sure the OSES-J address is reachable from the browser and that the extension is enabled.
 
 ## A buyer replied but nothing happened
 
@@ -42,4 +41,4 @@ Scheduling uses the buyer timezone resolved from their location. If the location
 
 ## Need help?
 
-Use the contact page or email the address in **Settings → Account → Support**.
+Email info@cnexai.com, WhatsApp +92 312 7233047, or use the contact page on the website.

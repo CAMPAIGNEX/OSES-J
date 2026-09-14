@@ -19,5 +19,5 @@ export const POST = withApi(
       return { ok: false, error: errorMessage(err), origin };
     }
   },
-  { body: z.object({ actorId: z.string().trim().max(200).optional() }) },
+  { body: z.object({ actorId: z.string().trim().max(200).optional() }), superAdminOnly: true, operatorOrgOverride: true },
 );

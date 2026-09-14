@@ -56,7 +56,7 @@ export function LoginForm() {
         </Button>
       </form>
       <p className="mt-5 text-center text-[13px] text-muted">
-        New to OSES J?{" "}
+        New to OSES-J?{" "}
         <Link href="/register" className="font-medium text-brand-600 hover:underline">
           Create an account
         </Link>

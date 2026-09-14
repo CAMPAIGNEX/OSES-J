@@ -5,7 +5,7 @@ import { FEATURES } from "@/content/features";
 import { getSession } from "@/lib/server/session";
 
 export const metadata: Metadata = {
-  title: "OSES J · AI-powered social export sales system",
+  title: "OSES-J · AI-powered social export sales system",
   description: "Find apparel, sportswear and fitness-wear buyers on Instagram and Facebook, organise them as clients, and sell with an AI sales agent that follows your rules.",
 };
 
@@ -39,7 +39,7 @@ export default async function HomePage() {
             <br />
             an AI agent.
           </Headline>
-          <p className="mt-6 max-w-xl text-[16px] leading-relaxed text-muted">OSES J finds new apparel, sportswear and fitness-wear brands on Instagram and Facebook, enriches their public business details, organises them into a CRM with permanent IDs, and lets an AI sales agent contact and follow up with them, on your rules, in your voice.</p>
+          <p className="mt-6 max-w-xl text-[16px] leading-relaxed text-muted">OSES-J finds new apparel, sportswear and fitness-wear brands on Instagram and Facebook, enriches their public business details, organises them into a CRM with permanent IDs, and lets an AI sales agent contact and follow up with them, on your rules, in your voice.</p>
           <div className="mt-8 flex flex-wrap items-center gap-3">
             <Link href={signedIn ? "/dashboard" : "/register"} data-ui="button" data-variant="primary" className="inline-flex h-12 items-center px-6 text-[13px]">
               {signedIn ? "Open the app" : "Create your workspace"}
@@ -130,7 +130,7 @@ export default async function HomePage() {
         <div className="grid gap-5 md:grid-cols-3">
           {[
             { t: "Sources on every field", d: "Emails, phones and websites show where they came from (profile, bio, website, structured data) and how confident we are. Nothing is guessed." },
-            { t: "Your own accounts", d: "Messages go out through the official Meta API or a browser extension running in your logged-in session. OSES J never asks for your Instagram password." },
+            { t: "Your own accounts", d: "Messages go out through the official Meta API or a browser extension running in your logged-in session. OSES-J never asks for your Instagram password." },
             { t: "Encrypted and audited", d: "Provider tokens and AI keys are encrypted at rest, sessions are hashed, webhooks are signed, and the audit log records who did what." },
           ].map((item) => (
             <PosterCard key={item.t} tape={false}>

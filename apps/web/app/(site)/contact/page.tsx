@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Eyebrow, Headline, Marker, PosterCard, Section } from "@/components/site/blocks";
 
-export const metadata: Metadata = { title: "Contact", description: "Talk to the CNEX AI team about OSES J." };
+export const metadata: Metadata = { title: "Contact", description: "Talk to the CNEX AI team about OSES-J." };
 
 export default function ContactPage() {
   return (
@@ -15,21 +15,28 @@ export default function ContactPage() {
       <div className="grid gap-4">
         <PosterCard>
           <h3 className="font-display text-[14px] uppercase">Email</h3>
-          <a href="mailto:hello@cnexai.com" className="mt-2 block text-[15px] font-bold underline decoration-2 underline-offset-4">
-            hello@cnexai.com
+          <a href="mailto:info@cnexai.com" className="mt-2 block text-[15px] font-bold underline decoration-2 underline-offset-4">
+            info@cnexai.com
           </a>
-          <p className="mt-2 text-[13px] text-muted">Sales, onboarding and partnership enquiries.</p>
+          <p className="mt-2 text-[13px] text-muted">Sales, onboarding, activation of services and partnership enquiries.</p>
         </PosterCard>
         <PosterCard tape={false}>
-          <h3 className="font-display text-[14px] uppercase">Support</h3>
-          <a href="mailto:support@cnexai.com" className="mt-2 block text-[15px] font-bold underline decoration-2 underline-offset-4">
-            support@cnexai.com
+          <h3 className="font-display text-[14px] uppercase">Phone / WhatsApp</h3>
+          <a href="tel:+923127233047" className="mt-2 block text-[15px] font-bold underline decoration-2 underline-offset-4">
+            +92 312 7233047
           </a>
-          <p className="mt-2 text-[13px] text-muted">Include your workspace name and, if relevant, the client CID or search run.</p>
+          <p className="mt-2 text-[13px] text-muted">Monday to Saturday, 10:00 to 19:00 Pakistan time.</p>
+        </PosterCard>
+        <PosterCard tape={false}>
+          <h3 className="font-display text-[14px] uppercase">Administration</h3>
+          <a href="mailto:admin@cnexai.com" className="mt-2 block text-[15px] font-bold underline decoration-2 underline-offset-4">
+            admin@cnexai.com
+          </a>
+          <p className="mt-2 text-[13px] text-muted">Accounts, billing, workspace access and legal requests. Include your workspace name.</p>
         </PosterCard>
         <PosterCard tape={false}>
           <h3 className="font-display text-[14px] uppercase">Company</h3>
-          <p className="mt-2 text-[13px] text-muted">CNEX AI · OSES J is a product of CNEX AI.</p>
+          <p className="mt-2 text-[13px] text-muted">CNEX AI · OSES-J is a product of CNEX AI.</p>
         </PosterCard>
       </div>
     </Section>

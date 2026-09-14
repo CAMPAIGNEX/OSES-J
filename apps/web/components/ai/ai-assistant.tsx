@@ -11,13 +11,8 @@ import { Badge, Button, Card, CardHeader, Field, Input, Select, Skeleton, Status
 import { Dialog, Tabs, useToast } from "@/components/ui/overlay";
 
 interface AISettings {
-  provider: string;
-  model: string | null;
-  baseUrl: string | null;
-  hasApiKey: boolean;
-  apiKeyPreview: string | null;
-  platformDefault: { provider: string; model: string | null } | null;
-  temperature: number;
+  /** AI is active for this workspace (set up by the CNEX AI team) */
+  ready: boolean;
   tone: string | null;
   language: string | null;
   messagingMode: string;
@@ -167,8 +162,8 @@ export function AIAssistant() {
             </div>
           </Card>
           <Card className="lg:col-span-2">
-            <CardHeader title="AI provider & style" description="Which model writes for you, and how." />
-            <ProviderForm settings={s} onSave={(patch) => update(patch, "AI provider updated")} saving={busy === "settings"} />
+            <CardHeader title="Writing style" description="How the AI writes for you. The model and keys are set up by the CNEX AI team." actions={<Badge tone={s.ready ? "success" : "warning"} dot>{s.ready ? "AI active" : "AI not active"}</Badge>} />
+            <StyleForm settings={s} onSave={(patch) => update(patch, "Writing style saved")} saving={busy === "settings"} />
           </Card>
         </div>
       )}
@@ -218,35 +213,15 @@ export function AIAssistant() {
   );
 }
 
-function ProviderForm({ settings, onSave, saving }: { settings: AISettings; onSave: (patch: Record<string, unknown>) => Promise<void>; saving: boolean }) {
-  const [form, setForm] = useState({ provider: settings.provider, model: settings.model ?? "", baseUrl: settings.baseUrl ?? "", apiKey: "", tone: settings.tone ?? "", language: settings.language ?? "", temperature: settings.temperature });
+function StyleForm({ settings, onSave, saving }: { settings: AISettings; onSave: (patch: Record<string, unknown>) => Promise<void>; saving: boolean }) {
+  const [form, setForm] = useState({ tone: settings.tone ?? "", language: settings.language ?? "" });
   return (
-    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-      <Field label="Provider" description={settings.platformDefault ? `Platform default: ${settings.platformDefault.provider} (${settings.platformDefault.model ?? "default model"})` : "No platform default configured on the server."}>
-        <Select value={form.provider} onChange={(e) => setForm((f) => ({ ...f, provider: e.target.value }))}>
-          <option value="platform_default">Platform default</option>
-          <option value="anthropic">Anthropic (Claude)</option>
-          <option value="openai">OpenAI</option>
-          <option value="openai_compatible">OpenAI-compatible endpoint</option>
-          <option value="none">Disabled</option>
-        </Select>
-      </Field>
-      <Field label="Model" description="e.g. claude-opus-5">
-        <Input value={form.model} onChange={(e) => setForm((f) => ({ ...f, model: e.target.value }))} placeholder="claude-opus-5" />
-      </Field>
-      <Field label="API key" description={settings.hasApiKey ? `Stored encrypted (${settings.apiKeyPreview}). Leave blank to keep.` : "Stored encrypted; never shown again."}>
-        <Input type="password" value={form.apiKey} onChange={(e) => setForm((f) => ({ ...f, apiKey: e.target.value }))} placeholder={settings.hasApiKey ? "••••••••" : "sk-…"} autoComplete="off" />
-      </Field>
-      {form.provider === "openai_compatible" && (
-        <Field label="Base URL" className="lg:col-span-3"><Input value={form.baseUrl} onChange={(e) => setForm((f) => ({ ...f, baseUrl: e.target.value }))} placeholder="https://openrouter.ai/api/v1" /></Field>
-      )}
-      <Field label="Tone"><Input value={form.tone} onChange={(e) => setForm((f) => ({ ...f, tone: e.target.value }))} placeholder="Professional, friendly, short" /></Field>
-      <Field label="Language"><Input value={form.language} onChange={(e) => setForm((f) => ({ ...f, language: e.target.value }))} placeholder="English" /></Field>
-      <Field label={`Temperature ${form.temperature.toFixed(2)}`} description="Used by providers that support it (ignored by current Claude models).">
-        <input type="range" min={0} max={1} step={0.05} value={form.temperature} onChange={(e) => setForm((f) => ({ ...f, temperature: Number(e.target.value) }))} className="w-full accent-brand-500" />
-      </Field>
-      <div className="sm:col-span-2 lg:col-span-3">
-        <Button loading={saving} onClick={() => void onSave({ provider: form.provider, model: form.model || null, baseUrl: form.baseUrl || null, ...(form.apiKey ? { apiKey: form.apiKey } : {}), tone: form.tone || null, language: form.language || null, temperature: form.temperature })}>Save AI settings</Button>
+    <div className="grid gap-3 sm:grid-cols-2">
+      <Field label="Tone" description="A few words the AI follows in every message."><Input value={form.tone} onChange={(e) => setForm((f) => ({ ...f, tone: e.target.value }))} placeholder="Professional, friendly, short" /></Field>
+      <Field label="Language" description="The language buyers should read."><Input value={form.language} onChange={(e) => setForm((f) => ({ ...f, language: e.target.value }))} placeholder="English" /></Field>
+      {!settings.ready && <p className="text-[13px] text-muted sm:col-span-2">AI features are not active for this workspace yet. Email <a href="mailto:info@cnexai.com" className="underline">info@cnexai.com</a> and the CNEX AI team will switch it on.</p>}
+      <div className="sm:col-span-2">
+        <Button loading={saving} onClick={() => void onSave({ tone: form.tone || null, language: form.language || null })}>Save writing style</Button>
       </div>
     </div>
   );

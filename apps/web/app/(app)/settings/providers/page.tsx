@@ -1,8 +1,6 @@
-import type { Metadata } from "next";
-import { ProvidersSettings } from "@/components/settings/settings-pages";
+import { redirect } from "next/navigation";
 
-export const metadata: Metadata = { title: "Providers" };
-
+/** Provider configuration moved to the OS-Panel (operators); members see service readiness under Automation. */
 export default function Page() {
-  return <ProvidersSettings />;
+  redirect("/settings/automation");
 }

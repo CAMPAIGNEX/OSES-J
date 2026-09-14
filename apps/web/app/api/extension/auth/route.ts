@@ -2,7 +2,7 @@ import { pairDevice } from "@oses/messaging";
 import { extensionAuthSchema } from "@oses/validation";
 import { withExtensionApi } from "@/lib/server/api";
 
-/** Extension: exchange the pairing code for device tokens (no OSES J password ever reaches the extension). */
+/** Extension: exchange the pairing code for device tokens (no OSES-J password ever reaches the extension). */
 export const POST = withExtensionApi(
   async (ctx) => {
     const { device, tokens } = await pairDevice(ctx.db, ctx.body);

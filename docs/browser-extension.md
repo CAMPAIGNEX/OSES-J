@@ -1,6 +1,6 @@
 # Browser extension
 
-`apps/extension` is a Chrome Manifest V3 extension. It is the primary browser-automation interface: OSES J creates delivery jobs; the extension, running in the exporter's own logged-in browser, performs the UI action and reports the result. It never sees Instagram/Facebook passwords and never receives the OSES J password.
+`apps/extension` is a Chrome Manifest V3 extension. It is the primary browser-automation interface: OSES-J creates delivery jobs; the extension, running in the exporter's own logged-in browser, performs the UI action and reports the result. It never sees Instagram/Facebook passwords and never receives the OSES-J password.
 
 ## Build & install
 
@@ -12,7 +12,7 @@ Chrome → `chrome://extensions` → Developer mode → **Load unpacked** → se
 
 ## Pairing
 
-1. OSES J: **Settings → Automation → Pair extension** → `POST /api/extension/pairing` returns an 8-character code valid for 10 minutes (only its hash is stored).
+1. OSES-J: **Settings → Automation → Pair extension** → `POST /api/extension/pairing` returns an 8-character code valid for 10 minutes (only its hash is stored).
 2. Extension popup: enter the server URL and the code. The popup requests host permission for that origin (so the worker can call the API) and calls `POST /api/extension/auth`.
 3. The server creates an `ExtensionDevice` and returns an access token (1 h, `EXTENSION_ACCESS_TOKEN_TTL_MINUTES`) and a refresh token (30 days). Both are stored hashed server-side; the extension keeps them in `chrome.storage.local` and rotates them through `POST /api/extension/refresh`.
 

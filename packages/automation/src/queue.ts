@@ -4,7 +4,7 @@ import { ConfigurationError, getEnv, type ErrorClass } from "@oses/shared";
 /**
  * Queue abstraction.
  *
- * The MySQL driver keeps OSES J deployable on shared hosting (no Redis). A Redis/BullMQ driver can be
+ * The MySQL driver keeps OSES-J deployable on shared hosting (no Redis). A Redis/BullMQ driver can be
  * added behind the same interface for VPS deployments; the rest of the system only sees `JobQueue`.
  */
 

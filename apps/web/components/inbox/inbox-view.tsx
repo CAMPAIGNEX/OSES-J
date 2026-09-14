@@ -57,14 +57,14 @@ export function InboxView({ selectedId }: { selectedId?: string }) {
             <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search clients or messages" className="pl-9" />
           </div>
           <div className="mt-2 flex gap-2">
-            <Select value={filter} onChange={(e) => setFilter(e.target.value)} className="flex-1">
+            <Select value={filter} onChange={(e) => setFilter(e.target.value)} className="min-w-0 flex-[3] basis-0">
               <option value="all">All open</option>
               <option value="unread">Unread</option>
               <option value="ai">AI suggestions</option>
               <option value="review">Needs human review</option>
               <option value="closed">Closed</option>
             </Select>
-            <Select value={channel} onChange={(e) => setChannel(e.target.value)} className="w-32">
+            <Select value={channel} onChange={(e) => setChannel(e.target.value)} className="min-w-0 flex-[2] basis-0">
               <option value="">All channels</option>
               <option value="INSTAGRAM">Instagram</option>
               <option value="FACEBOOK">Facebook</option>

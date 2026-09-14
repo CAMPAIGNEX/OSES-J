@@ -60,7 +60,7 @@ export const conversationListQuerySchema = paginationQuerySchema.extend({
 });
 export type ConversationListQuery = z.infer<typeof conversationListQuerySchema>;
 
-/** Record a message the user sent manually outside OSES J, or an inbound reply typed in by the user. */
+/** Record a message the user sent manually outside OSES-J, or an inbound reply typed in by the user. */
 export const logManualMessageSchema = z.object({
   conversationId: idSchema,
   direction: z.enum(["OUTBOUND", "INBOUND"]),

@@ -7,7 +7,7 @@ import { getScopedUserProfile } from "./graph-client";
 
 const log = createLogger("messaging.webhooks");
 
-/** Subset of the Messenger Platform webhook payload that OSES J consumes. */
+/** Subset of the Messenger Platform webhook payload that OSES-J consumes. */
 export interface MetaWebhookPayload {
   object: string;
   entry?: Array<{

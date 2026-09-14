@@ -1,6 +1,6 @@
-# OSES J — AI-Powered Social Export Sales System
+# OSES-J — AI-Powered Social Export Sales System
 
-OSES J is an export-sales operating system for apparel, sportswear, hosiery and fitness-wear manufacturers (starting with exporters in Sialkot, Pakistan). It finds potential buyers on Instagram and Facebook, enriches their public business information, de-duplicates and organizes them as leads and clients, and lets the exporter contact and manage those prospects through a unified, AI-assisted sales workspace.
+OSES-J is an export-sales operating system for apparel, sportswear, hosiery and fitness-wear manufacturers (starting with exporters in Sialkot, Pakistan). It finds potential buyers on Instagram and Facebook, enriches their public business information, de-duplicates and organizes them as leads and clients, and lets the exporter contact and manage those prospects through a unified, AI-assisted sales workspace.
 
 ```
 FIND  →  SAVE  →  ADD TO BUSINESS  →  AI CONTACT  →  FOLLOW UP  →  CLOSE
@@ -112,7 +112,7 @@ Create a Meta app with Facebook Login + Messenger + Instagram messaging products
 pnpm extension:build
 ```
 
-Load `apps/extension/dist` as an unpacked extension in Chrome (`chrome://extensions` → Developer mode → Load unpacked). In OSES J open **Settings → Automation → Pair extension**, enter the server URL and pairing code in the extension popup. See [docs/browser-extension.md](docs/browser-extension.md).
+Load `apps/extension/dist` as an unpacked extension in Chrome (`chrome://extensions` → Developer mode → Load unpacked). In OSES-J open **Settings → Automation → Pair extension**, enter the server URL and pairing code in the extension popup. See [docs/browser-extension.md](docs/browser-extension.md).
 
 ## AI setup
 

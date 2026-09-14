@@ -3,7 +3,7 @@ import Link from "next/link";
 import { CtaBand, Eyebrow, Headline, Marker, PosterCard, Section } from "@/components/site/blocks";
 import { getSession } from "@/lib/server/session";
 
-export const metadata: Metadata = { title: "How it works", description: "From a plain-language search to a closed deal: how OSES J discovers, enriches, organises and contacts buyers with an AI agent under your control." };
+export const metadata: Metadata = { title: "How it works", description: "From a plain-language search to a closed deal: how OSES-J discovers, enriches, organises and contacts buyers with an AI agent under your control." };
 
 const STAGES = [
   {

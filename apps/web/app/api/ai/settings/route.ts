@@ -1,25 +1,28 @@
 import { getOrCreateSettings, writeAudit } from "@oses/database";
-import { decryptSecret, encryptSecret, getEnv, maskSecret } from "@oses/shared";
+import { decryptSecret, encryptSecret, ForbiddenError, getEnv, maskSecret } from "@oses/shared";
 import { aiSettingsSchema } from "@oses/validation";
 import { withApi } from "@/lib/server/api";
 
-function view(s: Awaited<ReturnType<typeof getOrCreateSettings>>) {
+function view(s: Awaited<ReturnType<typeof getOrCreateSettings>>, operator: boolean) {
   const env = getEnv();
   let keyPreview: string | null = null;
-  if (s.aiApiKeyEncrypted) {
+  if (s.aiApiKeyEncrypted && operator) {
     try {
       keyPreview = maskSecret(decryptSecret(s.aiApiKeyEncrypted, env.ENCRYPTION_KEY));
     } catch {
       keyPreview = "(unreadable)";
     }
   }
+  const platformDefault = env.AI_PROVIDER !== "none" && env.AI_API_KEY ? { provider: env.AI_PROVIDER, model: env.AI_MODEL ?? null } : null;
   return {
-    provider: s.aiProvider ?? "platform_default",
-    model: s.aiModel,
-    baseUrl: s.aiBaseUrl,
+    /** Whether AI features work for this workspace (own key or platform default) */
+    ready: Boolean(s.aiApiKeyEncrypted) || (s.aiProvider !== "none" && platformDefault !== null),
+    provider: operator ? (s.aiProvider ?? "platform_default") : undefined,
+    model: operator ? s.aiModel : undefined,
+    baseUrl: operator ? s.aiBaseUrl : undefined,
     hasApiKey: Boolean(s.aiApiKeyEncrypted),
     apiKeyPreview: keyPreview,
-    platformDefault: env.AI_PROVIDER !== "none" && env.AI_API_KEY ? { provider: env.AI_PROVIDER, model: env.AI_MODEL ?? null } : null,
+    platformDefault: operator ? platformDefault : undefined,
     temperature: s.aiTemperature,
     tone: s.aiTone,
     language: s.aiLanguage,
@@ -39,12 +42,15 @@ function view(s: Awaited<ReturnType<typeof getOrCreateSettings>>) {
   };
 }
 
-export const GET = withApi(async (ctx) => ({ settings: view(await getOrCreateSettings(ctx.db, ctx.organizationId)) }));
+export const GET = withApi(async (ctx) => ({ settings: view(await getOrCreateSettings(ctx.db, ctx.organizationId), ctx.isOperator) }), { operatorOrgOverride: true });
 
 export const PUT = withApi(
   async (ctx) => {
     const env = getEnv();
     const b = ctx.body;
+    // Provider, model, endpoint, key and temperature are managed by platform operators from the OS-Panel only.
+    const operatorOnlyKeys = ["provider", "model", "baseUrl", "apiKey", "temperature"] as const;
+    if (!ctx.isOperator && operatorOnlyKeys.some((k) => b[k] !== undefined)) throw new ForbiddenError("AI provider settings are managed by the CNEX AI team. Contact support to change them.");
     await getOrCreateSettings(ctx.db, ctx.organizationId);
     const data: Record<string, unknown> = {};
     if (b.provider !== undefined) data.aiProvider = b.provider === "platform_default" ? null : b.provider;
@@ -59,7 +65,7 @@ export const PUT = withApi(
     }
     const updated = await ctx.db.organizationSettings.update({ where: { organizationId: ctx.organizationId }, data });
     await writeAudit(ctx.db, { organizationId: ctx.organizationId, userId: ctx.userId, action: "settings.ai_updated", meta: { fields: Object.keys(data).filter((k) => k !== "aiApiKeyEncrypted"), keyChanged: b.apiKey !== undefined } });
-    return { settings: view(updated) };
+    return { settings: view(updated, ctx.isOperator) };
   },
-  { body: aiSettingsSchema, adminOnly: true },
+  { body: aiSettingsSchema, adminOnly: true, operatorOrgOverride: true },
 );

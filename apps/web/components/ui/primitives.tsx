@@ -56,19 +56,24 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
 
 // ---------- Inputs ----------
 
-const fieldBase = "w-full rounded-lg border border-strong bg-surface px-3 text-sm text-body placeholder:text-faint transition-colors focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/25 disabled:opacity-60";
+const fieldBase = "rounded-lg border border-strong bg-surface px-3 text-sm text-body placeholder:text-faint transition-colors focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/25 disabled:opacity-60";
+
+/** Fields fill their container unless the caller sizes them (w-*, flex-*, basis-*). */
+function fieldWidth(className?: string): string {
+  return className && /(^|s)(w-|min-w-|max-w-|flex-|basis-|grow)/.test(className) ? "" : "w-full";
+}
 
 export const Input = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLInputElement> & { invalid?: boolean }>(function Input({ className, invalid, ...props }, ref) {
-  return <input ref={ref} data-ui="input" className={cn(fieldBase, "h-9", invalid && "border-red-500 focus:border-red-500 focus:ring-red-500/20", className)} {...props} />;
+  return <input ref={ref} data-ui="input" className={cn(fieldBase, fieldWidth(className), "h-9", invalid && "border-red-500 focus:border-red-500 focus:ring-red-500/20", className)} {...props} />;
 });
 
 export const Textarea = forwardRef<HTMLTextAreaElement, TextareaHTMLAttributes<HTMLTextAreaElement> & { invalid?: boolean }>(function Textarea({ className, invalid, ...props }, ref) {
-  return <textarea ref={ref} data-ui="input" className={cn(fieldBase, "py-2 min-h-[96px] leading-relaxed", invalid && "border-red-500", className)} {...props} />;
+  return <textarea ref={ref} data-ui="input" className={cn(fieldBase, fieldWidth(className), "py-2 min-h-[96px] leading-relaxed", invalid && "border-red-500", className)} {...props} />;
 });
 
 export const Select = forwardRef<HTMLSelectElement, SelectHTMLAttributes<HTMLSelectElement> & { invalid?: boolean }>(function Select({ className, invalid, children, ...props }, ref) {
   return (
-    <select ref={ref} data-ui="input" className={cn(fieldBase, "h-9 pr-8 appearance-none bg-[url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%2394a3b8%22 stroke-width=%222%22><path d=%22m6 9 6 6 6-6%22/></svg>')] bg-[length:12px] bg-[right_10px_center] bg-no-repeat", invalid && "border-red-500", className)} {...props}>
+    <select ref={ref} data-ui="input" className={cn(fieldBase, fieldWidth(className), "h-9 pr-8 appearance-none bg-[url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%2394a3b8%22 stroke-width=%222%22><path d=%22m6 9 6 6 6-6%22/></svg>')] bg-[length:12px] bg-[right_10px_center] bg-no-repeat", invalid && "border-red-500", className)} {...props}>
       {children}
     </select>
   );

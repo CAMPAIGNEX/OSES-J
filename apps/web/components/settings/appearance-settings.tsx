@@ -11,7 +11,8 @@ import { useToast } from "@/components/ui/overlay";
 /** Miniature of the app shell rendered inside the template's own token scope. */
 function TemplatePreview({ id }: { id: UiTemplate }) {
   return (
-    <div data-template={id} className="bg-app pointer-events-none select-none overflow-hidden rounded-[10px] border border-default" aria-hidden>
+    <div data-template={id} className="bg-app pointer-events-none relative select-none overflow-hidden rounded-[10px] border border-default" aria-hidden>
+      {id === "neo" && <div className="app-backdrop" style={{ position: "absolute" }} />}
       <div className="flex h-[132px]">
         <div data-ui="sidebar" className="flex w-[42%] flex-col gap-1.5 border-r border-default bg-surface p-2">
           <div className="flex items-center gap-1.5">
@@ -112,12 +113,13 @@ export function AppearanceSettings() {
       <Card>
         <CardHeader title="Template" description="Templates restyle the entire workspace: colours, type, icons, boxes and textures. The choice applies to everyone in this workspace." />
         {loading ? (
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            <Skeleton className="h-56" />
             <Skeleton className="h-56" />
             <Skeleton className="h-56" />
           </div>
         ) : (
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
             {UI_TEMPLATES.map((t) => {
               const active = current === t.id;
               return (
@@ -140,14 +142,20 @@ export function AppearanceSettings() {
         )}
       </Card>
       <Card>
-        <CardHeader title="Light / dark" description="Personal preference for this device. Both templates have a light and a dark variant." />
+        <CardHeader title="Light / dark" description="Personal preference for this device. Every template has a light and a dark variant." />
         <Button variant="outline" icon={dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />} onClick={toggleMode}>
           Switch to {dark ? "light" : "dark"} mode
         </Button>
       </Card>
       <Card>
-        <CardHeader title="What Bauhaus Mix changes" />
+        <CardHeader title="What the templates change" />
         <ul className="grid gap-2 text-[13px] text-muted sm:grid-cols-2">
+          <li>
+            <span className="font-medium text-body">Classic</span> — quiet surfaces, Manrope type, solid icons; the default that stays out of the way.
+          </li>
+          <li>
+            <span className="font-medium text-body">Neo</span> — frosted glass over a slow aurora, cyan / violet light, Orbitron headings, animated accents (disabled when your device asks for reduced motion).
+          </li>
           <li>
             <span className="font-medium text-body">Geometry</span> — primary shapes, zero corner radius, 2px ink borders and hard offset shadows.
           </li>

@@ -2,13 +2,13 @@
 title: Settings & administration
 section: Administration
 order: 1
-summary: Account, team roles, company, appearance templates, messaging limits, automation, providers, audit log and security.
-updated: 2026-09-14
+summary: Account, team roles, company, appearance templates, messaging limits, browser extension, services, audit log and security.
+updated: 2026-09-15
 ---
 
 ## Account
 
-Name, email, password and personal timezone. Sign out of other sessions from here.
+Name, email, password and personal timezone. If you belong to more than one workspace, switch between them here.
 
 ## Team and roles
 
@@ -24,6 +24,7 @@ Choose the workspace **template**:
 
 - **Classic**: clean and quiet.
 - **Bauhaus Mix**: Bauhaus geometry with graffiti, mixed-media and pop-art touches.
+- **Neo**: futuristic glass over a slow aurora with cyan and violet light and subtle motion.
 
 The template applies to everyone in the workspace. Light and dark mode are personal to each device.
 
@@ -33,11 +34,7 @@ Default channel, AI mode (Manual, Copilot, Autopilot), working hours, follow-up 
 
 ## Automation
 
-Apify token, extension on/off and paired devices, **Pause all automation**, and the job monitor (queued, running, failed jobs with retry).
-
-## Providers
-
-Actors per purpose with test buttons. Organisation settings override platform defaults.
+The browser extension (on/off, pairing, paired devices) and the **Services** list showing what the CNEX AI team has activated for your workspace: discovery and enrichment, the AI agent, the extension and Meta. Technical settings (provider keys, Actors, job limits) are not part of the workspace; they are managed by CNEX AI.
 
 ## Social accounts
 

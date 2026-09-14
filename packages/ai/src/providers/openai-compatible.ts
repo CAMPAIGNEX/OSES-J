@@ -24,7 +24,7 @@ interface ChatCompletionResponse {
 
 /**
  * OpenAI Chat Completions-compatible provider (OpenAI, OpenRouter, Groq, local gateways).
- * Uses raw HTTP so the platform stays dependency-light; only the small subset OSES J needs.
+ * Uses raw HTTP so the platform stays dependency-light; only the small subset OSES-J needs.
  */
 export class OpenAICompatibleProvider implements AIProvider {
   readonly key: string;

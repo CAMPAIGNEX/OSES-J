@@ -1,6 +1,6 @@
 # Deployment
 
-OSES J is one Next.js application plus an optional worker process, backed by MySQL/MariaDB. The same build runs on Hostinger Business (shared, Node.js app) and on a VPS; only the job-runner mode differs.
+OSES-J is one Next.js application plus an optional worker process, backed by MySQL/MariaDB. The same build runs on Hostinger Business (shared, Node.js app) and on a VPS; only the job-runner mode differs.
 
 ## Runtime requirements (read first)
 

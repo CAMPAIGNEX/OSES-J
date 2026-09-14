@@ -21,14 +21,14 @@ Every AI draft is checked against your facts before you see it. Violations (an i
 
 | Option | What happens | Status tracking |
 |---|---|---|
-| **Send myself** | OSES J opens Instagram/Facebook with the text ready and records the message as *Sent · by you* | none |
+| **Send myself** | OSES-J opens Instagram/Facebook with the text ready and records the message as *Sent · by you* | none |
 | **Browser extension** | A paired Chrome extension opens the profile in your logged-in session, types and sends the message, and reports back | sent / failed / blocked |
 | **Apify** | A messaging Actor sends the message (optional, use with care) | only if the Actor confirms |
 | **Meta official API** | Replies to buyers who have already messaged your connected Page/Instagram account | delivered and seen |
 
 **Send automatically** picks the best available option in this order: Meta (existing thread only) → extension (online and logged in) → Apify (configured) → otherwise it tells you why and offers *Send myself*. The decision, including every provider considered and the reason it was skipped, is stored on the message.
 
-OSES J never claims a message was delivered when it cannot verify it.
+OSES-J never claims a message was delivered when it cannot verify it.
 
 ## The unified inbox
 

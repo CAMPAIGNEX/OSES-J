@@ -3,7 +3,7 @@ import { fetchWithTimeout, getEnv, ProviderError, type ErrorClass } from "@oses/
 
 /**
  * Minimal Meta Graph API client for the official Facebook Page / Instagram messaging integration.
- * Only the endpoints OSES J uses are wrapped. Tokens are passed explicitly; nothing is cached here.
+ * Only the endpoints OSES-J uses are wrapped. Tokens are passed explicitly; nothing is cached here.
  */
 
 export interface GraphErrorBody {

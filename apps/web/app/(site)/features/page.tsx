@@ -3,7 +3,7 @@ import { CtaBand, Eyebrow, FeatureCard, Headline, Marker, Section } from "@/comp
 import { FEATURES } from "@/content/features";
 import { getSession } from "@/lib/server/session";
 
-export const metadata: Metadata = { title: "Features", description: "Everything inside OSES J: lead search, enrichment, CRM, unified inbox, AI sales agent, campaigns, analysis, integrations and security." };
+export const metadata: Metadata = { title: "Features", description: "Everything inside OSES-J: lead search, enrichment, CRM, unified inbox, AI sales agent, campaigns, analysis, integrations and security." };
 
 export default async function FeaturesPage() {
   const signedIn = Boolean(await getSession());

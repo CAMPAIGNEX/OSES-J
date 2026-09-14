@@ -8,6 +8,8 @@ import { getSessionFromRequest, type SessionContext } from "./session";
 const log = createLogger("api");
 
 export interface ApiContext<TBody = unknown> {
+  /** Platform operator (OS-Panel) making the request */
+  isOperator: boolean;
   req: Request;
   params: Record<string, string>;
   query: URLSearchParams;
@@ -33,6 +35,8 @@ export interface ApiOptions<TBody> {
   superAdminOnly?: boolean;
   /** Allow the request even when the active organization is suspended (default false) */
   allowSuspended?: boolean;
+  /** Operators (OS-Panel) may act on another workspace by passing ?organizationId=; ignored for everyone else */
+  operatorOrgOverride?: boolean;
   /** Skip the same-origin check (only for endpoints authenticated by bearer tokens or signatures) */
   skipCsrf?: boolean;
   /** Simple per-IP limit for unauthenticated endpoints */
@@ -144,7 +148,7 @@ export function withApi<TBody = unknown>(handler: (ctx: ApiContext<TBody>) => Pr
       if (options.auth !== false) {
         session = await getSessionFromRequest(req);
         if (!session) throw new AuthError();
-        if (options.adminOnly && session.organization.role === "MEMBER") throw new ForbiddenError("Administrator access required");
+        if (options.adminOnly && session.organization.role === "MEMBER" && !session.user.isSuperAdmin) throw new ForbiddenError("Administrator access required");
         if (options.superAdminOnly && !session.user.isSuperAdmin) throw new NotFoundError("Page");
         if (!options.superAdminOnly && !options.allowSuspended && session.organization.status === "SUSPENDED" && !session.user.isSuperAdmin) {
           throw new AppError("ORG_SUSPENDED", `This workspace is suspended${session.organization.suspendedReason ? `: ${session.organization.suspendedReason}` : ""}. Contact support.`, { status: 403, errorClass: "PERMANENT" });
@@ -152,6 +156,15 @@ export function withApi<TBody = unknown>(handler: (ctx: ApiContext<TBody>) => Pr
       }
       const body = await parseBody<TBody>(req, options.body);
       if (options.query) parseQuery(url.searchParams, options.query);
+      let organizationId = session?.organization.id ?? "";
+      if (options.operatorOrgOverride && session?.user.isSuperAdmin) {
+        const target = url.searchParams.get("organizationId");
+        if (target) {
+          const exists = await db.organization.findFirst({ where: { id: target, deletedAt: null }, select: { id: true } });
+          if (!exists) throw new NotFoundError("Organization");
+          organizationId = target;
+        }
+      }
       const ctx: ApiContext<TBody> = {
         req,
         params,
@@ -160,8 +173,9 @@ export function withApi<TBody = unknown>(handler: (ctx: ApiContext<TBody>) => Pr
         db,
         ip,
         session: session as SessionContext,
-        organizationId: session?.organization.id ?? "",
+        organizationId,
         userId: session?.user.id ?? "",
+        isOperator: Boolean(session?.user.isSuperAdmin),
       };
       const result = await handler(ctx);
       if (result instanceof Response) return result;
@@ -183,7 +197,7 @@ export function withExtensionApi<TBody = unknown>(handler: (ctx: Omit<ApiContext
       const auth = req.headers.get("authorization") ?? "";
       const token = auth.startsWith("Bearer ") ? auth.slice(7).trim() : "";
       const body = await parseBody<TBody>(req, options.body);
-      const result = await handler({ req, params, query: url.searchParams, body, db, ip, token });
+      const result = await handler({ req, params, query: url.searchParams, body, db, ip, token, isOperator: false });
       if (result instanceof Response) return result;
       return NextResponse.json(result ?? { ok: true });
     } catch (err) {

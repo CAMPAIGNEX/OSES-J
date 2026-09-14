@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Eyebrow, Headline, Section } from "@/components/site/blocks";
 
-export const metadata: Metadata = { title: "Terms of service", description: "The terms under which CNEX AI provides OSES J." };
+export const metadata: Metadata = { title: "Terms of service", description: "The terms under which CNEX AI provides OSES-J." };
 
 export default function TermsPage() {
   return (
@@ -11,7 +11,7 @@ export default function TermsPage() {
       <p className="mt-3 text-[12px] uppercase tracking-[0.1em] text-faint">Effective 14 September 2026</p>
       <div className="prose-doc mt-8 max-w-3xl">
         <h2>The service</h2>
-        <p>OSES J ("the service") is provided by CNEX AI to organisations ("you") for finding, organising and contacting business prospects on social platforms. Access is through workspaces created by you.</p>
+        <p>OSES-J ("the service") is provided by CNEX AI to organisations ("you") for finding, organising and contacting business prospects on social platforms. Access is through workspaces created by you.</p>
         <h2>Your responsibilities</h2>
         <ul>
           <li>Use the service in compliance with the laws that apply to your outreach and with the terms of the platforms and providers you connect (Instagram, Facebook, Apify, AI providers).</li>
@@ -30,7 +30,7 @@ export default function TermsPage() {
         <h2>Changes</h2>
         <p>We may update these terms; the effective date above will change and material changes will be announced in the changelog.</p>
         <h2>Contact</h2>
-        <p>legal@cnexai.com</p>
+        <p>admin@cnexai.com</p>
       </div>
     </Section>
   );

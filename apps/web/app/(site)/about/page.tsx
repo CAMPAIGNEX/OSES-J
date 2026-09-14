@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { CtaBand, Eyebrow, Headline, Marker, PosterCard, Section } from "@/components/site/blocks";
 import { getSession } from "@/lib/server/session";
 
-export const metadata: Metadata = { title: "About", description: "OSES J is built by CNEX AI for apparel and sportswear exporters." };
+export const metadata: Metadata = { title: "About", description: "OSES-J is built by CNEX AI for apparel and sportswear exporters." };
 
 export default async function AboutPage() {
   const signedIn = Boolean(await getSession());
@@ -12,7 +12,7 @@ export default async function AboutPage() {
         <div>
           <Eyebrow>About</Eyebrow>
           <Headline as="h1" className="mt-4 text-4xl sm:text-6xl">Built for exporters, by CNEX AI</Headline>
-          <p className="mt-6 text-[15px] leading-relaxed text-muted">OSES J started with a simple observation: apparel, sportswear and fitness-wear manufacturers win business by finding the right brands early and talking to them properly. Most of that work happens on Instagram and Facebook, and most of it is manual, repetitive and easy to get wrong.</p>
+          <p className="mt-6 text-[15px] leading-relaxed text-muted">OSES-J started with a simple observation: apparel, sportswear and fitness-wear manufacturers win business by finding the right brands early and talking to them properly. Most of that work happens on Instagram and Facebook, and most of it is manual, repetitive and easy to get wrong.</p>
           <p className="mt-4 text-[15px] leading-relaxed text-muted">We built a system that does the finding, organising and first drafts, while keeping people in charge of every promise made to a buyer. No invented prices. No guessed certifications. Sources on every field.</p>
           <Marker className="mt-6 block text-[20px]">honest data, bold design</Marker>
         </div>

@@ -36,7 +36,7 @@ export class ApiError extends Error {
   }
 }
 
-/** Server client: bearer-token auth with automatic refresh. The OSES J password never enters the extension. */
+/** Server client: bearer-token auth with automatic refresh. The OSES-J password never enters the extension. */
 export class ServerClient {
   constructor(private config: ExtensionConfig) {}
 
@@ -44,7 +44,7 @@ export class ServerClient {
     const expires = new Date(this.config.accessTokenExpiresAt).getTime();
     if (Number.isFinite(expires) && expires - Date.now() > 60_000) return;
     const res = await fetch(`${this.config.serverUrl}/api/extension/refresh`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ refreshToken: this.config.refreshToken }) });
-    if (!res.ok) throw new ApiError(res.status, "REFRESH_FAILED", "Session expired. Pair the extension again from OSES J settings.");
+    if (!res.ok) throw new ApiError(res.status, "REFRESH_FAILED", "Session expired. Pair the extension again from OSES-J settings.");
     const data = (await res.json()) as { accessToken: string; accessTokenExpiresAt: string; refreshToken: string; refreshTokenExpiresAt: string };
     this.config = { ...this.config, ...data };
     await saveConfig(this.config);

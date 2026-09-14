@@ -52,7 +52,7 @@ export interface ExportRow {
 /** Build an XLSX workbook (Excel-compatible) from rows. */
 export async function buildXlsx(rows: ExportRow[], sheetName = "Leads"): Promise<Buffer> {
   const workbook = new ExcelJS.Workbook();
-  workbook.creator = "OSES J";
+  workbook.creator = "OSES-J";
   workbook.created = new Date();
   const sheet = workbook.addWorksheet(sheetName, { views: [{ state: "frozen", ySplit: 1 }] });
   sheet.columns = EXPORT_COLUMNS.map((c) => ({ header: c.header, key: c.key, width: c.width }));

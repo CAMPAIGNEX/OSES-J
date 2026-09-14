@@ -3,7 +3,7 @@ title: Finding leads
 section: Finding leads
 order: 1
 summary: Search queries, filters, strategies, scores, enrichment and the sources behind every field.
-updated: 2026-09-14
+updated: 2026-09-15
 ---
 
 ## Writing a search
@@ -42,7 +42,7 @@ Explicit fields always win over the parsed text. If you set *City = Lyon* and th
 - **Hashtags**: authors of recent posts under hashtags derived from your keywords.
 - **Auto**: runs the search-engine strategy first when a location is present, then profile search, then hashtags, until your limit is reached.
 
-Each strategy needs an Apify Actor. Defaults are configured; you can change them in **Settings → Providers**.
+Each strategy runs on a discovery provider configured by the CNEX AI team; nothing to set up on your side.
 
 ## Understanding a result
 
@@ -74,7 +74,6 @@ Select leads and use **Save**, **Add to Business**, **Tag**, **Export** (XLSX) o
 
 ## When a search returns nothing
 
-- *Apify token not configured*: add it in **Settings → Automation**.
-- *No provider for the platform*: configure an Actor in **Settings → Providers**.
-- *Provider failed*: the run shows the provider error; other providers continue.
+- *Discovery not active*: check **Settings → Automation → Services** and contact CNEX AI.
+- *Provider failed*: the run shows the provider message; other providers continue.
 - Try a broader query, remove the follower range, or switch strategy.

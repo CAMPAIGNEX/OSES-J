@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Eyebrow, Headline, Section } from "@/components/site/blocks";
 import { renderMarkdownFile } from "@/lib/content";
 
-export const metadata: Metadata = { title: "Changelog", description: "What changed in OSES J, release by release." };
+export const metadata: Metadata = { title: "Changelog", description: "What changed in OSES-J, release by release." };
 
 export default function ChangelogPage() {
   const { html, updatedAt } = renderMarkdownFile("changelog.md");

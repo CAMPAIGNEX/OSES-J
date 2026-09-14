@@ -261,7 +261,7 @@ export async function recordJobResult(db: DbClient, jobId: string, input: JobRes
   return updatedJob;
 }
 
-/** Record a message the user sent (or received) outside OSES J so the conversation stays complete. */
+/** Record a message the user sent (or received) outside OSES-J so the conversation stays complete. */
 export async function logManualMessage(db: DbClient, ctx: RequestContext, input: { conversationId: string; direction: "INBOUND" | "OUTBOUND"; body: string; sentAt?: Date }): Promise<Message> {
   const conv = await db.conversation.findFirst({ where: { id: input.conversationId, organizationId: ctx.organizationId } });
   if (!conv) throw new NotFoundError("Conversation");

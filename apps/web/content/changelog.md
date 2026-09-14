@@ -1,7 +1,15 @@
 ---
 title: Changelog
-updated: 2026-09-14
+updated: 2026-09-15
 ---
+
+## 2026-09-15 · Neo template, mobile app experience, operations moved to OS-Panel
+
+- New **Neo** template: futuristic glass, aurora backdrop, cyan / violet light, Orbitron headings, subtle motion.
+- Installable mobile app: home-screen icon, standalone mode, bottom tab bar, native-sized controls, bottom-sheet dialogs, offline notice.
+- Technical settings (provider keys, Actors, job limits, AI provider) are now managed exclusively by the CNEX AI team from the OS-Panel; workspaces see a simple *Services* readiness list.
+- Workspace switcher removed from the sidebar (moved to Settings → Account for members of several workspaces).
+- Product name is OSES-J everywhere; contact details updated (info@cnexai.com, +92 312 7233047, admin@cnexai.com).
 
 ## 2026-09-14 · Bauhaus Mix, public website, OS-Panel
 

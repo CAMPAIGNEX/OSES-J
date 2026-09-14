@@ -3,7 +3,7 @@ import { createLogger, ProviderError, sleep, type ErrorClass } from "@oses/share
 /**
  * Minimal Apify REST API v2 client.
  *
- * Only the handful of endpoints OSES J needs are wrapped here. Everything above this layer
+ * Only the handful of endpoints OSES-J needs are wrapped here. Everything above this layer
  * (discovery, enrichment, messaging providers) speaks in terms of "run an Actor with this
  * input and give me the dataset items"; nothing else in the system imports Apify specifics.
  */

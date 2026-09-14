@@ -2,7 +2,7 @@
  * Background service worker: heartbeat, job claiming and orchestration of the content script.
  *
  * Flow:  alarm -> heartbeat -> claim job -> open target tab -> content script performs UI steps
- *        -> progress/result relayed to the OSES J server -> next job.
+ *        -> progress/result relayed to the OSES-J server -> next job.
  *
  * The worker never sees Instagram/Facebook credentials; it only drives the user's own session.
  */

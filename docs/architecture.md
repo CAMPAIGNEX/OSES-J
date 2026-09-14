@@ -54,7 +54,7 @@ Delivery jobs (`MessageJob`) are separate from automation jobs: extension jobs a
 official Meta API (needs connected account + existing thread)
   └─ else browser extension (online device, logged in)
        └─ else Apify DM Actor (token + actor configured)
-            └─ else manual (user sends it, OSES J records it)
+            └─ else manual (user sends it, OSES-J records it)
 ```
 
 The decision and every considered provider are stored on the message and job (`meta.decision`), so nothing switches silently. Messaging eligibility is an explicit state on each client social account (`DISCOVERED`, `MESSAGEABLE`, `NOT_MESSAGEABLE`, `REQUIRES_USER`, `PROVIDER_ERROR`).

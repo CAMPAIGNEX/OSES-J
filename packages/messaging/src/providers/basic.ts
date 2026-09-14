@@ -6,7 +6,7 @@ export const EXTENSION_ONLINE_WINDOW_MS = 120_000;
 
 /**
  * Manual provider: the user sends the message themselves in Instagram/Facebook.
- * OSES J records the message and offers an "Open in Instagram" link; nothing is automated.
+ * OSES-J records the message and offers an "Open in Instagram" link; nothing is automated.
  */
 export class ManualMessagingProvider implements MessagingProvider {
   readonly key = "manual";

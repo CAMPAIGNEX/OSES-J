@@ -12,7 +12,7 @@ export const PATCH = withApi(
     await writeAudit(ctx.db, { organizationId: ctx.organizationId, userId: ctx.userId, action: "provider.updated", entityType: "ProviderConfig", entityId: item.id });
     return { item };
   },
-  { body: providerConfigSchema.partial(), adminOnly: true },
+  { body: providerConfigSchema.partial(), superAdminOnly: true, operatorOrgOverride: true },
 );
 
 export const DELETE = withApi(
@@ -22,5 +22,5 @@ export const DELETE = withApi(
     await writeAudit(ctx.db, { organizationId: ctx.organizationId, userId: ctx.userId, action: "provider.deleted", entityType: "ProviderConfig", entityId: ctx.params.id });
     return { ok: true };
   },
-  { adminOnly: true },
+  { superAdminOnly: true, operatorOrgOverride: true },
 );

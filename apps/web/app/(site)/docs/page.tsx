@@ -4,7 +4,7 @@ import { Eyebrow, Headline, Marker } from "@/components/site/blocks";
 import { DocsShell } from "@/components/site/docs-shell";
 import { DOC_SECTIONS, listDocs } from "@/lib/content";
 
-export const metadata: Metadata = { title: "Manual", description: "The OSES J user manual: every feature explained step by step, kept up to date with the product." };
+export const metadata: Metadata = { title: "Manual", description: "The OSES-J user manual: every feature explained step by step, kept up to date with the product." };
 
 export default function DocsIndexPage() {
   const docs = listDocs();

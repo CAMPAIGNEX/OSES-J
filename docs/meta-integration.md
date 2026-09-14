@@ -20,7 +20,7 @@ The official Meta integration is the only path with real delivery/read status an
 
 - Message events are recorded in `WebhookEvent` keyed by `mid` (unique); redeliveries are counted as duplicates and ignored.
 - Unknown senders become a new client (with CID) + `ClientSocialAccount` (with `scopedUserId`, eligibility `MESSAGEABLE`); the profile name/username is fetched from the Graph API when the token allows it.
-- Echoes (messages sent from the Meta inbox by a human) are stored as outbound `USER` messages so the OSES J inbox stays complete.
+- Echoes (messages sent from the Meta inbox by a human) are stored as outbound `USER` messages so the OSES-J inbox stays complete.
 - `delivery` / `read` events update outbound messages to `DELIVERED` / `SEEN`.
 - New inbound messages enqueue `AI_REPLY_JOB` (classification + reply pipeline).
 
