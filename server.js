@@ -11,6 +11,10 @@ const webDir = path.join(root, "apps", "web");
 const dbDir = path.join(root, "packages", "database");
 const port = process.env.PORT || "3000";
 
+// Startup diagnostics for hosting logs (names only, never secret values).
+const present = ["NODE_ENV", "APP_URL", "DATABASE_URL", "AUTH_SECRET", "ENCRYPTION_KEY", "JOB_RUNNER_MODE"].filter((k) => process.env[k]);
+console.log(`[server] node ${process.version} | port ${port} | cwd ${root} | env set: ${present.join(", ") || "none"}`);
+
 function resolveBin(pkgRelativeFile, from) {
   return require.resolve(pkgRelativeFile, { paths: [from] });
 }

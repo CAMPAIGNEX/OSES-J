@@ -1,13 +1,18 @@
 import { NextResponse } from "next/server";
 import { db } from "@oses/database";
-import { getEnv } from "@oses/shared";
+import { checkEnv, getEnv } from "@oses/shared";
 
+/** Unauthenticated liveness/readiness check: reports configuration (names only) and database reachability. */
 export async function GET(): Promise<Response> {
   const started = Date.now();
+  const config = checkEnv();
+  if (!config.ok) {
+    return NextResponse.json({ ok: false, config: { missing: config.missing, invalid: config.invalid, nodeEnv: config.nodeEnv }, hint: "Set the listed environment variables in the hosting panel and redeploy." }, { status: 503 });
+  }
   try {
     await db.$queryRaw`SELECT 1`;
     return NextResponse.json({ ok: true, db: "up", mode: getEnv().JOB_RUNNER_MODE, latencyMs: Date.now() - started });
   } catch (err) {
-    return NextResponse.json({ ok: false, db: "down", error: (err as Error).message }, { status: 503 });
+    return NextResponse.json({ ok: false, db: "down", error: (err as Error).message, hint: "Check DATABASE_URL (host, user, password, database name) and that remote access is allowed for this database." }, { status: 503 });
   }
 }

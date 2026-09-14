@@ -5,7 +5,13 @@
  */
 export async function register(): Promise<void> {
   if (process.env.NEXT_RUNTIME !== "nodejs") return;
-  const { getEnv, createLogger, errorMessage } = await import("@oses/shared");
+  const { getEnv, checkEnv, createLogger, errorMessage } = await import("@oses/shared");
+  const config = checkEnv();
+  if (!config.ok) {
+    // Start anyway so /api/health can report what is wrong instead of the host showing a bare 503.
+    console.error(`[oses] configuration problem: missing=${config.missing.join(",") || "-"} invalid=${config.invalid.join(",") || "-"} (NODE_ENV=${config.nodeEnv}). Set the environment variables and restart.`);
+    return;
+  }
   if (getEnv().JOB_RUNNER_MODE !== "inline") return;
   const { processJobsInline } = await import("@oses/automation");
   const { db } = await import("@oses/database");

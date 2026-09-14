@@ -115,6 +115,19 @@ export function loadEnv(source: NodeJS.ProcessEnv = process.env): Env {
   return env;
 }
 
+/** Non-throwing configuration report (names only, never values) for health checks and startup logs. */
+export function checkEnv(source: NodeJS.ProcessEnv = process.env): { ok: boolean; missing: string[]; invalid: string[]; nodeEnv: string } {
+  const parsed = envSchema.safeParse(source);
+  const invalid = parsed.success ? [] : parsed.error.issues.map((i) => i.path.join("."));
+  const missing: string[] = [];
+  if (source.NODE_ENV === "production") {
+    if (!source.AUTH_SECRET && !source.NEXTAUTH_SECRET) missing.push("AUTH_SECRET");
+    if (!source.ENCRYPTION_KEY) missing.push("ENCRYPTION_KEY");
+    if (!source.DATABASE_URL) missing.push("DATABASE_URL");
+  }
+  return { ok: invalid.length === 0 && missing.length === 0, missing, invalid, nodeEnv: source.NODE_ENV ?? "development" };
+}
+
 export function getEnv(): Env {
   if (!cached) cached = loadEnv();
   return cached;
