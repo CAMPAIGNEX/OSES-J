@@ -2,14 +2,19 @@
 
 OSES J is one Next.js application plus an optional worker process, backed by MySQL/MariaDB. The same build runs on Hostinger Business (shared, Node.js app) and on a VPS; only the job-runner mode differs.
 
+## Runtime requirements (read first)
+
+- **Node.js 22** (LTS). Prisma 7 needs `^20.19 || ^22.12 || >=24` and Next.js 16 needs `>=20.9`; an older runtime fails the build with `TypeError: A dynamic import callback was not specified`. The repo pins this in `.nvmrc`, `.node-version` and `package.json#engines`; select the same version in the hosting panel.
+- **pnpm 9** (workspace protocol). `package.json#packageManager` lets corepack install it: `corepack enable && corepack prepare pnpm@9.15.9 --activate`. If the host reports a corepack signature error, update it first: `npm install -g corepack@latest`.
+- A MySQL 8 / MariaDB 10.6+ database and the environment variables from `.env.example` (set them in the panel or in a root `.env`).
+
 ## Common steps
 
 ```bash
 pnpm install --frozen-lockfile
 cp .env.example .env            # fill in production values
-pnpm db:deploy                  # apply migrations
-pnpm build                      # prisma generate + next build
-pnpm start                      # next start on $PORT (default 3100)
+pnpm build                      # prisma generate + next build (no DB connection needed)
+pnpm start                      # prisma migrate deploy + next start on $PORT (default 3000)
 ```
 
 Production `.env` essentials: `NODE_ENV=production`, `APP_URL=https://your-domain`, strong `AUTH_SECRET` / `ENCRYPTION_KEY` / `INTERNAL_JOB_SECRET`, `DATABASE_URL`, `STORAGE_DIR` (persistent, outside the web root), provider keys as needed. Keep `.env` out of version control (it is git-ignored).
@@ -17,8 +22,8 @@ Production `.env` essentials: `NODE_ENV=production`, `APP_URL=https://your-domai
 ## Option A: Hostinger Business (shared hosting, Node.js app)
 
 1. Create a MySQL database in hPanel; put its credentials in `DATABASE_URL` (add `?connection_limit=5` to stay within shared limits).
-2. Upload the repository (or `git clone`) into the app directory, run the common steps with the Node.js version set to 20+ in hPanel.
-3. Set the application start command to `pnpm start` (or `node apps/web/node_modules/next/dist/bin/next start -p $PORT` if pnpm is unavailable) and the entry root to the repository.
+2. Upload the repository (or `git clone`) into the app directory and set the Node.js version to **22** in hPanel.
+3. Build command: `corepack enable && pnpm install --frozen-lockfile && pnpm build` (no database needed at build time). Start command: `pnpm start` (applies pending migrations, then starts Next on `$PORT`). Application root: the repository root (not `apps/web`).
 4. Job execution — choose one:
    - `JOB_RUNNER_MODE=inline`: jobs run inside the web process right after the request that created them, and a timer in the web process (`apps/web/instrumentation.ts`) runs the scheduler plus a small job batch every minute while the app is up. Simplest; fine for one exporter as long as the host keeps the Node process alive.
    - `JOB_RUNNER_MODE=cron`: add an hPanel cron job every minute:

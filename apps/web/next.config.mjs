@@ -1,11 +1,13 @@
-import path from "node:path";
+// Plain ESM config (not .ts): the TypeScript config loader needs a recent Node.js and fails on hosts that
+// pin an older runtime with "A dynamic import callback was not specified".
 import { config as loadDotenv } from "dotenv";
-import type { NextConfig } from "next";
+import { fileURLToPath } from "node:url";
 
-// The single .env lives at the repository root (shared with workers and Prisma).
-loadDotenv({ path: path.resolve(process.cwd(), "../../.env") });
+// The single .env lives at the repository root (shared with workers and Prisma). Missing file = env from the host.
+loadDotenv({ path: fileURLToPath(new URL("../../.env", import.meta.url)) });
 
-const nextConfig: NextConfig = {
+/** @type {import("next").NextConfig} */
+const nextConfig = {
   reactStrictMode: true,
   agentRules: false,
   transpilePackages: ["@oses/shared", "@oses/validation", "@oses/database", "@oses/apify", "@oses/discovery", "@oses/enrichment", "@oses/messaging", "@oses/ai", "@oses/automation", "@oses/crm"],

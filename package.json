@@ -5,12 +5,13 @@
   "description": "OSES J — AI-powered social export sales system",
   "packageManager": "pnpm@9.15.9",
   "engines": {
-    "node": ">=20.9.0"
+    "node": ">=22.12.0",
+    "pnpm": ">=9"
   },
   "scripts": {
     "dev": "pnpm --filter @oses/web dev",
     "build": "pnpm --filter @oses/database generate && pnpm --filter @oses/web build",
-    "start": "pnpm --filter @oses/web start",
+    "start": "pnpm --filter @oses/database migrate:deploy && pnpm --filter @oses/web start",
     "worker": "pnpm --filter @oses/workers start",
     "extension:build": "pnpm --filter @oses/extension build",
     "db:generate": "pnpm --filter @oses/database generate",
@@ -25,7 +26,8 @@
     "test:watch": "vitest",
     "test:integration": "vitest run --project integration",
     "postinstall": "pnpm --filter @oses/database generate",
-    "test:unit": "vitest run --project unit"
+    "test:unit": "vitest run --project unit",
+    "start:web": "pnpm --filter @oses/web start"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",

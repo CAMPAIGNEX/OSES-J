@@ -102,7 +102,10 @@ export function loadEnv(source: NodeJS.ProcessEnv = process.env): Env {
     isProduction: data.NODE_ENV === "production",
     isTest: data.NODE_ENV === "test",
   };
-  if (env.isProduction) {
+  // Required secrets are enforced at runtime only: `next build` runs with NODE_ENV=production on hosts
+  // that inject environment variables at start time, and must not fail because they are absent.
+  const isBuildPhase = typeof source.NEXT_PHASE === "string" && source.NEXT_PHASE.startsWith("phase-production-build");
+  if (env.isProduction && !isBuildPhase) {
     const missing: string[] = [];
     if (!env.authSecret) missing.push("AUTH_SECRET");
     if (!env.ENCRYPTION_KEY) missing.push("ENCRYPTION_KEY");

@@ -18,7 +18,8 @@ pnpm dev                      # web on http://localhost:3100 (JOB_RUNNER_MODE=in
 pnpm typecheck                # tsc for every package (also run per package: cd packages/x && pnpm exec tsc --noEmit -p tsconfig.json)
 pnpm test:unit                # fast, no DB
 pnpm test:integration         # needs TEST_DATABASE_URL (migrations applied automatically)
-pnpm build                    # prisma generate + next build
+pnpm build                    # prisma generate + next build (must work without .env / DB; hosts build first)
+pnpm start                    # migrate deploy + next start on $PORT
 pnpm db:migrate | db:deploy | db:seed | db:studio
 ```
 
@@ -40,3 +41,4 @@ Local DB is XAMPP MariaDB (`oses_j_dev`, test DB `oses_j_test`); credentials in 
 - `server-only` imports in `apps/web/lib/server/*` are aliased to an empty module in Vitest (`tests/src/support/server-only.ts`).
 - The extension's `tsconfig` uses `types: ["chrome", "node"]`; content scripts are built as IIFE, background/popup as ESM.
 - Windows: run shell steps through Git Bash; the C: drive is small, so build outputs and temp files should stay on D:.
+- Keep `apps/web/next.config.mjs` as plain JS (a `.ts` config breaks builds on hosts with older Node). Deployment targets Node 22 + pnpm 9 via corepack (`.nvmrc`, `package.json#packageManager`).

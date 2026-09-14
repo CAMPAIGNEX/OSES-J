@@ -48,7 +48,7 @@ Next.js 16 · React 19 · TypeScript 5.9 · Tailwind CSS 4 · Prisma 7 (Rust-fre
 
 ## Local development
 
-Requirements: Node.js ≥ 20.9 (24 recommended), pnpm 9, MySQL 8 / MariaDB 10.4+.
+Requirements: Node.js 22 (or 24), pnpm 9, MySQL 8 / MariaDB 10.6+. Older Node versions fail the build (Prisma 7 needs ^20.19 || ^22.12 || >=24).
 
 ```bash
 pnpm install                      # installs everything and generates the Prisma client
@@ -65,7 +65,7 @@ Useful scripts:
 
 | Script | Purpose |
 |---|---|
-| `pnpm dev` / `pnpm build` / `pnpm start` | Web app (port 3100) |
+| `pnpm dev` / `pnpm build` / `pnpm start` | Web app (dev on 3100; `start` applies migrations then serves on `$PORT`) |
 | `pnpm worker` | Standalone job worker (`JOB_RUNNER_MODE=worker`) |
 | `pnpm extension:build` | Build the Chrome extension into `apps/extension/dist` |
 | `pnpm db:migrate` / `pnpm db:deploy` / `pnpm db:studio` | Prisma migrate dev / deploy / Studio |
