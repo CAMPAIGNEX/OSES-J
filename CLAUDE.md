@@ -41,4 +41,4 @@ Local DB is XAMPP MariaDB (`oses_j_dev`, test DB `oses_j_test`); credentials in 
 - `server-only` imports in `apps/web/lib/server/*` are aliased to an empty module in Vitest (`tests/src/support/server-only.ts`).
 - The extension's `tsconfig` uses `types: ["chrome", "node"]`; content scripts are built as IIFE, background/popup as ESM.
 - Windows: run shell steps through Git Bash; the C: drive is small, so build outputs and temp files should stay on D:.
-- Keep `apps/web/next.config.mjs` as plain JS (a `.ts` config breaks builds on hosts with older Node). Hosting: Node 22, any pnpm 9-11 (no `packageManager` pin; strictness and release-age policy disabled in `.npmrc`/`pnpm-workspace.yaml`), entry file `server.js` at the root.
+- Keep `apps/web/next.config.mjs` as plain JS (a `.ts` config breaks builds on hosts with older Node). Hosting: Node 22, any pnpm 9-11 (no `packageManager` pin; strictness and release-age policy disabled in `.npmrc`/`pnpm-workspace.yaml`), entry file `server.js` at the root. Any new dependency with an install script must be added to `allowBuilds` in `pnpm-workspace.yaml` or pnpm 11 hosts fail with ERR_PNPM_IGNORED_BUILDS.

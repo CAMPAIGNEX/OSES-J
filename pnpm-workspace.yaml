@@ -4,11 +4,20 @@ packages:
   - "workers"
   - "tests"
 
-# pnpm 10+/11 settings (older pnpm ignores these keys)
-minimumReleaseAge: 0
+# pnpm 10+/11 refuse to run dependency build scripts unless they are listed here
+# (pnpm 11 fails the install with ERR_PNPM_IGNORED_BUILDS otherwise). Older pnpm ignores these keys.
+allowBuilds:
+  esbuild: true
+  prisma: true
+  "@prisma/engines": true
+  "@prisma/client": true
+  unrs-resolver: true
+  sharp: true
 onlyBuiltDependencies:
   - esbuild
   - prisma
-  - "@prisma/client"
   - "@prisma/engines"
+  - "@prisma/client"
+  - unrs-resolver
   - sharp
+minimumReleaseAge: 0

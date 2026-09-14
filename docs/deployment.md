@@ -5,7 +5,7 @@ OSES J is one Next.js application plus an optional worker process, backed by MyS
 ## Runtime requirements (read first)
 
 - **Node.js 22** (LTS). Prisma 7 needs `^20.19 || ^22.12 || >=24` and Next.js 16 needs `>=20.9`; an older runtime fails the build with `TypeError: A dynamic import callback was not specified`. The repo pins this in `.nvmrc`, `.node-version` and `package.json#engines`; select the same version in the hosting panel.
-- **pnpm 9, 10 or 11** (workspace protocol). The repo deliberately does not pin a pnpm version (`package-manager-strict=false`, `minimum-release-age=0` in `.npmrc` / `pnpm-workspace.yaml`) so hosts that ship a newer pnpm can install the committed lockfile.
+- **pnpm 9, 10 or 11** (workspace protocol). The repo deliberately does not pin a pnpm version (`package-manager-strict=false`, `minimum-release-age=0`) so hosts that ship a newer pnpm can install the committed lockfile. Dependencies with build scripts (esbuild, prisma, @prisma/engines, unrs-resolver) are approved in `pnpm-workspace.yaml#allowBuilds`; pnpm 11 fails the install with `ERR_PNPM_IGNORED_BUILDS` for any unlisted one, so add new ones there.
 - A MySQL 8 / MariaDB 10.6+ database and the environment variables from `.env.example` (set them in the panel or in a root `.env`).
 
 ## Common steps

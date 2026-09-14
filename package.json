@@ -37,8 +37,9 @@
     "onlyBuiltDependencies": [
       "esbuild",
       "prisma",
-      "@prisma/client",
       "@prisma/engines",
+      "@prisma/client",
+      "unrs-resolver",
       "sharp"
     ]
   }
