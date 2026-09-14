@@ -4,20 +4,23 @@ packages:
   - "workers"
   - "tests"
 
-# pnpm 10+/11 refuse to run dependency build scripts unless they are listed here
-# (pnpm 11 fails the install with ERR_PNPM_IGNORED_BUILDS otherwise). Older pnpm ignores these keys.
+# pnpm 10+/11 refuse to run dependency build scripts unless each one is listed here as allowed (true)
+# or skipped (false); pnpm 11 fails the install with ERR_PNPM_IGNORED_BUILDS for unlisted ones.
+# esbuild/unrs-resolver postinstalls only validate a native binary and fail on hosts that forbid
+# executing files during install (EACCES); both packages work at runtime without them.
 allowBuilds:
-  esbuild: true
   prisma: true
   "@prisma/engines": true
   "@prisma/client": true
-  unrs-resolver: true
   sharp: true
+  esbuild: false
+  unrs-resolver: false
 onlyBuiltDependencies:
-  - esbuild
   - prisma
   - "@prisma/engines"
   - "@prisma/client"
-  - unrs-resolver
   - sharp
+ignoredBuiltDependencies:
+  - esbuild
+  - unrs-resolver
 minimumReleaseAge: 0
