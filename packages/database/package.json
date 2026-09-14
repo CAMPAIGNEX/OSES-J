@@ -23,7 +23,8 @@
   "dependencies": {
     "@oses/shared": "workspace:*",
     "@prisma/adapter-mariadb": "7.10.0",
-    "@prisma/client": "7.10.0"
+    "@prisma/client": "7.10.0",
+    "mariadb": "3.4.5"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",

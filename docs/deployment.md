@@ -23,7 +23,7 @@ Production `.env` essentials: `NODE_ENV=production`, `APP_URL=https://your-domai
 
 1. Create a MySQL database in hPanel; put its credentials in `DATABASE_URL` (add `?connection_limit=5` to stay within shared limits).
 2. Upload the repository (or `git clone`) into the app directory and set the Node.js version to **22** in hPanel.
-3. Panel settings: framework preset **Other**, package manager **pnpm**, Node **22.x**, root directory `./`, build command `pnpm run build` (no database needed at build time), output directory empty, **entry file `server.js`** (applies pending migrations, then starts Next on `$PORT`). On a plain shell the equivalent is `pnpm install && pnpm build && node server.js`.
+3. Panel settings: framework preset **Other**, package manager **pnpm**, Node **22.x**, root directory `./`, build command `pnpm run build` (no database needed at build time), output directory empty, **entry file `server.js`** (applies pending migrations with the pure-JS runner `packages/database/scripts/migrate.mjs`, because shared hosts cannot execute Prisma's engine binary, then serves Next in-process on `$PORT`). On a plain shell the equivalent is `pnpm install && pnpm build && node server.js`.
 4. Job execution — choose one:
    - `JOB_RUNNER_MODE=inline`: jobs run inside the web process right after the request that created them, and a timer in the web process (`apps/web/instrumentation.ts`) runs the scheduler plus a small job batch every minute while the app is up. Simplest; fine for one exporter as long as the host keeps the Node process alive.
    - `JOB_RUNNER_MODE=cron`: add an hPanel cron job every minute:
