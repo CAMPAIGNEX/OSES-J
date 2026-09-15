@@ -3,6 +3,7 @@ import { getPlatformConfig, type DbClient } from "@oses/database";
 import { createLogger, decryptSecret, getEnv, type Platform } from "@oses/shared";
 import { BUILT_IN_ADAPTERS, resolveAdapter, type ActorAdapter, type AdapterSettings } from "./apify/adapters";
 import { ApifyContentProvider, ApifyDiscoveryProvider, ApifyProfileProvider } from "./apify/providers";
+import { GoogleCseDiscoveryProvider } from "./google/cse";
 import type { ContentProvider, DiscoveryProvider, ProfileProvider, SearchCriteria } from "./types";
 
 const log = createLogger("discovery.registry");
@@ -25,6 +26,8 @@ export interface ResolvedProviders {
   content: ContentProvider[];
   definitions: ProviderDefinition[];
   apifyConfigured: boolean;
+  /** Google Programmable Search is configured (search-engine strategy works without Apify). */
+  googleConfigured: boolean;
   warnings: string[];
 }
 
@@ -128,16 +131,23 @@ export async function loadProviderDefinitions(db: DbClient, organizationId: stri
 export async function resolveProviders(db: DbClient, organizationId: string): Promise<ResolvedProviders> {
   const warnings: string[] = [];
   const definitions = await loadProviderDefinitions(db, organizationId);
-  const { token } = await resolveApifyToken(db, organizationId);
-  if (!token) {
-    warnings.push("Lead discovery is not active for this workspace. The CNEX AI team activates it from the OS-Panel (Providers & keys).");
-    return { discovery: [], profile: [], content: [], definitions, apifyConfigured: false, warnings };
-  }
-  const client = new ApifyClient({ token });
+  const [{ token }, platform] = await Promise.all([resolveApifyToken(db, organizationId), getPlatformConfig(db)]);
   const discovery: DiscoveryProvider[] = [];
   const profile: ProfileProvider[] = [];
   const content: ContentProvider[] = [];
+  // Google's official API takes over the search-engine strategy when configured: cheaper, deterministic, no Actor.
+  const googleConfigured = Boolean(platform.google.apiKey && platform.google.cseId);
+  if (googleConfigured) {
+    for (const p of ["INSTAGRAM", "FACEBOOK"] as const) discovery.push(new GoogleCseDiscoveryProvider({ apiKey: platform.google.apiKey!, cseId: platform.google.cseId! }, p));
+  }
+  if (!token) {
+    if (!googleConfigured) warnings.push("Lead discovery is not active for this workspace. The CNEX AI team activates it from the OS-Panel (Providers & keys).");
+    return { discovery, profile, content, definitions, apifyConfigured: false, googleConfigured, warnings };
+  }
+  const client = new ApifyClient({ token });
   for (const def of definitions) {
+    // With Google configured, the paid search-engine Actor is redundant for the same slot.
+    if (googleConfigured && def.domain === "DISCOVERY" && def.adapter.startsWith("search-engine")) continue;
     let adapter: ActorAdapter;
     try {
       adapter = resolveAdapter(def.adapter, def.platform, def.actorId);
@@ -151,7 +161,7 @@ export async function resolveProviders(db: DbClient, organizationId: string): Pr
     else if (def.domain === "CONTENT" && adapter.purposes.includes("CONTENT")) content.push(new ApifyContentProvider(cfg));
     else warnings.push(`Adapter "${def.adapter}" does not support ${def.domain.toLowerCase()} for ${def.actorId}`);
   }
-  return { discovery, profile, content, definitions, apifyConfigured: true, warnings };
+  return { discovery, profile, content, definitions, apifyConfigured: true, googleConfigured, warnings };
 }
 
 /**

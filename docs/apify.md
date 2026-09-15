@@ -7,6 +7,7 @@ Apify is the default external provider for discovery, profile enrichment and (op
 | Level | Where | Notes |
 |---|---|---|
 | Token | OS-Panel → Providers & keys (platform, encrypted); optional workspace override in OS-Panel → Organization → Operations; `APIFY_API_TOKEN` as fallback | Workspace override > platform > environment |
+| Search-engine strategy | Google Custom Search API (OS-Panel → Providers & keys → Google search API; `GOOGLE_API_KEY` / `GOOGLE_CSE_ID` fallback) replaces `apify/google-search-scraper` when configured | `GoogleCseDiscoveryProvider` in `packages/discovery/src/google/cse.ts`, same query builder and normalizer as the Apify adapter |
 | Actors | OS-Panel → Providers & keys → Default Actors (platform `ProviderConfig` rows) or workspace overrides; `APIFY_*_ACTOR` env as fallback | Workspace rows > platform rows > env |
 | Test | OS-Panel test buttons | Verifies the token (`/users/me`) and that the Actor exists |
 

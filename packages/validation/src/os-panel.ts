@@ -52,6 +52,8 @@ export const platformSettingsSchema = z
     embeddingProvider: z.enum(["openai", "none", ""]).optional(),
     embeddingModel: z.string().trim().max(120).optional().nullable(),
     embeddingApiKey: z.string().trim().max(500).optional(),
+    googleApiKey: z.string().trim().max(200).optional(),
+    googleCseId: z.string().trim().max(80).optional().nullable(),
     metaAppId: z.string().trim().max(80).optional().nullable(),
     metaAppSecret: z.string().trim().max(500).optional(),
     metaWebhookVerifyToken: z.string().trim().max(200).optional().nullable(),
@@ -61,8 +63,9 @@ export type PlatformSettingsInput = z.infer<typeof platformSettingsSchema>;
 
 /** Connection test for a platform provider; inline values test what is typed before saving. */
 export const platformTestSchema = z.object({
-  target: z.enum(["apify", "ai", "meta"]),
+  target: z.enum(["apify", "ai", "meta", "google"]),
   apifyToken: z.string().trim().max(500).optional(),
+  google: z.object({ apiKey: z.string().trim().max(200).optional(), cseId: z.string().trim().max(80).optional() }).optional(),
   ai: z
     .object({
       provider: z.enum(["anthropic", "openai", "openai_compatible"]),

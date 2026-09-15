@@ -9,5 +9,6 @@ export * from "./lead-repository";
 export * from "./search-service";
 export * from "./lead-service";
 export * from "./apify/adapters";
+export * from "./google/cse";
 export * from "./apify/providers";
 export * from "./apify/normalizers";

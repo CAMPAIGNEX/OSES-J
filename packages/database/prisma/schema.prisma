@@ -561,6 +561,9 @@ model PlatformSettings {
   embeddingProvider        String?  @db.VarChar(40)
   embeddingModel           String?  @db.VarChar(120)
   embeddingApiKeyEncrypted String?  @db.Text
+  // Google Programmable Search (Custom Search JSON API): search-engine strategy without Apify
+  googleApiKeyEncrypted    String?  @db.Text
+  googleCseId              String?  @db.VarChar(80)
   // Meta app (Facebook Login, Graph API, webhooks)
   metaAppId                String?  @db.VarChar(80)
   metaAppSecretEncrypted   String?  @db.Text

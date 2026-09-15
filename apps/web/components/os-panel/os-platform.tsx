@@ -16,6 +16,7 @@ interface PlatformView {
   apify: { enabled: boolean; hasToken: boolean; tokenPreview: string | null; effective: { configured: boolean; origin: Origin; preview: string | null }; environmentFallback: boolean };
   ai: { provider: string; model: string | null; baseUrl: string | null; hasApiKey: boolean; apiKeyPreview: string | null; effective: { provider: string; model: string | null; origin: Origin; configured: boolean }; environmentFallback: string | null };
   embeddings: { provider: string; model: string | null; hasApiKey: boolean; apiKeyPreview: string | null; effective: { provider: string; model: string | null; origin: Origin; configured: boolean }; environmentFallback: boolean };
+  google: { cseId: string | null; hasApiKey: boolean; apiKeyPreview: string | null; effective: { configured: boolean; origin: Origin; cseId: string | null }; environmentFallback: boolean };
   meta: { appId: string | null; hasAppSecret: boolean; appSecretPreview: string | null; webhookVerifyToken: string | null; effective: { configured: boolean; origin: Origin; appId: string | null; webhookConfigured: boolean }; environmentFallback: boolean; callbackUrl: string };
 }
 
@@ -56,6 +57,7 @@ export function OsPlatform() {
   const [ai, setAi] = useState({ provider: "", model: "", baseUrl: "", apiKey: "" });
   const [emb, setEmb] = useState({ provider: "", model: "", apiKey: "" });
   const [meta, setMeta] = useState({ appId: "", appSecret: "", webhookVerifyToken: "" });
+  const [google, setGoogle] = useState({ apiKey: "", cseId: "" });
   const [tests, setTests] = useState<Record<string, TestResult | null>>({});
 
   useEffect(() => {
@@ -63,6 +65,7 @@ export function OsPlatform() {
     setAi({ provider: s.ai.provider, model: s.ai.model ?? "", baseUrl: s.ai.baseUrl ?? "", apiKey: "" });
     setEmb({ provider: s.embeddings.provider, model: s.embeddings.model ?? "", apiKey: "" });
     setMeta({ appId: s.meta.appId ?? "", appSecret: "", webhookVerifyToken: s.meta.webhookVerifyToken ?? "" });
+    setGoogle({ apiKey: "", cseId: s.google.cseId ?? "" });
   }, [s]);
 
   async function save(label: string, body: Record<string, unknown>, after?: () => void) {
@@ -123,8 +126,9 @@ export function OsPlatform() {
         <p className="font-mono text-[12px] text-[#6b7280]">Loading…</p>
       ) : (
         <div className="space-y-4">
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
             <StatusCard label="Lead discovery (Apify)" origin={s.apify.effective.origin} configured={s.apify.effective.configured && s.apify.enabled} hint={!s.apify.enabled ? "disabled platform-wide" : s.apify.effective.preview ?? "no token"} />
+            <StatusCard label="Google search API" origin={s.google.effective.origin} configured={s.google.effective.configured} hint={s.google.effective.configured ? `engine ${s.google.effective.cseId}` : "search-engine strategy uses Apify"} />
             <StatusCard label="AI provider" origin={s.ai.effective.origin} configured={s.ai.effective.configured} hint={s.ai.effective.configured ? `${s.ai.effective.provider} · ${s.ai.effective.model ?? "default model"}` : "no provider / key"} />
             <StatusCard label="Embeddings" origin={s.embeddings.effective.origin} configured={s.embeddings.effective.configured} hint={s.embeddings.effective.configured ? `${s.embeddings.effective.provider} · ${s.embeddings.effective.model ?? "default model"}` : "keyword search only"} />
             <StatusCard label="Meta app" origin={s.meta.effective.origin} configured={s.meta.effective.configured} hint={s.meta.effective.configured ? `app ${s.meta.effective.appId} · webhook ${s.meta.effective.webhookConfigured ? "ok" : "no verify token"}` : "official Instagram / Facebook API off"} />
@@ -153,6 +157,37 @@ export function OsPlatform() {
               </OsButton>
             </div>
             <TestLine result={tests.apify ?? null} />
+          </OsPanel>
+
+          <OsPanel title="Google search API · search-engine strategy without Apify (100 free queries a day)" actions={<OriginBadge origin={s.google.effective.origin} configured={s.google.effective.configured} />}>
+            <p className="mb-3 text-[12px] text-[#9ca3af]">
+              Official Google Custom Search JSON API: create a Programmable Search Engine that searches the entire web, copy its <span className="font-mono text-white">Search engine ID (cx)</span>, and create an API key in Google Cloud with the Custom Search API enabled. When set, the &ldquo;Search engine&rdquo; strategy runs here for free (100 queries/day, then $5 per 1,000) and the paid Apify search Actor is skipped.
+              {s.google.apiKeyPreview ? <> Saved key: <span className="font-mono text-white">{s.google.apiKeyPreview}</span>.</> : null}
+            </p>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <label className="block">
+                <FieldLabel>API key {s.google.hasApiKey ? "(blank keeps the saved key)" : ""}</FieldLabel>
+                <OsInput type="password" value={google.apiKey} onChange={(e) => setGoogle((f) => ({ ...f, apiKey: e.target.value }))} placeholder={s.google.hasApiKey ? "••••••••" : "AIza…"} className="mt-1 w-full" autoComplete="off" />
+              </label>
+              <label className="block">
+                <FieldLabel>Search engine ID (cx)</FieldLabel>
+                <OsInput value={google.cseId} onChange={(e) => setGoogle((f) => ({ ...f, cseId: e.target.value }))} placeholder="a1b2c3d4e5f6g7h8i" className="mt-1 w-full" />
+              </label>
+            </div>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <OsButton tone="primary" disabled={busy !== null || (!google.cseId && !s.google.cseId)} onClick={() => void save("Google search API saved", { googleCseId: google.cseId || null, ...(google.apiKey ? { googleApiKey: google.apiKey } : {}) }, () => setGoogle((f) => ({ ...f, apiKey: "" })))}>
+                Save Google search
+              </OsButton>
+              <OsButton disabled={busy !== null || (!google.apiKey && !s.google.effective.configured)} onClick={() => void test("google", { target: "google", ...(google.apiKey || google.cseId ? { google: { ...(google.apiKey ? { apiKey: google.apiKey } : {}), ...(google.cseId ? { cseId: google.cseId } : {}) } } : {}) })}>
+                {busy === "test:google" ? "Testing…" : "Test (one free query)"}
+              </OsButton>
+              {(s.google.hasApiKey || s.google.cseId) && (
+                <OsButton tone="danger" disabled={busy !== null} onClick={() => void save("Google search API removed", { googleApiKey: "", googleCseId: "" })}>
+                  Remove
+                </OsButton>
+              )}
+            </div>
+            <TestLine result={tests.google ?? null} />
           </OsPanel>
 
           <OsPanel title="AI provider · used by every workspace without its own key" actions={<OriginBadge origin={s.ai.effective.origin} configured={s.ai.effective.configured} />}>

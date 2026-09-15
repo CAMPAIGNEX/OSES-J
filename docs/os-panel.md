@@ -25,6 +25,7 @@ The OS-Panel is the control room for the CNEX AI team. It lives at `/os-panel` i
 `/os-panel/platform` is the single place where everything that runs behind OSES-J is configured for **all** workspaces:
 
 - **Apify token** for discovery, enrichment and content search, plus a platform-wide discovery on/off switch.
+- **Google search API** (Custom Search JSON API key + Programmable Search Engine id): when set, the search-engine strategy runs on Google's official API (100 free queries/day, then $5 per 1,000) and the paid Apify search Actor is skipped for that slot.
 - **AI provider** (Anthropic, OpenAI, OpenAI-compatible endpoint): provider, model, base URL and key.
 - **Embeddings** for the knowledge base (OpenAI; reuses the OpenAI chat key when no separate key is given).
 - **Meta app**: app id, app secret and webhook verify token for the official Instagram / Facebook API.

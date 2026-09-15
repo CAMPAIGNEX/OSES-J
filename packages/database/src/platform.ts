@@ -18,6 +18,8 @@ export interface PlatformConfig {
   apify: { token: string | null; enabled: boolean; origin: ConfigOrigin | null };
   ai: { provider: PlatformAIProviderKey; apiKey: string | null; model: string | null; baseUrl: string | null; origin: ConfigOrigin | null };
   embeddings: { provider: "openai" | "none"; apiKey: string | null; model: string | null; baseUrl: string | null; origin: ConfigOrigin | null };
+  /** Google Programmable Search: the search-engine strategy without an Apify Actor (100 free queries a day). */
+  google: { apiKey: string | null; cseId: string | null; origin: ConfigOrigin | null };
   meta: { appId: string | null; appSecret: string | null; webhookVerifyToken: string | null; origin: ConfigOrigin | null };
   updatedAt: Date | null;
 }
@@ -54,6 +56,14 @@ export function buildPlatformConfig(row: PlatformSettings | null): PlatformConfi
   const aiKey = decryptOrNull(row?.aiApiKeyEncrypted, env.ENCRYPTION_KEY, "AI key");
   const embeddingKey = decryptOrNull(row?.embeddingApiKeyEncrypted, env.ENCRYPTION_KEY, "embedding key");
   const metaSecret = decryptOrNull(row?.metaAppSecretEncrypted, env.ENCRYPTION_KEY, "Meta app secret");
+  const googleKey = decryptOrNull(row?.googleApiKeyEncrypted, env.ENCRYPTION_KEY, "Google API key");
+
+  const google: PlatformConfig["google"] =
+    googleKey && row?.googleCseId
+      ? { apiKey: googleKey, cseId: row.googleCseId, origin: "platform" }
+      : env.GOOGLE_API_KEY && env.GOOGLE_CSE_ID
+        ? { apiKey: env.GOOGLE_API_KEY, cseId: env.GOOGLE_CSE_ID, origin: "environment" }
+        : { apiKey: null, cseId: null, origin: null };
 
   const apify: PlatformConfig["apify"] = apifyToken
     ? { token: apifyToken, enabled: row?.apifyEnabled ?? true, origin: "platform" }
@@ -92,7 +102,7 @@ export function buildPlatformConfig(row: PlatformSettings | null): PlatformConfi
         ? { appId: env.META_APP_ID, appSecret: env.META_APP_SECRET, webhookVerifyToken: row?.metaWebhookVerifyToken || env.META_WEBHOOK_VERIFY_TOKEN || null, origin: "environment" }
         : { appId: null, appSecret: null, webhookVerifyToken: row?.metaWebhookVerifyToken || env.META_WEBHOOK_VERIFY_TOKEN || null, origin: null };
 
-  return { apify, ai, embeddings, meta, updatedAt: row?.updatedAt ?? null };
+  return { apify, ai, embeddings, google, meta, updatedAt: row?.updatedAt ?? null };
 }
 
 /** Effective platform configuration (OS-Panel row merged with environment fallbacks), cached for a few seconds. */

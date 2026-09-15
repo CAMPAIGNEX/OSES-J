@@ -5,6 +5,7 @@ updated: 2026-09-15
 
 ## 2026-09-15 · All hunted leads, in-app instructions, forgiving city names
 
+- Search-engine strategy can run on Google's official Custom Search API (set by the CNEX AI team) instead of a scraping Actor: free daily quota, no Apify cost for that step.
 - **Saved Leads → All hunted leads**: every lead ever found for your workspace, filterable by the search that found it.
 - Saving leads works on MySQL 8 hosts (fixed a collation error that made every search end with "No leads found").
 - Every feature page starts with a short "how to use this" guide (dismissible, with a link to the manual).

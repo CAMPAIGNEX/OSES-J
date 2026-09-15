@@ -47,6 +47,13 @@ function view(row: PlatformSettings) {
       effective: { provider: effective.embeddings.provider, model: effective.embeddings.model, origin: effective.embeddings.origin, configured: effective.embeddings.provider !== "none" && Boolean(effective.embeddings.apiKey) },
       environmentFallback: env.AI_EMBEDDING_PROVIDER === "openai" && Boolean(env.AI_EMBEDDING_API_KEY || (env.AI_PROVIDER === "openai" && env.AI_API_KEY)),
     },
+    google: {
+      cseId: row.googleCseId,
+      hasApiKey: Boolean(row.googleApiKeyEncrypted),
+      apiKeyPreview: preview(row.googleApiKeyEncrypted),
+      effective: { configured: Boolean(effective.google.apiKey && effective.google.cseId), origin: effective.google.origin, cseId: effective.google.cseId },
+      environmentFallback: Boolean(env.GOOGLE_API_KEY && env.GOOGLE_CSE_ID),
+    },
     meta: {
       appId: row.metaAppId,
       hasAppSecret: Boolean(row.metaAppSecretEncrypted),
@@ -81,12 +88,14 @@ export const PUT = withApi(
     if (b.embeddingProvider !== undefined) data.embeddingProvider = b.embeddingProvider || null;
     if (b.embeddingModel !== undefined) data.embeddingModel = b.embeddingModel || null;
     if (b.embeddingApiKey !== undefined) data.embeddingApiKeyEncrypted = b.embeddingApiKey ? encryptSecret(b.embeddingApiKey, env.ENCRYPTION_KEY) : null;
+    if (b.googleApiKey !== undefined) data.googleApiKeyEncrypted = b.googleApiKey ? encryptSecret(b.googleApiKey, env.ENCRYPTION_KEY) : null;
+    if (b.googleCseId !== undefined) data.googleCseId = b.googleCseId || null;
     if (b.metaAppId !== undefined) data.metaAppId = b.metaAppId || null;
     if (b.metaAppSecret !== undefined) data.metaAppSecretEncrypted = b.metaAppSecret ? encryptSecret(b.metaAppSecret, env.ENCRYPTION_KEY) : null;
     if (b.metaWebhookVerifyToken !== undefined) data.metaWebhookVerifyToken = b.metaWebhookVerifyToken || null;
     const row = await ctx.db.platformSettings.update({ where: { id: "platform" }, data });
     invalidatePlatformConfig();
-    const secretFields = ["apifyTokenEncrypted", "aiApiKeyEncrypted", "embeddingApiKeyEncrypted", "metaAppSecretEncrypted"];
+    const secretFields = ["apifyTokenEncrypted", "aiApiKeyEncrypted", "embeddingApiKeyEncrypted", "googleApiKeyEncrypted", "metaAppSecretEncrypted"];
     await osAudit(ctx, {
       action: "platform.settings_updated",
       entityType: "PlatformSettings",

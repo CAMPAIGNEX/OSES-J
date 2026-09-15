@@ -37,7 +37,7 @@ Explicit fields always win over the parsed text. If you set *City = Lyon* and th
 
 ## Strategies
 
-- **Search engine**: Google results restricted to instagram.com or facebook.com with your keywords and location. Best for "brands in a city".
+- **Search engine**: Google results restricted to instagram.com or facebook.com with your keywords and location (through Google's official search API when the CNEX AI team has enabled it, otherwise through a search Actor). Best for "brands in a city".
 - **Profile search**: the platform search Actor with your keywords.
 - **Hashtags**: authors of recent posts under hashtags derived from your keywords.
 - **Auto**: runs the search-engine strategy first when a location is present, then profile search, then hashtags, until your limit is reached.

@@ -16,6 +16,8 @@ function row(overrides: Partial<PlatformSettings> = {}): PlatformSettings {
     embeddingProvider: null,
     embeddingModel: null,
     embeddingApiKeyEncrypted: null,
+    googleApiKeyEncrypted: null,
+    googleCseId: null,
     metaAppId: null,
     metaAppSecretEncrypted: null,
     metaWebhookVerifyToken: null,
@@ -33,7 +35,7 @@ function withEnv(values: Record<string, string>) {
 
 describe("platform configuration (OS-Panel row over environment fallback)", () => {
   afterEach(() => {
-    withEnv({ APIFY_API_TOKEN: "", AI_PROVIDER: "none", AI_API_KEY: "", AI_MODEL: "", META_APP_ID: "", META_APP_SECRET: "", META_WEBHOOK_VERIFY_TOKEN: "", AI_EMBEDDING_PROVIDER: "none" });
+    withEnv({ APIFY_API_TOKEN: "", AI_PROVIDER: "none", AI_API_KEY: "", AI_MODEL: "", META_APP_ID: "", META_APP_SECRET: "", META_WEBHOOK_VERIFY_TOKEN: "", AI_EMBEDDING_PROVIDER: "none", GOOGLE_API_KEY: "", GOOGLE_CSE_ID: "" });
   });
 
   it("reports nothing configured when neither the row nor the environment has values", () => {
@@ -82,6 +84,13 @@ describe("platform configuration (OS-Panel row over environment fallback)", () =
     expect(cfg.embeddings).toEqual({ provider: "openai", apiKey: "sk-chat", model: "text-embedding-3-small", baseUrl: null, origin: "platform" });
   });
 
+  it("reads the Google search API from the row before the environment", () => {
+    withEnv({ GOOGLE_API_KEY: "env-key", GOOGLE_CSE_ID: "env-cx" });
+    expect(buildPlatformConfig(null).google).toEqual({ apiKey: "env-key", cseId: "env-cx", origin: "environment" });
+    expect(buildPlatformConfig(row({ googleApiKeyEncrypted: encryptSecret("panel-key", KEY), googleCseId: "panel-cx" })).google).toEqual({ apiKey: "panel-key", cseId: "panel-cx", origin: "platform" });
+    withEnv({ GOOGLE_API_KEY: "", GOOGLE_CSE_ID: "" });
+    expect(buildPlatformConfig(row({ googleCseId: "panel-cx" })).google.origin).toBeNull();
+  });
   it("ignores a secret it cannot decrypt instead of failing", () => {
     withEnv({ APIFY_API_TOKEN: "apify_env" });
     const cfg = buildPlatformConfig(row({ apifyTokenEncrypted: "v1.garbage.garbage.garbage" }));

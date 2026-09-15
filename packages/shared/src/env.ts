@@ -51,6 +51,9 @@ export const envSchema = z.object({
   AI_EMBEDDING_MODEL: optionalString,
   AI_EMBEDDING_API_KEY: optionalString,
 
+  // Google Programmable Search (fallback only; normally set in OS-Panel → Providers & keys)
+  GOOGLE_API_KEY: optionalString,
+  GOOGLE_CSE_ID: optionalString,
   APIFY_API_TOKEN: optionalString,
   APIFY_INSTAGRAM_DISCOVERY_ACTOR: optionalString,
   APIFY_INSTAGRAM_PROFILE_ACTOR: optionalString,
