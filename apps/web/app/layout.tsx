@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from "next";
 import { cookies } from "next/headers";
-import Script from "next/script";
 import type { ReactNode } from "react";
 import { PwaRegister } from "@/components/layout/pwa";
 import { ToastProvider } from "@/components/ui/overlay";
@@ -37,12 +36,15 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   const theme = normalizeTheme(store.get(THEME_COOKIE)?.value);
   return (
     <html lang="en" suppressHydrationWarning data-template={template} className={theme === "dark" ? `${fontVariables} dark` : fontVariables}>
+      <head>
+        {/* Fallback for visitors without the theme cookie (system preference). `async src` is the one form of <script>
+            React treats as a hoistable resource, so it never warns when the layout is re-rendered on the client. */}
+        <script async src="/theme-init.js" />
+      </head>
       <body className="min-h-screen bg-app text-body">
         <ToastProvider>{children}</ToastProvider>
         <PwaRegister />
       </body>
-      {/* Fallback for visitors without the theme cookie (system preference); a real script file so React never renders an inline <script>. */}
-      <Script src="/theme-init.js" strategy="beforeInteractive" />
     </html>
   );
 }
