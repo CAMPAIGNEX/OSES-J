@@ -125,14 +125,16 @@ export function parseQuery(query: string): ParsedQuery {
       }
     }
   }
-  // Fallback: trailing known city/country without a preposition ("streetwear brands London")
+  // Fallback: trailing known city/country without a preposition ("streetwear brands London", "buyers Manchester, UK")
   if (!location.city && !location.countryCode) {
     const words = subject.trim().split(" ");
-    for (let take = Math.min(3, words.length - 1); take >= 1; take--) {
-      const tail = words.slice(-take).join(" ");
+    for (let take = Math.min(4, words.length - 1); take >= 1; take--) {
+      const tail = words.slice(-take).join(" ").replace(/[.!?]+$/, "");
       const key = normalizeText(tail);
-      if (CITY_TZ[key] || normalizeCountryCode(tail)) {
-        location = resolvePlace(tail);
+      const commaPlace = tail.includes(",") ? resolvePlace(tail) : null;
+      const knownComma = commaPlace ? (commaPlace.city ? Boolean(CITY_TZ[normalizeText(commaPlace.city)]) : Boolean(commaPlace.countryCode)) : false;
+      if (CITY_TZ[key] || normalizeCountryCode(tail) || knownComma) {
+        location = commaPlace && knownComma ? commaPlace : resolvePlace(tail);
         subject = words.slice(0, words.length - take).join(" ");
         break;
       }
@@ -141,9 +143,6 @@ export function parseQuery(query: string): ParsedQuery {
 
   const categories = detectCategories(subject);
   const recencyHint = /\b(new|emerging|upcoming|startup|start-up)\b/i.test(subject);
-  const keywords = normalizeText(subject)
-    .split(" ")
-    .filter((w) => w && !FILLER.has(w) && w.length > 1);
   // Keep multi-word category phrases intact when present.
   const phraseKeywords: string[] = [];
   const n = ` ${normalizeText(subject)} `;
@@ -153,7 +152,24 @@ export function parseQuery(query: string): ParsedQuery {
       if (nw.includes(" ") && n.includes(` ${nw} `)) phraseKeywords.push(nw);
     }
   }
-  const merged = [...new Set([...phraseKeywords, ...keywords.filter((k) => !phraseKeywords.some((p) => p.split(" ").includes(k)))])];
+  // Everything else stays grouped as the user typed it: adjacent non-filler words form one phrase
+  // ("gym acessories", not "gym" + "acessories"), because providers search for phrases, not tokens.
+  const phrases: string[] = [];
+  let current: string[] = [];
+  const flush = () => {
+    if (current.length) phrases.push(current.join(" "));
+    current = [];
+  };
+  for (const w of normalizeText(subject).split(" ")) {
+    const inCategoryPhrase = phraseKeywords.some((p) => p.split(" ").includes(w));
+    if (!w || FILLER.has(w) || w.length <= 1 || inCategoryPhrase) {
+      flush();
+      continue;
+    }
+    current.push(w);
+  }
+  flush();
+  const merged = [...new Set([...phraseKeywords, ...phrases])];
   return { keywords: merged.slice(0, 8), categories, location, recencyHint };
 }
 

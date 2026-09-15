@@ -49,10 +49,19 @@ function applyOverrides(input: Record<string, unknown>, settings: AdapterSetting
   return settings.inputOverrides ? { ...input, ...settings.inputOverrides } : input;
 }
 
+/** Keyword phrase only: platform user search matches names, so a location or country word only pollutes it. */
+function keywordPhrase(criteria: SearchCriteria, max = 2): string {
+  return criteria.keywords.slice(0, max).join(" ").trim();
+}
+
+/** The most specific place we know (city > region > country) for providers whose search understands free text. */
+function placeWord(location: SearchCriteria["location"]): string | null {
+  return location.city ?? location.region ?? location.country ?? location.countryCode ?? null;
+}
+
+/** Keyword phrase plus the most specific place, without commas (Actors split on them). */
 function searchPhrase(criteria: SearchCriteria): string {
-  const kw = criteria.keywords.slice(0, 3).join(" ");
-  const loc = locationText(criteria.location);
-  return [kw, loc].filter(Boolean).join(" ").trim();
+  return [keywordPhrase(criteria), placeWord(criteria.location)].filter(Boolean).join(" ").trim();
 }
 
 // ---------------------------------------------------------------------------
@@ -68,7 +77,9 @@ export const instagramSearchAdapter: ActorAdapter = {
   buildDiscoveryInput(criteria, settings) {
     return applyOverrides(
       {
-        search: searchPhrase(criteria),
+        // Instagram user search matches account names; "gym accessories" finds brands, "New York, United States" finds
+        // accounts called United States. Location is applied later through the bio / website match in scoring.
+        search: keywordPhrase(criteria),
         searchType: "user",
         searchLimit: Math.min(Math.max(criteria.limit * 2, 10), 100),
         resultsType: "details",
@@ -239,19 +250,61 @@ export const facebookSearchAdapter: ActorAdapter = {
 // Search engine strategy (apify/google-search-scraper): site:instagram.com / site:facebook.com
 // ---------------------------------------------------------------------------
 
+/**
+ * Google queries that land on profile pages rather than posts. Profile pages carry the title
+ * "Name (@user) • Instagram photos and videos" (Facebook: "Name | Facebook"), so the first query pins that
+ * title; a second, broader query catches profiles Google indexes differently (post hits from it are turned
+ * into their authors by the normalizer). Only the most specific place is quoted: quoting the country as well
+ * ("New York" "United States") matches almost nothing, because profiles rarely spell out the country.
+ */
 export function buildSearchEngineQueries(criteria: SearchCriteria, platform: Platform, maxQueries = 3): string[] {
   const site = platform === "INSTAGRAM" ? "site:instagram.com" : "site:facebook.com";
-  const loc = [criteria.location.city, criteria.location.region, criteria.location.country].filter(Boolean) as string[];
-  const locPart = loc.length ? loc.map((l) => `"${l}"`).join(" ") : "";
-  const groups: string[] = [];
+  const place = criteria.location.city ?? criteria.location.region ?? countryName(criteria.location);
+  const locPart = place ? `"${place}"` : "";
   const keywords = criteria.keywords.length ? criteria.keywords : ["apparel brand"];
-  for (const kw of keywords.slice(0, maxQueries)) {
-    groups.push(`${site} "${kw}" ${locPart} -inurl:/p/ -inurl:/reel/ -inurl:/explore/`.replace(/\s+/g, " ").trim());
-  }
+  const phrase = keywords.slice(0, 2).join(" ");
+  const profileTitle = platform === "INSTAGRAM" ? 'intitle:"Instagram photos and videos"' : 'intitle:"Facebook"';
+  const groups: string[] = [`${site} ${profileTitle} "${phrase}" ${locPart}`];
+  groups.push(`${site} "${phrase}" ${locPart} -inurl:/p/ -inurl:/reel/ -inurl:/explore/`);
   if (criteria.category && !keywords.includes(criteria.category) && groups.length < maxQueries) {
-    groups.push(`${site} "${criteria.category}" ${locPart}`.replace(/\s+/g, " ").trim());
+    groups.push(`${site} ${profileTitle} "${criteria.category}" ${locPart}`);
   }
-  return [...new Set(groups)];
+  return [...new Set(groups.map((g) => g.replace(/\s+/g, " ").trim()))].slice(0, maxQueries);
+}
+
+const COUNTRY_NAMES: Record<string, string> = { US: "USA", GB: "UK", AE: "UAE", DE: "Germany", FR: "France", IT: "Italy", ES: "Spain", NL: "Netherlands", CA: "Canada", AU: "Australia", PK: "Pakistan", IN: "India", BD: "Bangladesh", TR: "Turkey", SA: "Saudi Arabia" };
+
+function countryName(location: SearchCriteria["location"]): string | null {
+  const cc = location.countryCode?.toUpperCase();
+  if (cc && COUNTRY_NAMES[cc]) return COUNTRY_NAMES[cc];
+  return location.country ?? null;
+}
+
+/**
+ * Google often answers with posts and reels even when asked for profiles. Their snippets still name the
+ * author ("Photo by Endia (@endia698)", "lena_j83's profile picture", "12 likes, 3 comments - brand on May 4"),
+ * which is a real account we can normalize. Mentions such as "@sephora" are deliberately ignored.
+ */
+export function authorFromPostSnippet(title: string | null, description: string | null): string | null {
+  const t = title ?? "";
+  const d = description ?? "";
+  const patterns: Array<[string, RegExp]> = [
+    [t, /\(@([A-Za-z0-9._]{2,30})\)/],
+    [d, /\b([A-Za-z0-9._]{2,30})'s profile picture/],
+    [d, /(?:likes?|comments?)\s*[-–]\s*([A-Za-z0-9._]{2,30})\s+on\s+[A-Z][a-z]+\s+\d/],
+  ];
+  for (const [text, re] of patterns) {
+    const m = re.exec(text);
+    const u = m?.[1] ? normalizeUsername(m[1]) : null;
+    if (u && !IG_POST_AUTHOR_STOP.has(u)) return u;
+  }
+  return null;
+}
+
+const IG_POST_AUTHOR_STOP = new Set(["instagram", "explore", "reels", "reel"]);
+
+function isInstagramPostUrl(url: string): boolean {
+  return /instagram\.com\/(p|reel|reels|tv)\//i.test(url);
 }
 
 function parseSearchSnippet(title: string | null, description: string | null): { displayName: string | null; followers: number | null; bio: string | null; username: string | null } {
@@ -282,7 +335,16 @@ export function normalizeSearchEngineItems(items: Item[], platform: Platform, so
     const organic = Array.isArray(item.organicResults) ? (item.organicResults as Item[]) : Array.isArray(item.results) ? (item.results as Item[]) : [item];
     for (const r of organic) {
       const url = pickString(r, ["url", "link"]);
-      const parsed = url ? parseSocialUrl(url) : null;
+      let parsed = url ? parseSocialUrl(url) : null;
+      let viaPost = false;
+      if (!parsed && url && platform === "INSTAGRAM" && isInstagramPostUrl(url)) {
+        // A post or reel: keep its author as the lead, with a lower provider score than a direct profile hit.
+        const author = authorFromPostSnippet(pickString(r, ["title"]), pickString(r, ["description", "snippet"]));
+        if (author) {
+          parsed = parseSocialUrl(`https://www.instagram.com/${author}/`);
+          viaPost = true;
+        }
+      }
       if (!parsed || parsed.platform !== platform) continue;
       const snippet = parseSearchSnippet(pickString(r, ["title"]), pickString(r, ["description", "snippet"]));
       const username = parsed.username ?? snippet.username;
@@ -294,10 +356,10 @@ export function normalizeSearchEngineItems(items: Item[], platform: Platform, so
         username,
         profileUrl: parsed.profileUrl,
         externalId: parsed.externalId,
-        displayName: snippet.displayName,
-        followers: snippet.followers,
-        bio: snippet.bio,
-        providerScore: Math.max(0, 1 - position / 100),
+        displayName: viaPost ? null : snippet.displayName,
+        followers: viaPost ? null : snippet.followers,
+        bio: viaPost ? null : snippet.bio,
+        providerScore: viaPost ? Math.max(0, 0.4 - position / 100) : Math.max(0, 1 - position / 100),
         raw: r,
         source,
       });

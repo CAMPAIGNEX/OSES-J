@@ -5,6 +5,8 @@ updated: 2026-09-15
 
 ## 2026-09-15 · Platform providers & keys in the OS-Panel
 
+- Lead search: multi-word phrases are kept together ("gym accessories"), Instagram account search no longer receives the location text, Google queries target profile pages and turn post hits into their authors, and an empty result now explains what your filters excluded.
+
 - New **OS-Panel → Providers & keys**: the Apify token, AI provider and key, embeddings and the Meta app are set once for the whole platform, with test buttons and a one-click recommended Actor set. Workspaces inherit these automatically; per-workspace overrides remain available on each organisation page.
 - Faster, more resilient database connections.
 - Cookie-backed light/dark preference (no flash on load) and a white-O favicon / app icon.

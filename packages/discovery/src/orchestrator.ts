@@ -45,7 +45,7 @@ export class DiscoveryOrchestrator {
     const normalized: NormalizedLead[] = [];
     let raw = 0;
     if (!providers.length) {
-      warnings.push("No discovery provider is configured for the requested platform. Configure an Apify Actor in Settings > Providers.");
+      warnings.push("No discovery provider is active for the requested platform. The CNEX AI team activates it from the OS-Panel (Providers & keys).");
     }
     const perPlatformCount = new Map<string, number>();
     for (const provider of providers) {
@@ -67,23 +67,40 @@ export class DiscoveryOrchestrator {
     }
     const { leads, merged } = dedupeBatch(normalized);
     const filtered = applyCriteriaFilters(leads, criteria);
+    if (leads.length > 0 && filtered.length < leads.length) warnings.push(describeExclusions(leads, criteria));
     const scored = filtered.map((lead) => ({ ...lead, score: scoreLead(lead, criteria) })).sort((a, b) => b.score.total - a.score.total);
     log.info("discovery finished", { raw, normalized: normalized.length, deduped: leads.length, merged, returned: scored.length });
     return { leads: scored, runs, warnings, totals: { raw, normalized: normalized.length, deduped: leads.length } };
   }
 }
 
+/** Why a lead fails the hard filters (first reason wins), or null when it passes. Unknown values are kept. */
+export function exclusionReason(lead: NormalizedLead, criteria: SearchCriteria): string | null {
+  if (criteria.minFollowers != null && lead.followers != null && lead.followers < criteria.minFollowers) return "fewer followers than your minimum";
+  if (criteria.maxFollowers != null && lead.followers != null && lead.followers > criteria.maxFollowers) return "more followers than your maximum";
+  if (criteria.filters.hasWebsite && !lead.website) return "no website";
+  if (criteria.filters.hasEmail && !lead.email) return "no email";
+  if (criteria.filters.hasPhone && !lead.phone) return "no phone";
+  if (criteria.filters.hasWhatsApp && !lead.whatsapp) return "no WhatsApp";
+  if (criteria.filters.businessOnly && lead.isBusiness === false) return "not a business account";
+  if (criteria.filters.activeRecently && lead.lastPostAt && Date.now() - lead.lastPostAt.getTime() > 90 * 86_400_000) return "not active in the last 90 days";
+  return null;
+}
+
 /** Apply hard filters that need provider data (follower range, contact availability). Unknown values are kept. */
 export function applyCriteriaFilters(leads: NormalizedLead[], criteria: SearchCriteria): NormalizedLead[] {
-  return leads.filter((lead) => {
-    if (criteria.minFollowers != null && lead.followers != null && lead.followers < criteria.minFollowers) return false;
-    if (criteria.maxFollowers != null && lead.followers != null && lead.followers > criteria.maxFollowers) return false;
-    if (criteria.filters.hasWebsite && !lead.website) return false;
-    if (criteria.filters.hasEmail && !lead.email) return false;
-    if (criteria.filters.hasPhone && !lead.phone) return false;
-    if (criteria.filters.hasWhatsApp && !lead.whatsapp) return false;
-    if (criteria.filters.businessOnly && lead.isBusiness === false) return false;
-    if (criteria.filters.activeRecently && lead.lastPostAt && Date.now() - lead.lastPostAt.getTime() > 90 * 86_400_000) return false;
-    return true;
-  });
+  return leads.filter((lead) => exclusionReason(lead, criteria) === null);
+}
+
+/** Human explanation of what the filters removed, so an empty result never looks like a broken search. */
+export function describeExclusions(leads: NormalizedLead[], criteria: SearchCriteria): string {
+  const counts = new Map<string, number>();
+  for (const lead of leads) {
+    const reason = exclusionReason(lead, criteria);
+    if (reason) counts.set(reason, (counts.get(reason) ?? 0) + 1);
+  }
+  const excluded = [...counts.values()].reduce((a, b) => a + b, 0);
+  const parts = [...counts.entries()].sort((a, b) => b[1] - a[1]).map(([reason, n]) => `${n} ${reason}`);
+  const range = criteria.minFollowers != null || criteria.maxFollowers != null ? ` (follower range ${criteria.minFollowers?.toLocaleString() ?? "0"}–${criteria.maxFollowers?.toLocaleString() ?? "∞"})` : "";
+  return `${excluded} of ${leads.length} accounts found were excluded by your filters: ${parts.join(", ")}${range}. Widen the range or remove a filter to keep more of them.`;
 }

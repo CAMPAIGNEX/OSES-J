@@ -10,6 +10,8 @@ import {
   normalizeDiscoveryResult,
   normalizeInstagramProfile,
   normalizeSearchEngineItems,
+  instagramSearchAdapter,
+  describeExclusions,
   parseQuery,
   scoreLead,
   type DiscoveryProvider,
@@ -36,6 +38,15 @@ describe("query parser", () => {
     expect(parsed.keywords[0]).toBe("gym wear");
     expect(parsed.location).toMatchObject({ city: "Manchester", countryCode: "GB" });
     expect(parseQuery("streetwear brands Berlin").location.city).toBe("Berlin");
+  });
+  it("keeps adjacent words as one phrase and reads a trailing 'City, CC'", () => {
+    // Real production query that produced "gym" + "acessories" as separate keywords before.
+    const parsed = parseQuery("New Gym Acessories Brands in New York");
+    expect(parsed.keywords).toEqual(["gym acessories"]);
+    expect(parsed.location).toMatchObject({ city: "New York", countryCode: "US" });
+    const tail = parseQuery("fitness apparel wholesale buyers Manchester, UK");
+    expect(tail.location).toMatchObject({ city: "Manchester", countryCode: "GB" });
+    expect(tail.keywords).toEqual(["fitness apparel", "wholesale buyers"]);
   });
   it("lets explicit form fields override parsed values", () => {
     const criteria = buildSearchCriteria({ query: "hoodie brands in Paris", keywords: [], platform: "BOTH", city: "Lyon", country: "France", limit: 20, strategy: "auto", filters: {}, enrich: true, minFollowers: 5000, maxFollowers: 100000 });
@@ -81,6 +92,34 @@ describe("search engine adapter", () => {
     expect(queries[0]).toContain('"apparel"');
     expect(queries[0]).toContain('"New York"');
   });
+  it("pins profile-page titles and quotes only the most specific place", () => {
+    const criteria = buildSearchCriteria({ query: "New Gym Acessories Brands in New York", keywords: [], platform: "INSTAGRAM", limit: 10, strategy: "search_engine", filters: {}, enrich: false });
+    const queries = buildSearchEngineQueries(criteria, "INSTAGRAM");
+    expect(queries[0]).toBe('site:instagram.com intitle:"Instagram photos and videos" "gym acessories" "New York"');
+    expect(queries.join(" ")).not.toContain("United States");
+    expect(queries.join(" ")).not.toContain('"US"');
+    expect(instagramSearchAdapter.buildDiscoveryInput!(criteria, {})).toMatchObject({ search: "gym acessories", searchType: "user" });
+  });
+  it("turns post and reel hits into their authors, ignoring plain mentions", () => {
+    // Snippets copied from a real google-search-scraper run.
+    const items = normalizeSearchEngineItems(
+      [
+        {
+          organicResults: [
+            { url: "https://www.instagram.com/p/Dcpd2EVRTFR/", title: "Photo by Endia (@endia698) · August 30, 2026", description: "Market me new bracelets bhi aye haj ... New York, New York. 221 likes.", position: 1 },
+            { url: "https://www.instagram.com/p/CrbSrMDO0ZC/", title: "The struggle to get the sports bra off after this shoulder ...", description: "#fit #gym #fyp · View all 57 comments · August 27 · lena_j83's profile picture. lena_j83. •. Follow · New York City", position: 2 },
+            { url: "https://www.instagram.com/p/DYV8tYis5gI/", title: "My top 10 @sephora favorites @yslbeauty blush ...", description: "THE HAIR, MAKEUP, NAILS ... GRWM day one in New York", position: 3 },
+            { url: "https://www.instagram.com/reel/DUgMRx7DCaw/", title: "Upper with mini me  #gym #bodybuilding", description: "", position: 4 },
+          ],
+        },
+      ],
+      "INSTAGRAM",
+      source,
+    );
+    expect(items.map((i) => i.username)).toEqual(["endia698", "lena_j83"]);
+    expect(items[0]!.providerScore).toBeLessThan(0.5);
+    expect(items[0]!.followers).toBeNull();
+  });
   it("extracts usernames and follower counts from result snippets", () => {
     const items = normalizeSearchEngineItems(
       [{ organicResults: [{ title: "Urban Fitness Wear (@urbanfitnesswear) • Instagram photos and videos", url: "https://www.instagram.com/urbanfitnesswear/", description: "12K Followers, 300 Following, 450 Posts - Performance apparel made in NYC", position: 1 }, { title: "Reel", url: "https://www.instagram.com/reel/abc/", description: "", position: 2 }] }],
@@ -119,6 +158,20 @@ describe("scoring and filters", () => {
     expect(scoreLead(good, criteria).total).toBeGreaterThan(60);
     expect(scoreLead(weak, criteria).total).toBeLessThan(15);
     expect(scoreLead(weak, criteria).notes).toContain("private account");
+  });
+  it("explains what the filters removed instead of returning a silent empty page", () => {
+    const criteria = buildSearchCriteria({ query: "gym accessories brands in New York", keywords: [], platform: "INSTAGRAM", limit: 10, strategy: "auto", filters: {}, enrich: false, minFollowers: 500, maxFollowers: 5000 });
+    const leads = [
+      normalizeDiscoveryResult({ platform: "INSTAGRAM", username: "usarmy", profileUrl: "https://www.instagram.com/usarmy/", externalId: null, followers: 3_084_843, providerScore: 1, raw: {}, source }),
+      normalizeDiscoveryResult({ platform: "INSTAGRAM", username: "justenergy_us", profileUrl: "https://www.instagram.com/justenergy_us/", externalId: null, followers: 55, providerScore: 1, raw: {}, source }),
+      normalizeDiscoveryResult({ platform: "INSTAGRAM", username: "thechausa", profileUrl: "https://www.instagram.com/thechausa/", externalId: null, followers: 1667, providerScore: 1, raw: {}, source }),
+    ];
+    expect(applyCriteriaFilters(leads, criteria).map((l) => l.username)).toEqual(["thechausa"]);
+    const text = describeExclusions(leads, criteria);
+    expect(text).toContain("2 of 3 accounts found were excluded");
+    expect(text).toContain("1 more followers than your maximum");
+    expect(text).toContain("1 fewer followers than your minimum");
+    expect(text).toContain("500–5,000");
   });
   it("applies hard filters only when data is known", () => {
     const criteria = buildSearchCriteria({ query: "hoodies", keywords: [], platform: "INSTAGRAM", limit: 10, strategy: "auto", filters: { hasEmail: true }, enrich: false, minFollowers: 5000 });

@@ -130,7 +130,7 @@ export class ApifyDiscoveryProvider implements DiscoveryProvider {
       const results = this.cfg.adapter.normalizeProfiles(outcome.items, outcome.source).filter((r) => r.platform === this.platform);
       const warnings: string[] = [];
       if (outcome.items.length > 0 && results.length === 0) {
-        warnings.push(`Actor ${this.cfg.actorId} returned ${outcome.items.length} items but none could be normalized with adapter "${this.cfg.adapter.key}". Check the Actor output schema.`);
+        warnings.push(`${this.cfg.actorId} returned ${outcome.items.length} result${outcome.items.length === 1 ? "" : "s"} but none were usable ${this.platform === "INSTAGRAM" ? "Instagram" : "Facebook"} profiles (adapter "${this.cfg.adapter.key}"). Try different keywords; if this keeps happening the CNEX AI team will check the Actor.`);
       }
       return { results, runs: [outcome.meta], warnings };
     } catch (err) {
