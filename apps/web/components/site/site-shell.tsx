@@ -19,11 +19,8 @@ export function SiteShell({ children, signedIn }: { children: ReactNode; signedI
       <div className="site-backdrop" aria-hidden />
       <header className="relative z-20 border-b-2 border-ink bg-surface">
         <div className="mx-auto flex h-16 max-w-7xl items-center gap-4 px-4 sm:px-6">
-          <Link href="/" className="flex items-center gap-3" aria-label="OSES-J home">
-            <span data-ui="brand-mark" className="flex h-9 w-9 items-center justify-center bg-brand-500 text-white">
-              <Image src="/brand/oses-j-mark.svg" alt="" width={22} height={22} className="h-[22px] w-[22px] brightness-0 invert" priority />
-            </span>
-            <Image src="/brand/oses-j-wordmark.svg" alt="OSES-J" width={132} height={18} className="h-[18px] w-auto dark:brightness-0 dark:invert" priority />
+          <Link href="/" className="flex items-center" aria-label="OSES-J home">
+            <Image src="/brand/oses-j-wordmark.svg" alt="OSES-J" width={148} height={20} className="h-5 w-auto dark:brightness-0 dark:invert" priority />
           </Link>
           <SiteNav links={SITE_LINKS} signedIn={signedIn} />
         </div>

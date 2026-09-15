@@ -63,11 +63,11 @@ After a search, leads missing followers or a bio are sent to profile enrichment;
 
 You can re-run enrichment from a lead or client profile at any time.
 
-## Hunted Leads, Saved Leads
+## Saved Leads and all hunted leads
 
-- **Hunted Leads** is every account OSES-J has ever found for your workspace, from every search, newest first. Filter by the search that found it, platform, place, followers, contacts or tag. Nothing is lost when you leave a results page.
-- **Saved Leads** is your shortlist: leads you marked with *Save* from a results page or from Hunted Leads.
-- From either list, **Add to Business** turns a lead into a client with a permanent CID.
+- **Saved Leads** is your shortlist: leads you marked with *Save* on a results page.
+- Switch the first dropdown to **All hunted leads** to see every account OSES-J has ever found for your workspace, from every search; filter by the search that found it, platform, place, followers, contacts or tag. Nothing is lost when you leave a results page.
+- From either view, **Add to Business** turns a lead into a client with a permanent CID.
 
 ## Search history and saved searches
 

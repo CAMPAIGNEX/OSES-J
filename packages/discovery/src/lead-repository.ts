@@ -45,7 +45,13 @@ export async function findExistingLead(db: DbClient, organizationId: string, lea
   const key = brandKey(lead.brandName);
   const firstToken = key.split(" ").find((t) => t.length >= 4);
   if (!firstToken) return null;
-  const candidates = await db.lead.findMany({ where: { organizationId, deletedAt: null, brandName: { contains: firstToken } }, take: 25 });
+  let candidates: Lead[] = [];
+  try {
+    candidates = await db.lead.findMany({ where: { organizationId, deletedAt: null, brandName: { contains: firstToken } }, take: 25 });
+  } catch (err) {
+    // Fuzzy matching is an optimisation; a database quirk here must not stop the lead from being saved.
+    log.warn("fuzzy lead lookup failed; saving without fuzzy de-duplication", { organizationId, error: (err as Error).message });
+  }
   for (const c of candidates) {
     const match = fuzzyMatch(
       { brandName: lead.brandName, username: lead.username, websiteDomain: lead.websiteDomain, email: lead.email, city: lead.city, country: lead.country },

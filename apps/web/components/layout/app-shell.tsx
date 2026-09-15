@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import Image from "next/image";
-import { BarChart3, Bot, Building2, FileText, History, Inbox, LayoutDashboard, LogOut, Megaphone, Menu as MenuIcon, Moon, Search, Settings, Sun, Trash2, TrendingUp, Users, Bookmark, ShieldCheck } from "@/components/ui/icons";
+import { BarChart3, Bot, Building2, FileText, Inbox, LayoutDashboard, LogOut, Megaphone, Menu as MenuIcon, Moon, Search, Settings, Sun, Trash2, TrendingUp, Users, Bookmark, ShieldCheck } from "@/components/ui/icons";
 import { api } from "@/lib/api-client";
 import { applyTheme } from "@/lib/theme";
 import { Avatar, cn } from "@/components/ui/primitives";
@@ -25,8 +25,7 @@ export function useSession(): ShellSession {
 const NAV: Array<{ href: string; label: string; icon: ReactNode; match?: (p: string) => boolean }> = [
   { href: "/dashboard", label: "Dashboard", icon: <LayoutDashboard className="h-4 w-4" /> },
   { href: "/leads/search", label: "Search Leads", icon: <Search className="h-4 w-4" />, match: (p) => p.startsWith("/leads/search") },
-  { href: "/leads/hunted", label: "Hunted Leads", icon: <History className="h-4 w-4" />, match: (p) => p.startsWith("/leads/hunted") || /^\/leads\/(?!search|saved|hunted)[^/]+$/.test(p) },
-  { href: "/leads/saved", label: "Saved Leads", icon: <Bookmark className="h-4 w-4" />, match: (p) => p.startsWith("/leads/saved") },
+  { href: "/leads/saved", label: "Saved Leads", icon: <Bookmark className="h-4 w-4" />, match: (p) => p.startsWith("/leads/saved") || /^\/leads\/(?!search|saved)[^/]+$/.test(p) },
   { href: "/clients", label: "Clients", icon: <Users className="h-4 w-4" /> },
   { href: "/inbox", label: "Inbox", icon: <Inbox className="h-4 w-4" /> },
   { href: "/ai-assistant", label: "AI Assistant", icon: <Bot className="h-4 w-4" /> },
@@ -80,11 +79,8 @@ export function AppShell({ session, children }: { session: ShellSession; childre
   const sidebar = (
     <aside data-ui="sidebar" className="flex h-full w-[248px] flex-col border-r border-default bg-surface">
       <div className="flex h-14 items-center gap-2.5 px-5">
-        <Link href="/dashboard" className="flex items-center gap-2.5" aria-label="OSES-J home">
-          <span data-ui="brand-mark" className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-500 text-white">
-            <Image src="/brand/oses-j-mark.svg" alt="" width={20} height={20} className="h-5 w-5 brightness-0 invert" priority />
-          </span>
-          <Image src="/brand/oses-j-wordmark.svg" alt="OSES-J" width={118} height={16} className="h-4 w-auto dark:brightness-0 dark:invert" priority />
+        <Link href="/dashboard" className="flex items-center" aria-label="OSES-J home">
+          <Image src="/brand/oses-j-wordmark.svg" alt="OSES-J" width={132} height={18} className="h-[18px] w-auto dark:brightness-0 dark:invert" priority />
         </Link>
       </div>
       {nav}

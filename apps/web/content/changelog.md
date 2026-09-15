@@ -3,9 +3,10 @@ title: Changelog
 updated: 2026-09-15
 ---
 
-## 2026-09-15 · Hunted Leads, in-app instructions, forgiving city names
+## 2026-09-15 · All hunted leads, in-app instructions, forgiving city names
 
-- **Hunted Leads**: a new page with every lead ever found for your workspace, newest first, filterable by the search that found it.
+- **Saved Leads → All hunted leads**: every lead ever found for your workspace, filterable by the search that found it.
+- Saving leads works on MySQL 8 hosts (fixed a collation error that made every search end with "No leads found").
 - Every feature page starts with a short "how to use this" guide (dismissible, with a link to the manual).
 - City names in any spelling (`newyork`, `NewYork`, `NYC`, `new york city`) are understood in the query and in the City field.
 - Search runs now say when leads could not be saved, instead of showing an empty page.

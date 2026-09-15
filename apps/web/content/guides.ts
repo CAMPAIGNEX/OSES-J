@@ -17,24 +17,15 @@ export const GUIDES: Record<string, FeatureGuide> = {
       "Describe the buyer in plain words, product first, place second: “gym accessories brands in New York”. Any spelling of the city works (newyork, NYC).",
       "Pick a platform and, if you want, a follower range. 1,000–100,000 is a good first range; a very narrow range removes most results.",
       "Click Find leads. The run shows how many accounts were found, what your filters removed and what each provider did.",
-      "Select the good ones and Save, Add to Business, Tag or Export. Every lead you have ever found stays in Hunted Leads.",
-    ],
-    docs: "finding-leads",
-  },
-  "hunted-leads": {
-    title: "What Hunted Leads is",
-    steps: [
-      "Every account OSES-J has ever found for your workspace, from every search, newest first. Nothing is lost when you leave a results page.",
-      "Filter by search, platform, place, followers, contacts or tag; search by brand, username, bio or email.",
-      "Save the promising ones so they appear in Saved Leads, or Add to Business to turn them into clients with a permanent CID.",
-      "Select leads and Export to Excel at any time.",
+      "Select the good ones and Save, Add to Business, Tag or Export. Every lead you have ever found stays under Saved Leads → All hunted leads.",
     ],
     docs: "finding-leads",
   },
   "saved-leads": {
     title: "How to use Saved Leads",
     steps: [
-      "Saved Leads is your shortlist: leads you marked with Save from a search or from Hunted Leads.",
+      "Saved Leads is your shortlist: leads you marked with Save on a results page.",
+      "Switch the first dropdown to All hunted leads to see every account OSES-J has ever found for you, from every search; filter by the search that found it, platform, place, followers, contacts or tag.",
       "Open a lead to see its sources, contacts and score breakdown; add notes and tags.",
       "Add to Business when a lead becomes a real prospect: it gets a client ID (CID) and moves into Clients.",
     ],
@@ -71,7 +62,7 @@ export const GUIDES: Record<string, FeatureGuide> = {
     title: "How campaigns work",
     steps: [
       "A campaign sends a sequence of messages to a list of leads or clients, respecting working hours, daily limits and do-not-contact.",
-      "Pick the audience from Hunted, Saved or Clients, write the steps (or let the AI draft them), set the delays and start.",
+      "Pick the audience from your leads or clients, write the steps (or let the AI draft them), set the delays and start.",
       "Pause any time; replies pull a contact out of the sequence automatically.",
     ],
     docs: "campaigns",

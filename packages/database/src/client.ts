@@ -18,19 +18,25 @@ declare global {
 export function createPrismaClient(databaseUrl?: string): PrismaClient {
   const env = getEnv();
   const options = parseMysqlUrl(databaseUrl ?? env.DATABASE_URL, env.JOB_RUNNER_MODE === "worker" ? env.WORKER_CONCURRENCY + 2 : 5);
-  const adapter = new PrismaMariaDb({
-    host: options.host,
-    port: options.port,
-    user: options.user,
-    password: options.password,
-    database: options.database,
-    connectionLimit: options.connectionLimit,
-    // The driver aborts a handshake after 1s by default. A dev server compiling in-process or a busy shared host
-    // regularly needs longer, and every aborted handshake burns the acquire budget ("pool timeout ... active=0 idle=0").
-    connectTimeout: 15_000,
-    acquireTimeout: 30_000,
-    ...(options.ssl ? { ssl: options.ssl } : {}),
-  });
+  const adapter = new PrismaMariaDb(
+    {
+      host: options.host,
+      port: options.port,
+      user: options.user,
+      password: options.password,
+      database: options.database,
+      connectionLimit: options.connectionLimit,
+      // The driver aborts a handshake after 1s by default. A dev server compiling in-process or a busy shared host
+      // regularly needs longer, and every aborted handshake burns the acquire budget ("pool timeout ... active=0 idle=0").
+      connectTimeout: 15_000,
+      acquireTimeout: 30_000,
+      ...(options.ssl ? { ssl: options.ssl } : {}),
+    },
+    // MySQL 8 gives binary-protocol (prepared statement) string parameters the utf8mb4_bin collation, so every
+    // LIKE against a utf8mb4_unicode_ci column fails with "Illegal mix of collations". The text protocol escapes
+    // values inline, which inherit the connection collation and work on MySQL 8 and MariaDB alike.
+    { useTextProtocol: true },
+  );
   const client = new PrismaClient({
     adapter,
     log: env.LOG_LEVEL === "debug" ? [{ level: "warn", emit: "stdout" }, { level: "error", emit: "stdout" }] : [{ level: "error", emit: "stdout" }],
