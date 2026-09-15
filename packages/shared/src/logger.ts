@@ -58,6 +58,25 @@ export function redact(value: unknown, depth = 0): unknown {
   return value;
 }
 
+export interface RecentLogEntry {
+  time: string;
+  level: "warn" | "error";
+  logger: string;
+  msg: string;
+  fields: Record<string, unknown>;
+}
+
+const RECENT_LIMIT = 100;
+const recent: RecentLogEntry[] = [];
+
+/**
+ * Last warnings and errors of this process (newest first), for the OS-Panel. Hosts without log access
+ * still let operators see what went wrong; values pass through the same redaction as the log lines.
+ */
+export function getRecentLogs(limit = RECENT_LIMIT): RecentLogEntry[] {
+  return recent.slice(-limit).reverse();
+}
+
 function emit(level: LogLevel, name: string, bindings: LogFields, msg: string, fields?: LogFields): void {
   if (LEVEL_ORDER[level] < LEVEL_ORDER[config.level]) return;
   const record: Record<string, unknown> = {
@@ -68,6 +87,11 @@ function emit(level: LogLevel, name: string, bindings: LogFields, msg: string, f
     ...(redact(bindings) as Record<string, unknown>),
     ...(fields ? (redact(fields) as Record<string, unknown>) : {}),
   };
+  if (level === "warn" || level === "error") {
+    const { time, level: lvl, logger, msg: message, ...rest } = record;
+    recent.push({ time: String(time), level: lvl as "warn" | "error", logger: String(logger), msg: String(message), fields: rest });
+    if (recent.length > RECENT_LIMIT) recent.splice(0, recent.length - RECENT_LIMIT);
+  }
   if (config.format === "json") {
     config.write(JSON.stringify(record));
     return;

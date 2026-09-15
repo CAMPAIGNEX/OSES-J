@@ -20,6 +20,9 @@ export interface PersistBatchResult {
   needsProfileEnrichment: string[];
   /** Leads with a website but no email/phone; website extraction can add contacts. */
   needsWebsiteEnrichment: string[];
+  /** Leads that could not be saved (database errors), with the distinct error messages. */
+  failed: number;
+  errors: string[];
 }
 
 /** Look up an existing lead by deterministic identity keys, then by fuzzy brand match. */
@@ -183,7 +186,7 @@ async function upsertContacts(db: DbClient, organizationId: string, leadId: stri
 
 /** Persist a discovery batch: match existing leads, create new ones, link them to the search run. */
 export async function persistDiscoveredLeads(db: DbClient, input: PersistBatchInput, providerRunIdByExternalId: Map<string, string> = new Map()): Promise<PersistBatchResult> {
-  const result: PersistBatchResult = { created: 0, matched: 0, leadIds: [], needsProfileEnrichment: [], needsWebsiteEnrichment: [] };
+  const result: PersistBatchResult = { created: 0, matched: 0, leadIds: [], needsProfileEnrichment: [], needsWebsiteEnrichment: [], failed: 0, errors: [] };
   let rank = 0;
   for (const lead of input.leads) {
     rank++;
@@ -219,7 +222,11 @@ export async function persistDiscoveredLeads(db: DbClient, input: PersistBatchIn
       if (lead.website && !lead.websiteIsAggregator && (!lead.email || !lead.phone)) result.needsWebsiteEnrichment.push(leadId);
       else if (lead.website && lead.websiteIsAggregator) result.needsWebsiteEnrichment.push(leadId);
     } catch (err) {
-      log.error("failed to persist lead", { dedupeKey: lead.dedupeKey, error: (err as Error).message });
+      // Never let one bad row abort the batch, but never hide it either: the run reports these as warnings.
+      const message = (err as Error).message.replace(/\s+/g, " ").trim().slice(0, 300);
+      result.failed++;
+      if (!result.errors.includes(message) && result.errors.length < 3) result.errors.push(message);
+      log.error("failed to persist lead", { dedupeKey: lead.dedupeKey, username: lead.username, error: (err as Error).message, stack: (err as Error).stack });
     }
   }
   return result;

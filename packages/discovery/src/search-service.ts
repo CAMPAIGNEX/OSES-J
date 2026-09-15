@@ -117,6 +117,7 @@ export async function executeSearchRun(db: DbClient, searchRunId: string, option
     warnings.push(...output.warnings);
     const limited = output.leads.slice(0, Math.max(criteria.limit, 1) * criteria.platforms.length);
     const persisted = await persistDiscoveredLeads(db, { organizationId: run.organizationId, searchRunId: run.id, leads: limited }, providerRunIds);
+    if (persisted.failed > 0) warnings.push(`${persisted.failed} of ${limited.length} leads could not be saved because of a database error: ${persisted.errors.join(" | ")}. The CNEX AI team can see the details in the server log.`);
     const failedOnly = providers.length > 0 && output.runs.length > 0 && output.runs.every((r) => r.status !== "SUCCEEDED");
     const updated = await db.searchRun.update({
       where: { id: run.id },

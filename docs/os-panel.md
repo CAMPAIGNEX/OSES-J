@@ -44,6 +44,10 @@ Every workspace detail page has an **Operations** section that is never visible 
 
 Members only see a **Services** readiness list in Settings → Automation. The underlying APIs (`/api/settings/providers*`, provider/key fields of `/api/settings/automation` and `/api/ai/settings`) reject non-operators; operators act on another workspace by passing `?organizationId=`.
 
+## System page: recent warnings & errors
+
+Hosts such as Hostinger give no easy access to the process log, so the System page lists the last 50 warn/error log records of the running web process (`getRecentLogs()` in `@oses/shared`; same redaction as the log lines) together with the database version and SQL mode. A search whose leads could not be saved also carries the database error in its run warnings (`persisted.errors`).
+
 ## Suspension
 
 Suspending a workspace sets `Organization.status = SUSPENDED`, pauses automation (mode Manual, autopilot off, running campaigns paused, queued jobs cancelled) and makes every app API call for its members fail with `403 ORG_SUSPENDED`; the app shows a notice with the reason. Operators can still open the workspace. Activating restores access; automation stays off until the workspace turns it on again.

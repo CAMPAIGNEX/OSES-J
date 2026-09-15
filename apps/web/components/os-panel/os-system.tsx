@@ -8,11 +8,12 @@ import { OsBadge, OsPageHeader, OsPanel, OsStat } from "./os-shell";
 interface SystemInfo {
   config: { ok: boolean; missing: string[]; invalid: string[]; nodeEnv: string };
   runtime: { node: string; platform: string; uptimeSec: number; memoryMb: number; nodeEnv: string; appUrl: string; jobRunnerMode: string; queueDriver: string; logLevel: string };
-  database: { ok: boolean; latencyMs: number | null; error: string | null };
+  database: { ok: boolean; latencyMs: number | null; error: string | null; version: string | null; sqlMode: string | null };
   queue: { queued: number; running: number; failed24h: number; oldestQueuedAt: string | null; lastJob: { completedAt: string | null; type: string; status: string } | null };
   providers: { aiDefault: string | null; apifyDefault: boolean; apifyOrigin: string | null; meta: boolean; metaOrigin: string | null; metaWebhookVerify: boolean; superAdminBootstrap: boolean; storageDir: string };
   devices: Array<{ status: string; count: number }>;
   connections: Array<{ status: string; count: number }>;
+  recentLogs: Array<{ time: string; level: "warn" | "error"; logger: string; msg: string; fields: Record<string, unknown> }>;
 }
 
 function Row({ label, value }: { label: string; value: React.ReactNode }) {
@@ -46,6 +47,8 @@ export function OsSystem() {
           <Row label="Queue driver" value={data.runtime.queueDriver} />
           <Row label="Log level" value={data.runtime.logLevel} />
           <Row label="Storage dir" value={data.providers.storageDir} />
+          <Row label="Database" value={data.database.version ?? "—"} />
+          <Row label="SQL mode" value={<span className="break-all">{data.database.sqlMode || "(default)"}</span>} />
         </OsPanel>
         <OsPanel title="Platform defaults" actions={<Link href="/os-panel/platform" className="font-mono text-[11px] uppercase tracking-wider text-bauhaus-yellow hover:underline">Providers &amp; keys →</Link>}>
           <Row label="AI default" value={data.providers.aiDefault ? <OsBadge tone="green">{data.providers.aiDefault}</OsBadge> : <OsBadge tone="red">none · set it in Providers &amp; keys</OsBadge>} />
@@ -70,6 +73,20 @@ export function OsSystem() {
             <Row key={c.status} label={`Meta ${c.status.toLowerCase()}`} value={c.count} />
           ))}
           {!data.connections.length && <Row label="Meta connections" value="none" />}
+        </OsPanel>
+        <OsPanel title={`Recent warnings & errors (this process · ${data.recentLogs.length})`} className="lg:col-span-2">
+          {data.recentLogs.length === 0 ? (
+            <p className="font-mono text-[12px] text-[#6b7280]">Nothing logged at warn/error level since the server started.</p>
+          ) : (
+            <ul className="max-h-[420px] space-y-2 overflow-y-auto font-mono text-[11px]">
+              {data.recentLogs.map((l, i) => (
+                <li key={`${l.time}-${i}`} className="border-t border-[#1f2937] pt-2 first:border-t-0 first:pt-0">
+                  <span className="text-[#6b7280]">{formatDateTime(l.time)}</span> <OsBadge tone={l.level === "error" ? "red" : "yellow"}>{l.level}</OsBadge> <span className="text-[#9ca3af]">[{l.logger}]</span> <span className="text-white">{l.msg}</span>
+                  {Object.keys(l.fields).length > 0 && <pre className="mt-1 whitespace-pre-wrap break-all text-[#9ca3af]">{JSON.stringify(l.fields, null, 0).slice(0, 1200)}</pre>}
+                </li>
+              ))}
+            </ul>
+          )}
         </OsPanel>
       </div>
     </>

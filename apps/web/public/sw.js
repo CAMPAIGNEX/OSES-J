@@ -1,6 +1,6 @@
 /* OSES-J service worker: makes the installed app feel native (instant shell, offline notice).
    Static assets are cached; API responses and pages are always network-first and never stored stale. */
-const VERSION = "oses-sw-v2";
+const VERSION = "oses-sw-v3";
 const STATIC = `${VERSION}-static`;
 const OFFLINE_URL = "/offline";
 
@@ -18,9 +18,19 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return;
   if (url.pathname.startsWith("/api/")) return;
-  const isStatic = url.pathname.startsWith("/_next/static/") || url.pathname.startsWith("/brand/") || url.pathname.startsWith("/icons/") || url.pathname.startsWith("/fonts/") || /\.(woff2|png|svg|ico)$/.test(url.pathname);
-  if (isStatic) {
+  // Hashed build output never changes under the same URL: cache-first.
+  if (url.pathname.startsWith("/_next/static/")) {
     event.respondWith(caches.open(STATIC).then(async (cache) => (await cache.match(req)) ?? fetch(req).then((res) => { if (res.ok) cache.put(req, res.clone()); return res; })));
+    return;
+  }
+  // Brand, icons and fonts keep their URLs when they change: serve the cached copy instantly, refresh it in the background.
+  const isAsset = url.pathname.startsWith("/brand/") || url.pathname.startsWith("/icons/") || url.pathname.startsWith("/fonts/") || /\.(woff2|png|svg|ico)$/.test(url.pathname);
+  if (isAsset) {
+    event.respondWith(caches.open(STATIC).then(async (cache) => {
+      const cached = await cache.match(req);
+      const refresh = fetch(req).then((res) => { if (res.ok) cache.put(req, res.clone()); return res; }).catch(() => cached);
+      return cached ?? refresh;
+    }));
     return;
   }
   if (req.mode === "navigate") {

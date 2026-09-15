@@ -1,5 +1,5 @@
 import { getPlatformConfig } from "@oses/database";
-import { checkEnv, getEnv } from "@oses/shared";
+import { checkEnv, getEnv, getRecentLogs } from "@oses/shared";
 import { withApi } from "@/lib/server/api";
 
 /** Platform health for operators: configuration (names only), runtime, queue depth and provider defaults. */
@@ -10,9 +10,13 @@ export const GET = withApi(
     const started = Date.now();
     let dbLatencyMs: number | null = null;
     let dbError: string | null = null;
+    let dbVersion: string | null = null;
+    let dbSqlMode: string | null = null;
     try {
-      await db.$queryRaw`SELECT 1`;
+      const rows = await db.$queryRaw<Array<{ version: string; sqlMode: string }>>`SELECT VERSION() AS version, @@SESSION.sql_mode AS sqlMode`;
       dbLatencyMs = Date.now() - started;
+      dbVersion = rows[0]?.version ?? null;
+      dbSqlMode = rows[0]?.sqlMode ?? null;
     } catch (err) {
       dbError = (err as Error).message;
     }
@@ -29,7 +33,7 @@ export const GET = withApi(
     return {
       config,
       runtime: { node: process.version, platform: process.platform, uptimeSec: Math.round(process.uptime()), memoryMb: Math.round(process.memoryUsage().rss / 1_048_576), nodeEnv: env.NODE_ENV, appUrl: env.APP_URL, jobRunnerMode: env.JOB_RUNNER_MODE, queueDriver: env.QUEUE_DRIVER, logLevel: env.LOG_LEVEL },
-      database: { ok: !dbError, latencyMs: dbLatencyMs, error: dbError },
+      database: { ok: !dbError, latencyMs: dbLatencyMs, error: dbError, version: dbVersion, sqlMode: dbSqlMode },
       queue: { queued, running, failed24h, oldestQueuedAt: oldestQueued?.scheduledAt ?? null, lastJob },
       providers: {
         aiDefault: platform.ai.provider !== "none" && platform.ai.apiKey ? `${platform.ai.provider} (${platform.ai.model ?? "default model"}) · ${platform.ai.origin}` : null,
@@ -43,6 +47,7 @@ export const GET = withApi(
       },
       devices: devices.map((d) => ({ status: d.status, count: d._count._all })),
       connections: connections.map((c) => ({ status: c.status, count: c._count._all })),
+      recentLogs: getRecentLogs(50),
     };
   },
   { superAdminOnly: true },
