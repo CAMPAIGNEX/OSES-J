@@ -25,6 +25,10 @@ export function createPrismaClient(databaseUrl?: string): PrismaClient {
     password: options.password,
     database: options.database,
     connectionLimit: options.connectionLimit,
+    // The driver aborts a handshake after 1s by default. A dev server compiling in-process or a busy shared host
+    // regularly needs longer, and every aborted handshake burns the acquire budget ("pool timeout ... active=0 idle=0").
+    connectTimeout: 15_000,
+    acquireTimeout: 30_000,
     ...(options.ssl ? { ssl: options.ssl } : {}),
   });
   const client = new PrismaClient({
