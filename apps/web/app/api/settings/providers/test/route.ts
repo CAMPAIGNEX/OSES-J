@@ -1,4 +1,5 @@
 import { ApifyClient } from "@oses/apify";
+import { getPlatformConfig } from "@oses/database";
 import { resolveApifyToken } from "@oses/discovery";
 import { errorMessage } from "@oses/shared";
 import { z } from "zod";
@@ -7,7 +8,8 @@ import { withApi } from "@/lib/server/api";
 /** Validate the Apify token (and optionally that an Actor exists) without running anything. */
 export const POST = withApi(
   async (ctx) => {
-    const { token, origin } = await resolveApifyToken(ctx.db, ctx.organizationId);
+    // Platform scope tests the platform token itself (never a workspace override).
+    const { token, origin } = ctx.query.get("scope") === "platform" ? await getPlatformConfig(ctx.db).then((p) => p.apify) : await resolveApifyToken(ctx.db, ctx.organizationId);
     if (!token) return { ok: false, error: "No Apify token configured" };
     try {
       const client = new ApifyClient({ token });

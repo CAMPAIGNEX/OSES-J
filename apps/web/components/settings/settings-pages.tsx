@@ -171,7 +171,7 @@ export function SocialSettings() {
         {list.data && !list.data.metaConfigured && (
           <div className="mb-3 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[13px] text-amber-800 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-200">
             <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
-            <p>Meta app credentials are not configured on the server (META_APP_ID / META_APP_SECRET). See docs/meta-integration.md.</p>
+            <p>Official Instagram / Facebook messaging is not active yet. The CNEX AI team switches it on for the platform; email info@cnexai.com or WhatsApp +92 312 7233047.</p>
           </div>
         )}
         {list.data?.items.length ? (
@@ -194,8 +194,8 @@ export function SocialSettings() {
         <p className="mt-3 text-xs text-faint">The official API can reply to people who message your Page/Instagram account. It cannot cold-message arbitrary profiles — for first contact OSES-J uses the browser extension, Apify automation, or manual sending.</p>
       </Card>
       <Card>
-        <CardHeader title="Webhooks" description="Incoming messages, delivery and read receipts arrive through the Meta webhook." />
-        <p className="text-[13px] text-muted">Callback URL: <code className="rounded bg-surface-2 px-1.5 py-0.5">{typeof window !== "undefined" ? `${window.location.origin}/api/webhooks/meta` : "/api/webhooks/meta"}</code> · verify token: <code className="rounded bg-surface-2 px-1.5 py-0.5">META_WEBHOOK_VERIFY_TOKEN</code> {list.data?.webhookConfigured ? <Badge tone="success" className="ml-1">configured</Badge> : <Badge tone="warning" className="ml-1">not configured</Badge>}</p>
+        <CardHeader title="Incoming messages" description="Replies, delivery and read receipts from Meta arrive automatically once the connection is active; nothing to set up on your side." />
+        <p className="text-[13px] text-muted">Webhook status: {list.data?.webhookConfigured ? <Badge tone="success" className="ml-1">active</Badge> : <Badge tone="warning" className="ml-1">not active yet (CNEX AI)</Badge>}</p>
       </Card>
     </>
   );
@@ -335,9 +335,15 @@ interface ProviderRow { id: string; domain: string; platform: string; actorId: s
 interface ProvidersData { items: ProviderRow[]; environmentDefaults: Array<{ domain: string; platform: string; actorId: string; adapter: string; priority: number }>; adapters: Array<{ key: string; platform: string; purposes: string[]; defaultActorId: string; description: string }> }
 
 /** Discovery Actor configuration. Operators only: rendered inside the OS-Panel for a target workspace. */
-export function ProvidersSettings({ organizationId }: { organizationId: string }) {
+/**
+ * Actor configuration table (operators only; embedded in the OS-Panel). With `scope="platform"` it manages
+ * the platform-wide rows every workspace inherits; with an organizationId it manages that workspace's overrides.
+ */
+export function ProvidersSettings({ organizationId, scope: scopeKind = "organization" }: { organizationId?: string; scope?: "organization" | "platform" }) {
   const toast = useToast();
-  const scope = `?organizationId=${encodeURIComponent(organizationId)}`;
+  const platformScope = scopeKind === "platform";
+  const scope = platformScope ? "?scope=platform" : `?organizationId=${encodeURIComponent(organizationId ?? "")}`;
+  const editable = platformScope ? "global" : "organization";
   const data = useQuery<ProvidersData>(`/api/settings/providers${scope}`);
   const [form, setForm] = useState({ domain: "DISCOVERY", platform: "INSTAGRAM", adapter: "search-engine-instagram", actorId: "apify/google-search-scraper", priority: 1, timeoutSec: 600, settings: "" });
   const [saving, setSaving] = useState(false);
@@ -369,7 +375,7 @@ export function ProvidersSettings({ organizationId }: { organizationId: string }
   return (
     <>
       <Card>
-        <CardHeader title="Provider configuration" description="Which Apify Actor handles each job. Organization rows override platform defaults from the environment. Actors are external providers — verify the input/output schema of the Actor you choose." />
+        <CardHeader title={platformScope ? "Default Actors (all workspaces)" : "Actor configuration"} description={platformScope ? "Which Apify Actor handles each job for every workspace that has no override of its own. Rows here replace the environment defaults for the same domain and platform. Actors are external providers: verify the input/output schema of the Actor you choose." : "Which Apify Actor handles each job. Workspace rows override the platform defaults (OS-Panel → Providers & keys) for the same domain and platform."} />
         {data.data ? (
           <table className="w-full text-[13px]">
             <thead><tr className="text-left text-[11px] uppercase tracking-wide text-muted"><th className="py-1.5">Domain</th><th>Platform</th><th>Actor</th><th>Adapter</th><th>Priority</th><th>Scope</th><th></th></tr></thead>
@@ -381,10 +387,10 @@ export function ProvidersSettings({ organizationId }: { organizationId: string }
                   <td className="font-mono text-xs">{p.actorId}</td>
                   <td>{p.adapter}</td>
                   <td>{p.priority}</td>
-                  <td><Badge tone={p.scope === "organization" ? "brand" : "neutral"}>{p.scope}</Badge>{!p.enabled && <Badge tone="warning" className="ml-1">disabled</Badge>}</td>
+                  <td><Badge tone={p.scope === "organization" ? "brand" : "neutral"}>{p.scope === "global" ? "platform" : p.scope}</Badge>{!p.enabled && <Badge tone="warning" className="ml-1">disabled</Badge>}</td>
                   <td className="text-right">
                     <Button size="xs" variant="ghost" loading={testing === p.actorId} onClick={() => void testActor(p.actorId)}>Test</Button>
-                    {p.scope === "organization" && <Button size="xs" variant="ghost" onClick={() => void api(`/api/settings/providers/${p.id}${scope}`, { method: "DELETE" }).then(() => data.refetch())} icon={<Trash2 className="h-3.5 w-3.5" />} aria-label="Delete" />}
+                    {p.scope === editable && <Button size="xs" variant="ghost" onClick={() => void api(`/api/settings/providers/${p.id}${scope}`, { method: "DELETE" }).then(() => data.refetch())} icon={<Trash2 className="h-3.5 w-3.5" />} aria-label="Delete" />}
                     {testResult[p.actorId] && <p className="text-xs text-muted">{testResult[p.actorId]}</p>}
                   </td>
                 </tr>
@@ -405,7 +411,7 @@ export function ProvidersSettings({ organizationId }: { organizationId: string }
         ) : <Skeleton className="h-32" />}
       </Card>
       <Card>
-        <CardHeader title="Add provider configuration" />
+        <CardHeader title={platformScope ? "Add a default Actor" : "Add a workspace override"} />
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           <Field label="Domain"><Select value={form.domain} onChange={(e) => setForm({ ...form, domain: e.target.value })}><option value="DISCOVERY">Discovery</option><option value="ENRICHMENT">Enrichment (profile details)</option><option value="CONTENT">Content (posts)</option><option value="MESSAGING">Messaging (DM automation)</option></Select></Field>
           <Field label="Platform"><Select value={form.platform} onChange={(e) => setForm({ ...form, platform: e.target.value })}><option value="INSTAGRAM">Instagram</option><option value="FACEBOOK">Facebook</option><option value="ANY">Any</option></Select></Field>

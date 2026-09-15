@@ -87,9 +87,9 @@ All configuration lives in one `.env` at the repository root (see [.env.example]
 | `JOB_RUNNER_MODE` | `inline` (jobs run inside the web app), `cron` (POST `/api/internal/jobs/tick`), `worker` (`pnpm worker`) |
 | `INTERNAL_JOB_SECRET` | Bearer secret for the cron tick endpoint |
 | `SUPER_ADMIN_EMAILS` | Comma-separated emails granted OS-Panel (platform operator) access |
-| `AI_PROVIDER`, `AI_API_KEY`, `AI_MODEL` | Platform-default AI (`anthropic` → `claude-opus-5`); organizations can override in Settings |
-| `APIFY_API_TOKEN`, `APIFY_*_ACTOR` | Discovery / enrichment / messaging Actors (organization overrides in Settings → Providers) |
-| `META_APP_ID`, `META_APP_SECRET`, `META_WEBHOOK_VERIFY_TOKEN` | Official Meta integration |
+| `AI_PROVIDER`, `AI_API_KEY`, `AI_MODEL` | Fallback only: the platform AI provider is normally set in **OS-Panel → Providers & keys** |
+| `APIFY_API_TOKEN`, `APIFY_*_ACTOR` | Fallback only: token and default Actors are normally set in **OS-Panel → Providers & keys** |
+| `META_APP_ID`, `META_APP_SECRET`, `META_WEBHOOK_VERIFY_TOKEN` | Fallback only: the Meta app is normally set in **OS-Panel → Providers & keys** |
 | `STORAGE_DIR` | Local document storage directory |
 
 ## Database setup
@@ -98,13 +98,13 @@ The Prisma schema is in `packages/database/prisma/schema.prisma` (45 models, all
 
 ## Apify setup
 
-1. Add your Apify token in **Settings → Automation** (stored encrypted) or set `APIFY_API_TOKEN`.
+1. As an operator, add the Apify token in **OS-Panel → Providers & keys** (stored encrypted) and click **Add the recommended set** under Default Actors.
 2. Choose Actors in **Settings → Providers** or through env variables. Defaults: `apify/google-search-scraper` (search-engine strategy), `apify/instagram-scraper`, `apify/instagram-profile-scraper`, `apify/instagram-hashtag-scraper`, `apify/facebook-pages-scraper`.
 3. Use **Test** to verify the token and that an Actor exists. Actors are external providers: verify their input/output schema and adjust with `settings.inputOverrides` or the generic adapter's `inputTemplate`. See [docs/apify.md](docs/apify.md).
 
 ## Meta setup
 
-Create a Meta app with Facebook Login + Messenger + Instagram messaging products, set `META_APP_ID/SECRET`, configure the webhook callback `https://<APP_URL>/api/webhooks/meta` with `META_WEBHOOK_VERIFY_TOKEN`, then connect Pages in **Settings → Social accounts**. See [docs/meta-integration.md](docs/meta-integration.md).
+Create a Meta app with Facebook Login + Messenger + Instagram messaging products, enter its id, secret and a webhook verify token in **OS-Panel → Providers & keys → Meta app**, configure the webhook callback `https://<APP_URL>/api/webhooks/meta` with that verify token, then workspaces connect Pages in **Settings → Social accounts**. See [docs/meta-integration.md](docs/meta-integration.md).
 
 ## Extension setup
 
@@ -116,7 +116,7 @@ Load `apps/extension/dist` as an unpacked extension in Chrome (`chrome://extensi
 
 ## AI setup
 
-Set `AI_PROVIDER=anthropic` and `AI_API_KEY` (platform default), or configure a provider per organization in **AI Assistant → Behaviour & limits** (Anthropic, OpenAI or any OpenAI-compatible endpoint; keys are stored encrypted). Add company facts in **Settings → Company**, instructions and knowledge in **AI Assistant**. See [docs/ai-agent.md](docs/ai-agent.md).
+Set the platform AI provider in **OS-Panel → Providers & keys** (Anthropic, OpenAI or any OpenAI-compatible endpoint; keys are stored encrypted); a workspace-specific provider can be set in OS-Panel → Organization → Operations. Add company facts in **Settings → Company**, instructions and knowledge in **AI Assistant**. See [docs/ai-agent.md](docs/ai-agent.md).
 
 ## Testing
 
@@ -135,8 +135,8 @@ Git-based Node.js hosting (Hostinger and similar): Node 22, package manager pnpm
 
 | Symptom | Check |
 |---|---|
-| "AI is not configured" | `AI_PROVIDER` / `AI_API_KEY` or the organization's key in AI Assistant settings |
-| Searches complete with 0 results and a warning | Apify token missing or no provider for the platform (Settings → Automation / Providers) |
+| "AI is not configured" | OS-Panel → Providers & keys → AI provider (or a workspace override) |
+| Searches complete with 0 results and a warning | Apify token or default Actors missing (OS-Panel → Providers & keys) |
 | "Message cannot be sent automatically" | The provider decision lists why each provider was skipped (no Meta thread, extension offline, Apify not configured). Use *Open in Instagram* to send manually |
 | Extension shows "Waiting for heartbeat" | Pair it again; make sure the server URL is reachable from the browser and the org has the extension enabled |
 | Jobs stay QUEUED | `JOB_RUNNER_MODE`: in `cron` mode call `/api/internal/jobs/tick`; in `worker` mode run `pnpm worker` |

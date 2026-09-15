@@ -2,11 +2,13 @@ import { writeAudit } from "@oses/database";
 import { BUILT_IN_ADAPTERS, environmentDefinitions } from "@oses/discovery";
 import { providerConfigSchema } from "@oses/validation";
 import { withApi } from "@/lib/server/api";
+import { providerScope } from "@/lib/server/providers";
 
 /** Provider configuration: organization rows, platform-wide rows and environment defaults, plus the adapter catalogue. */
 export const GET = withApi(
   async (ctx) => {
-  const rows = await ctx.db.providerConfig.findMany({ where: { OR: [{ organizationId: ctx.organizationId }, { organizationId: null }] }, orderBy: [{ domain: "asc" }, { platform: "asc" }, { priority: "asc" }] });
+  const organizationId = providerScope(ctx);
+  const rows = await ctx.db.providerConfig.findMany({ where: organizationId ? { OR: [{ organizationId }, { organizationId: null }] } : { organizationId: null }, orderBy: [{ domain: "asc" }, { platform: "asc" }, { priority: "asc" }] });
   return {
     items: rows.map((r) => ({ ...r, costLimitUsd: r.costLimitUsd ? Number(r.costLimitUsd) : null, scope: r.organizationId ? "organization" : "global" })),
     environmentDefaults: environmentDefinitions(),
@@ -18,8 +20,9 @@ export const GET = withApi(
 
 export const POST = withApi(
   async (ctx) => {
-    const item = await ctx.db.providerConfig.create({ data: { organizationId: ctx.organizationId, domain: ctx.body.domain, provider: ctx.body.provider, platform: ctx.body.platform, actorId: ctx.body.actorId, adapter: ctx.body.adapter, enabled: ctx.body.enabled, priority: ctx.body.priority, costLimitUsd: ctx.body.costLimitUsd ?? null, timeoutSec: ctx.body.timeoutSec, settings: ctx.body.settings as object } });
-    await writeAudit(ctx.db, { organizationId: ctx.organizationId, userId: ctx.userId, action: "provider.created", entityType: "ProviderConfig", entityId: item.id, meta: { domain: item.domain, platform: item.platform, actorId: item.actorId } });
+    const organizationId = providerScope(ctx);
+    const item = await ctx.db.providerConfig.create({ data: { organizationId, domain: ctx.body.domain, provider: ctx.body.provider, platform: ctx.body.platform, actorId: ctx.body.actorId, adapter: ctx.body.adapter, enabled: ctx.body.enabled, priority: ctx.body.priority, costLimitUsd: ctx.body.costLimitUsd ?? null, timeoutSec: ctx.body.timeoutSec, settings: ctx.body.settings as object } });
+    await writeAudit(ctx.db, { organizationId, userId: ctx.userId, action: "provider.created", entityType: "ProviderConfig", entityId: item.id, meta: { domain: item.domain, platform: item.platform, actorId: item.actorId, scope: organizationId ? "organization" : "platform", operator: ctx.session.user.email } });
     return { item };
   },
   { body: providerConfigSchema, superAdminOnly: true, operatorOrgOverride: true },

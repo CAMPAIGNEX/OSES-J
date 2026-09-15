@@ -6,9 +6,9 @@ Apify is the default external provider for discovery, profile enrichment and (op
 
 | Level | Where | Notes |
 |---|---|---|
-| Token | Settings > Automation (encrypted per organization) or `APIFY_API_TOKEN` | Organization token wins |
-| Actors | Settings > Providers (`ProviderConfig` rows) or `APIFY_*_ACTOR` env defaults | Organization rows override global rows override env |
-| Test | Settings > Providers > Test / Settings > Automation > Test token | Verifies the token (`/users/me`) and that the Actor exists |
+| Token | OS-Panel → Providers & keys (platform, encrypted); optional workspace override in OS-Panel → Organization → Operations; `APIFY_API_TOKEN` as fallback | Workspace override > platform > environment |
+| Actors | OS-Panel → Providers & keys → Default Actors (platform `ProviderConfig` rows) or workspace overrides; `APIFY_*_ACTOR` env as fallback | Workspace rows > platform rows > env |
+| Test | OS-Panel test buttons | Verifies the token (`/users/me`) and that the Actor exists |
 
 Default Actors (public on the Apify Store; verify pricing and input schemas before production use):
 

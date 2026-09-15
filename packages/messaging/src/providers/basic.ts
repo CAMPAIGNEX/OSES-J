@@ -1,4 +1,4 @@
-import type { MessageJobProvider } from "@oses/database";
+import { getPlatformConfig, type MessageJobProvider } from "@oses/database";
 import { getEnv, type Platform } from "@oses/shared";
 import type { CapabilityResult, MessageJobPayload, MessageJobTarget, MessagingProvider, ProviderContext, SendMessageRequest, SendMessageResult } from "../types";
 
@@ -105,9 +105,11 @@ export class ApifyMessagingProvider implements MessagingProvider {
 
   async canSend(target: MessageTarget, ctx: ProviderContext): Promise<CapabilityResult> {
     const settings = await ctx.db.organizationSettings.findUnique({ where: { organizationId: ctx.organizationId }, select: { apifyEnabled: true, apifyTokenEncrypted: true } });
-    const env = getEnv();
-    if (settings && !settings.apifyEnabled) return { canSend: false, eligibility: "REQUIRES_USER", reason: "Apify automation is disabled in settings", requiresUser: true };
-    if (!settings?.apifyTokenEncrypted && !env.APIFY_API_TOKEN) return { canSend: false, eligibility: "REQUIRES_USER", reason: "Apify token is not configured", requiresUser: true };
+    if (settings && !settings.apifyEnabled) return { canSend: false, eligibility: "REQUIRES_USER", reason: "Apify automation is disabled for this workspace", requiresUser: true };
+    if (!settings?.apifyTokenEncrypted) {
+      const platform = (await getPlatformConfig(ctx.db)).apify;
+      if (!platform.token || !platform.enabled) return { canSend: false, eligibility: "REQUIRES_USER", reason: "Apify automation is not active (no platform token)", requiresUser: true };
+    }
     const cfg = await this.resolveConfig(ctx, target.platform);
     if (!cfg) return { canSend: false, eligibility: "REQUIRES_USER", reason: `No Apify messaging Actor configured for ${target.platform}`, requiresUser: true };
     if (!target.username && !target.inboxUrl && !target.externalThreadId) return { canSend: false, eligibility: "NOT_MESSAGEABLE", reason: "No username or thread reference for the Actor", requiresUser: false };

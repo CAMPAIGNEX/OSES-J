@@ -1,6 +1,6 @@
 import type { DbClient } from "@oses/database";
 import { allocateClientCid, writeAudit } from "@oses/database";
-import { createLogger, errorMessage, getEnv, type Platform } from "@oses/shared";
+import { createLogger, errorMessage, type Platform } from "@oses/shared";
 import { getOrCreateConversation, touchConversation } from "../conversation-service";
 import { connectionToken } from "./connections";
 import { getScopedUserProfile } from "./graph-client";
@@ -40,12 +40,12 @@ export interface WebhookProcessSummary {
   errors: string[];
 }
 
-export function handleVerification(query: URLSearchParams): { ok: boolean; challenge?: string } {
-  const env = getEnv();
+/** Meta webhook verification handshake; `verifyToken` comes from the platform configuration. */
+export function handleVerification(query: URLSearchParams, verifyToken: string | null | undefined): { ok: boolean; challenge?: string } {
   const mode = query.get("hub.mode");
   const token = query.get("hub.verify_token");
   const challenge = query.get("hub.challenge");
-  if (mode === "subscribe" && env.META_WEBHOOK_VERIFY_TOKEN && token === env.META_WEBHOOK_VERIFY_TOKEN && challenge) return { ok: true, challenge };
+  if (mode === "subscribe" && verifyToken && token === verifyToken && challenge) return { ok: true, challenge };
   return { ok: false };
 }
 

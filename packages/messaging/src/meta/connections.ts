@@ -1,5 +1,5 @@
 import type { DbClient, SocialConnection } from "@oses/database";
-import { writeAudit } from "@oses/database";
+import { getPlatformConfig, writeAudit } from "@oses/database";
 import { createLogger, decryptSecret, encryptSecret, errorMessage, getEnv, hmacSha256Hex, NotFoundError, randomToken, safeEqual } from "@oses/shared";
 import { exchangeCodeForToken, exchangeForLongLivedToken, listManagedPages, subscribePageToWebhooks } from "./graph-client";
 
@@ -43,10 +43,11 @@ export function metaRedirectUri(): string {
 export async function completeMetaConnection(db: DbClient, organizationId: string, userId: string, code: string): Promise<{ connections: SocialConnection[]; warnings: string[] }> {
   const env = getEnv();
   const warnings: string[] = [];
-  const shortLived = await exchangeCodeForToken(code, metaRedirectUri());
+  const creds = (await getPlatformConfig(db)).meta;
+  const shortLived = await exchangeCodeForToken(creds, code, metaRedirectUri());
   let userToken = shortLived.access_token;
   try {
-    userToken = (await exchangeForLongLivedToken(shortLived.access_token)).access_token;
+    userToken = (await exchangeForLongLivedToken(creds, shortLived.access_token)).access_token;
   } catch (err) {
     warnings.push(`Could not obtain a long-lived token: ${errorMessage(err)}`);
   }

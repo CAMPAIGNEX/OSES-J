@@ -62,8 +62,9 @@ export async function ingestKnowledgeText(
   db: DbClient,
   organizationId: string,
   input: { title: string; content: string; documentId?: string | null; sourceType?: "TEXT" | "FILE"; knowledgeDocumentId?: string },
-  embeddings: EmbeddingProvider | null = resolveEmbeddingProvider(),
+  embeddingsOverride?: EmbeddingProvider | null,
 ): Promise<{ knowledgeDocumentId: string; chunkCount: number }> {
+  const embeddings = embeddingsOverride === undefined ? await resolveEmbeddingProvider(db) : embeddingsOverride;
   const doc = input.knowledgeDocumentId
     ? await db.knowledgeDocument.update({ where: { id: input.knowledgeDocumentId }, data: { status: "PROCESSING", contentText: input.content, charCount: input.content.length, error: null } })
     : await db.knowledgeDocument.create({
@@ -142,7 +143,7 @@ export async function retrieveKnowledge(
   const results: RetrievedChunk[] = [];
 
   // 1) embeddings when available (both the query and stored chunks need vectors)
-  const embeddings = options.embeddings === undefined ? resolveEmbeddingProvider() : options.embeddings;
+  const embeddings = options.embeddings === undefined ? await resolveEmbeddingProvider(db) : options.embeddings;
   if (embeddings) {
     try {
       const [qv] = await embeddings.embed([q]);

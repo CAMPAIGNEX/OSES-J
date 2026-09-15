@@ -72,8 +72,8 @@ describe("Meta webhook security", () => {
   it("answers the verification handshake only with the right token", () => {
     process.env.META_WEBHOOK_VERIFY_TOKEN = "verify-me";
     resetEnvCache();
-    expect(handleVerification(new URLSearchParams({ "hub.mode": "subscribe", "hub.verify_token": "verify-me", "hub.challenge": "42" }))).toEqual({ ok: true, challenge: "42" });
-    expect(handleVerification(new URLSearchParams({ "hub.mode": "subscribe", "hub.verify_token": "wrong", "hub.challenge": "42" })).ok).toBe(false);
+    expect(handleVerification(new URLSearchParams({ "hub.mode": "subscribe", "hub.verify_token": "verify-me", "hub.challenge": "42" }), "verify-me")).toEqual({ ok: true, challenge: "42" });
+    expect(handleVerification(new URLSearchParams({ "hub.mode": "subscribe", "hub.verify_token": "wrong", "hub.challenge": "42" }), "verify-me").ok).toBe(false);
   });
   it("round-trips signed OAuth state and rejects tampering", () => {
     const state = createOAuthState("org-1", "user-1");

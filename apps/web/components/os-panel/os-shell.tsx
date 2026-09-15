@@ -4,13 +4,14 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
-import { BarChart3, Building2, FileText, LayoutDashboard, Server, ShieldCheck, Terminal, Users } from "@/components/ui/icons";
+import { BarChart3, Building2, FileText, KeyRound, LayoutDashboard, Server, ShieldCheck, Terminal, Users } from "@/components/ui/icons";
 import { cn } from "@/lib/cn";
 
 const NAV = [
   { href: "/os-panel", label: "Overview", icon: <LayoutDashboard className="h-4 w-4" />, exact: true },
   { href: "/os-panel/organizations", label: "Organizations", icon: <Building2 className="h-4 w-4" /> },
   { href: "/os-panel/users", label: "Users", icon: <Users className="h-4 w-4" /> },
+  { href: "/os-panel/platform", label: "Providers & keys", icon: <KeyRound className="h-4 w-4" /> },
   { href: "/os-panel/jobs", label: "Jobs", icon: <Terminal className="h-4 w-4" /> },
   { href: "/os-panel/audit", label: "Audit log", icon: <FileText className="h-4 w-4" /> },
   { href: "/os-panel/system", label: "System", icon: <Server className="h-4 w-4" /> },

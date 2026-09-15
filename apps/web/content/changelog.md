@@ -3,6 +3,12 @@ title: Changelog
 updated: 2026-09-15
 ---
 
+## 2026-09-15 · Platform providers & keys in the OS-Panel
+
+- New **OS-Panel → Providers & keys**: the Apify token, AI provider and key, embeddings and the Meta app are set once for the whole platform, with test buttons and a one-click recommended Actor set. Workspaces inherit these automatically; per-workspace overrides remain available on each organisation page.
+- Faster, more resilient database connections.
+- Cookie-backed light/dark preference (no flash on load) and a white-O favicon / app icon.
+
 ## 2026-09-15 · Neo template, mobile app experience, operations moved to OS-Panel
 
 - New **Neo** template: futuristic glass, aurora backdrop, cyan / violet light, Orbitron headings, subtle motion.

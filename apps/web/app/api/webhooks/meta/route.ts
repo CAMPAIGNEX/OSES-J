@@ -1,14 +1,15 @@
 import { NextResponse } from "next/server";
-import { db } from "@oses/database";
+import { db, getPlatformConfig } from "@oses/database";
 import { handleVerification, processMetaWebhook, verifyWebhookSignature, type MetaWebhookPayload } from "@oses/messaging";
-import { createLogger, errorMessage, getEnv } from "@oses/shared";
+import { createLogger, errorMessage } from "@oses/shared";
 import { enqueueJob } from "@/lib/server/jobs";
 
 const log = createLogger("webhooks.meta");
 
 /** Meta webhook verification handshake. */
 export async function GET(req: Request): Promise<Response> {
-  const result = handleVerification(new URL(req.url).searchParams);
+  const { meta } = await getPlatformConfig(db);
+  const result = handleVerification(new URL(req.url).searchParams, meta.webhookVerifyToken);
   if (!result.ok) return new NextResponse("Forbidden", { status: 403 });
   return new NextResponse(result.challenge, { status: 200, headers: { "Content-Type": "text/plain" } });
 }
@@ -18,9 +19,9 @@ export async function GET(req: Request): Promise<Response> {
  * processed idempotently, and every conversation with a new inbound message gets an AI_REPLY_JOB.
  */
 export async function POST(req: Request): Promise<Response> {
-  const env = getEnv();
+  const { meta } = await getPlatformConfig(db);
   const raw = await req.text();
-  if (!verifyWebhookSignature(raw, req.headers.get("x-hub-signature-256"), env.META_APP_SECRET)) {
+  if (!verifyWebhookSignature(raw, req.headers.get("x-hub-signature-256"), meta.appSecret ?? undefined)) {
     log.warn("rejected webhook with invalid signature");
     return new NextResponse("Invalid signature", { status: 401 });
   }

@@ -20,7 +20,21 @@ The OS-Panel is the control room for the CNEX AI team. It lives at `/os-panel` i
 | Audit log | Every audit event platform-wide with filters; OS-Panel operations are prefixed `os.` and carry the operator email |
 | System | Configuration check (variable names only), runtime, database latency, queue depth, platform provider defaults, devices and Meta connections |
 
-## Operations (providers, keys, limits)
+## Providers & keys (platform-wide)
+
+`/os-panel/platform` is the single place where everything that runs behind OSES-J is configured for **all** workspaces:
+
+- **Apify token** for discovery, enrichment and content search, plus a platform-wide discovery on/off switch.
+- **AI provider** (Anthropic, OpenAI, OpenAI-compatible endpoint): provider, model, base URL and key.
+- **Embeddings** for the knowledge base (OpenAI; reuses the OpenAI chat key when no separate key is given).
+- **Meta app**: app id, app secret and webhook verify token for the official Instagram / Facebook API.
+- **Default Actors**: the platform-wide `ProviderConfig` rows (organizationId = null) every workspace inherits; "Add the recommended set" seeds the standard Actors.
+
+Every field has a **Test** button (Apify `/users/me`, one tiny AI completion, a Meta app-token request) that can test a value before it is saved. Secrets are stored encrypted (`ENCRYPTION_KEY`) in the `platform_settings` row; only previews are ever returned. Every change is audited (`platform.settings_updated`, field names only).
+
+Resolution order everywhere: **workspace override → platform row → server environment variable → not configured**. Environment variables (`APIFY_API_TOKEN`, `AI_*`, `META_*`, `APIFY_*_ACTOR`) therefore remain a bootstrap/fallback only. The merged result is `getPlatformConfig(db)` in `@oses/database` (cached 15 s per process; the web process invalidates on write).
+
+## Operations per workspace (overrides)
 
 Every workspace detail page has an **Operations** section that is never visible to members:
 

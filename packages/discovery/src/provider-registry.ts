@@ -1,7 +1,7 @@
 import { ApifyClient } from "@oses/apify";
-import type { DbClient } from "@oses/database";
+import { getPlatformConfig, type DbClient } from "@oses/database";
 import { createLogger, decryptSecret, getEnv, type Platform } from "@oses/shared";
-import { resolveAdapter, type ActorAdapter, type AdapterSettings } from "./apify/adapters";
+import { BUILT_IN_ADAPTERS, resolveAdapter, type ActorAdapter, type AdapterSettings } from "./apify/adapters";
 import { ApifyContentProvider, ApifyDiscoveryProvider, ApifyProfileProvider } from "./apify/providers";
 import type { ContentProvider, DiscoveryProvider, ProfileProvider, SearchCriteria } from "./types";
 
@@ -28,18 +28,26 @@ export interface ResolvedProviders {
   warnings: string[];
 }
 
-/** Organization-level Apify token (encrypted in settings) falls back to the platform token from env. */
-export async function resolveApifyToken(db: DbClient, organizationId: string): Promise<{ token: string | null; origin: "organization" | "environment" | null }> {
+export type ApifyTokenOrigin = "organization" | "platform" | "environment";
+
+/**
+ * Apify token for a workspace: its own token (encrypted in settings) wins, otherwise the platform token
+ * set by operators in the OS-Panel (which itself falls back to APIFY_API_TOKEN). Discovery can be switched
+ * off per workspace or for the whole platform.
+ */
+export async function resolveApifyToken(db: DbClient, organizationId: string): Promise<{ token: string | null; origin: ApifyTokenOrigin | null }> {
   const env = getEnv();
   const settings = await db.organizationSettings.findUnique({ where: { organizationId }, select: { apifyTokenEncrypted: true, apifyEnabled: true } });
-  if (settings?.apifyTokenEncrypted && settings.apifyEnabled !== false) {
+  if (settings && settings.apifyEnabled === false) return { token: null, origin: null };
+  if (settings?.apifyTokenEncrypted) {
     try {
       return { token: decryptSecret(settings.apifyTokenEncrypted, env.ENCRYPTION_KEY), origin: "organization" };
     } catch (err) {
       log.warn("could not decrypt organization Apify token", { organizationId, error: (err as Error).message });
     }
   }
-  if (env.APIFY_API_TOKEN) return { token: env.APIFY_API_TOKEN, origin: "environment" };
+  const platform = await getPlatformConfig(db);
+  if (platform.apify.token && platform.apify.enabled) return { token: platform.apify.token, origin: platform.apify.origin };
   return { token: null, origin: null };
 }
 
@@ -122,7 +130,7 @@ export async function resolveProviders(db: DbClient, organizationId: string): Pr
   const definitions = await loadProviderDefinitions(db, organizationId);
   const { token } = await resolveApifyToken(db, organizationId);
   if (!token) {
-    warnings.push("Apify API token is not configured. Add it in Settings > Automation or set APIFY_API_TOKEN.");
+    warnings.push("Lead discovery is not active for this workspace. The CNEX AI team activates it from the OS-Panel (Providers & keys).");
     return { discovery: [], profile: [], content: [], definitions, apifyConfigured: false, warnings };
   }
   const client = new ApifyClient({ token });
@@ -144,4 +152,23 @@ export async function resolveProviders(db: DbClient, organizationId: string): Pr
     else warnings.push(`Adapter "${def.adapter}" does not support ${def.domain.toLowerCase()} for ${def.actorId}`);
   }
   return { discovery, profile, content, definitions, apifyConfigured: true, warnings };
+}
+
+/**
+ * Recommended platform-wide Actor set, mirroring `environmentDefinitions()` but built from the adapter
+ * catalogue's default Actor ids. The OS-Panel seeds platform ProviderConfig rows from this list so
+ * discovery works with nothing but an Apify token.
+ */
+export function recommendedProviderRows(): Array<{ domain: "DISCOVERY" | "ENRICHMENT" | "CONTENT"; platform: Platform; adapter: string; actorId: string; priority: number }> {
+  const a = BUILT_IN_ADAPTERS;
+  const rows: Array<{ domain: "DISCOVERY" | "ENRICHMENT" | "CONTENT"; platform: Platform; adapter: string; actorId: string; priority: number }> = [
+    { domain: "DISCOVERY", platform: "INSTAGRAM", adapter: "search-engine-instagram", actorId: a["search-engine-instagram"]!.defaultActorId, priority: 1 },
+    { domain: "DISCOVERY", platform: "FACEBOOK", adapter: "search-engine-facebook", actorId: a["search-engine-facebook"]!.defaultActorId, priority: 1 },
+    { domain: "DISCOVERY", platform: "INSTAGRAM", adapter: "instagram-search", actorId: a["instagram-search"]!.defaultActorId, priority: 2 },
+    { domain: "DISCOVERY", platform: "INSTAGRAM", adapter: "instagram-hashtag", actorId: a["instagram-hashtag"]!.defaultActorId, priority: 3 },
+    { domain: "CONTENT", platform: "INSTAGRAM", adapter: "instagram-hashtag", actorId: a["instagram-hashtag"]!.defaultActorId, priority: 1 },
+    { domain: "ENRICHMENT", platform: "INSTAGRAM", adapter: "instagram-profile", actorId: a["instagram-profile"]!.defaultActorId, priority: 1 },
+    { domain: "ENRICHMENT", platform: "FACEBOOK", adapter: "facebook-pages", actorId: a["facebook-pages"]!.defaultActorId, priority: 1 },
+  ];
+  return rows;
 }

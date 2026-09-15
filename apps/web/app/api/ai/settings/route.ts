@@ -1,9 +1,9 @@
-import { getOrCreateSettings, writeAudit } from "@oses/database";
+import { getOrCreateSettings, getPlatformConfig, writeAudit, type PlatformConfig } from "@oses/database";
 import { decryptSecret, encryptSecret, ForbiddenError, getEnv, maskSecret } from "@oses/shared";
 import { aiSettingsSchema } from "@oses/validation";
 import { withApi } from "@/lib/server/api";
 
-function view(s: Awaited<ReturnType<typeof getOrCreateSettings>>, operator: boolean) {
+function view(s: Awaited<ReturnType<typeof getOrCreateSettings>>, operator: boolean, platform: PlatformConfig) {
   const env = getEnv();
   let keyPreview: string | null = null;
   if (s.aiApiKeyEncrypted && operator) {
@@ -13,7 +13,7 @@ function view(s: Awaited<ReturnType<typeof getOrCreateSettings>>, operator: bool
       keyPreview = "(unreadable)";
     }
   }
-  const platformDefault = env.AI_PROVIDER !== "none" && env.AI_API_KEY ? { provider: env.AI_PROVIDER, model: env.AI_MODEL ?? null } : null;
+  const platformDefault = platform.ai.provider !== "none" && platform.ai.apiKey ? { provider: platform.ai.provider, model: platform.ai.model, origin: platform.ai.origin } : null;
   return {
     /** Whether AI features work for this workspace (own key or platform default) */
     ready: Boolean(s.aiApiKeyEncrypted) || (s.aiProvider !== "none" && platformDefault !== null),
@@ -42,7 +42,7 @@ function view(s: Awaited<ReturnType<typeof getOrCreateSettings>>, operator: bool
   };
 }
 
-export const GET = withApi(async (ctx) => ({ settings: view(await getOrCreateSettings(ctx.db, ctx.organizationId), ctx.isOperator) }), { operatorOrgOverride: true });
+export const GET = withApi(async (ctx) => ({ settings: view(await getOrCreateSettings(ctx.db, ctx.organizationId), ctx.isOperator, await getPlatformConfig(ctx.db)) }), { operatorOrgOverride: true });
 
 export const PUT = withApi(
   async (ctx) => {
@@ -65,7 +65,7 @@ export const PUT = withApi(
     }
     const updated = await ctx.db.organizationSettings.update({ where: { organizationId: ctx.organizationId }, data });
     await writeAudit(ctx.db, { organizationId: ctx.organizationId, userId: ctx.userId, action: "settings.ai_updated", meta: { fields: Object.keys(data).filter((k) => k !== "aiApiKeyEncrypted"), keyChanged: b.apiKey !== undefined } });
-    return { settings: view(updated, ctx.isOperator) };
+    return { settings: view(updated, ctx.isOperator, await getPlatformConfig(ctx.db)) };
   },
   { body: aiSettingsSchema, adminOnly: true, operatorOrgOverride: true },
 );

@@ -5,7 +5,7 @@ The official Meta integration is the only path with real delivery/read status an
 ## App setup
 
 1. Create an app at developers.facebook.com (type *Business*), add **Facebook Login for Business**, **Messenger** and **Instagram** products.
-2. Set `META_APP_ID`, `META_APP_SECRET`, `META_WEBHOOK_VERIFY_TOKEN` (any random string), `META_GRAPH_VERSION` (default `v21.0`).
+2. Enter the app id, app secret and a webhook verify token (any random string) in **OS-Panel → Providers & keys → Meta app** (encrypted at rest; `META_APP_ID`, `META_APP_SECRET`, `META_WEBHOOK_VERIFY_TOKEN` env variables remain a fallback). `META_GRAPH_VERSION` stays an env variable (default `v23.0`).
 3. Valid OAuth redirect URI: `https://<APP_URL>/api/social/meta/callback`.
 4. Webhooks (product *Webhooks*): callback URL `https://<APP_URL>/api/webhooks/meta`, verify token = `META_WEBHOOK_VERIFY_TOKEN`. Subscribe the **page** object (`messages`, `messaging_postbacks`, `message_deliveries`, `message_reads`) and the **instagram** object (`messages`).
 5. Requested permissions: `pages_show_list`, `pages_manage_metadata`, `pages_messaging`, `instagram_basic`, `instagram_manage_messages`, `business_management`. Advanced access requires Meta App Review before non-test users can connect.

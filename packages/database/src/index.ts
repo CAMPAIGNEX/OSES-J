@@ -5,6 +5,7 @@ export * from "./audit";
 export * from "./usage";
 export * from "./trash";
 export * from "./settings";
+export * from "./platform";
 export { Prisma, PrismaClient } from "../generated/prisma/client";
 export type * from "./models";
 export * from "../generated/prisma/enums";

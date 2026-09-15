@@ -32,6 +32,7 @@ export type Organization = M.OrganizationModel;
 export type OrganizationCounter = M.OrganizationCounterModel;
 export type OrganizationMember = M.OrganizationMemberModel;
 export type OrganizationSettings = M.OrganizationSettingsModel;
+export type PlatformSettings = M.PlatformSettingsModel;
 export type ProviderConfig = M.ProviderConfigModel;
 export type ProviderRun = M.ProviderRunModel;
 export type SavedSearch = M.SavedSearchModel;

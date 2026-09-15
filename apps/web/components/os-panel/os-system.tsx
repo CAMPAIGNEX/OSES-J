@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useQuery } from "@/lib/hooks/use-query";
 import { formatDateTime, timeAgo } from "@/lib/format";
 import { OsBadge, OsPageHeader, OsPanel, OsStat } from "./os-shell";
@@ -9,7 +10,7 @@ interface SystemInfo {
   runtime: { node: string; platform: string; uptimeSec: number; memoryMb: number; nodeEnv: string; appUrl: string; jobRunnerMode: string; queueDriver: string; logLevel: string };
   database: { ok: boolean; latencyMs: number | null; error: string | null };
   queue: { queued: number; running: number; failed24h: number; oldestQueuedAt: string | null; lastJob: { completedAt: string | null; type: string; status: string } | null };
-  providers: { aiDefault: string | null; apifyDefault: boolean; meta: boolean; metaWebhookVerify: boolean; superAdminBootstrap: boolean; storageDir: string };
+  providers: { aiDefault: string | null; apifyDefault: boolean; apifyOrigin: string | null; meta: boolean; metaOrigin: string | null; metaWebhookVerify: boolean; superAdminBootstrap: boolean; storageDir: string };
   devices: Array<{ status: string; count: number }>;
   connections: Array<{ status: string; count: number }>;
 }
@@ -46,10 +47,10 @@ export function OsSystem() {
           <Row label="Log level" value={data.runtime.logLevel} />
           <Row label="Storage dir" value={data.providers.storageDir} />
         </OsPanel>
-        <OsPanel title="Platform defaults">
-          <Row label="AI default" value={data.providers.aiDefault ? <OsBadge tone="green">{data.providers.aiDefault}</OsBadge> : <OsBadge>none (workspaces bring their own key)</OsBadge>} />
-          <Row label="Apify default token" value={data.providers.apifyDefault ? <OsBadge tone="green">set</OsBadge> : <OsBadge>none</OsBadge>} />
-          <Row label="Meta app" value={data.providers.meta ? <OsBadge tone="green">configured</OsBadge> : <OsBadge>not configured</OsBadge>} />
+        <OsPanel title="Platform defaults" actions={<Link href="/os-panel/platform" className="font-mono text-[11px] uppercase tracking-wider text-bauhaus-yellow hover:underline">Providers &amp; keys →</Link>}>
+          <Row label="AI default" value={data.providers.aiDefault ? <OsBadge tone="green">{data.providers.aiDefault}</OsBadge> : <OsBadge tone="red">none · set it in Providers &amp; keys</OsBadge>} />
+          <Row label="Apify token" value={data.providers.apifyDefault ? <OsBadge tone="green">set · {data.providers.apifyOrigin}</OsBadge> : <OsBadge tone="red">none · set it in Providers &amp; keys</OsBadge>} />
+          <Row label="Meta app" value={data.providers.meta ? <OsBadge tone="green">configured · {data.providers.metaOrigin}</OsBadge> : <OsBadge>not configured</OsBadge>} />
           <Row label="Meta webhook verify token" value={data.providers.metaWebhookVerify ? <OsBadge tone="green">set</OsBadge> : <OsBadge>none</OsBadge>} />
           <Row label="Operator bootstrap" value={data.providers.superAdminBootstrap ? <OsBadge tone="green">SUPER_ADMIN_EMAILS set</OsBadge> : <OsBadge tone="yellow">SUPER_ADMIN_EMAILS not set</OsBadge>} />
         </OsPanel>

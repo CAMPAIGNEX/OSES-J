@@ -1,4 +1,4 @@
-import type { DbClient } from "@oses/database";
+import { getPlatformConfig, type DbClient } from "@oses/database";
 import { ConfigurationError, createLogger, decryptSecret, getEnv } from "@oses/shared";
 import { AnthropicProvider } from "./providers/anthropic";
 import { OpenAICompatibleProvider, OpenAIEmbeddingProvider } from "./providers/openai-compatible";
@@ -9,7 +9,7 @@ const log = createLogger("ai.resolve");
 export interface ResolvedAI {
   provider: AIProvider | null;
   settings: AIProviderSettings;
-  origin: "organization" | "environment" | "none";
+  origin: "organization" | "platform" | "environment" | "none";
   temperature: number | null;
 }
 
@@ -28,7 +28,8 @@ export function createAIProvider(settings: AIProviderSettings): AIProvider | nul
 }
 
 /**
- * Organization-level AI configuration (encrypted key in settings) overrides the platform default from env.
+ * Organization-level AI configuration (encrypted key in settings) overrides the platform default set by
+ * operators in the OS-Panel (which itself falls back to AI_PROVIDER / AI_API_KEY from the environment).
  * Returns provider = null when nothing is configured so callers can degrade gracefully.
  */
 let testProvider: AIProvider | null | undefined;
@@ -56,9 +57,10 @@ export async function resolveAIProvider(db: DbClient, organizationId: string): P
     }
   }
   if (orgProvider === "none") return { provider: null, settings: { provider: "none" }, origin: "none", temperature: null };
-  if (env.AI_PROVIDER !== "none" && env.AI_API_KEY) {
-    const s: AIProviderSettings = { provider: env.AI_PROVIDER, apiKey: env.AI_API_KEY, model: env.AI_MODEL ?? null, baseUrl: env.AI_BASE_URL ?? null, temperature: settings?.aiTemperature ?? null };
-    return { provider: createAIProvider(s), settings: s, origin: "environment", temperature: settings?.aiTemperature ?? null };
+  const platform = (await getPlatformConfig(db)).ai;
+  if (platform.provider !== "none" && platform.apiKey && platform.origin) {
+    const s: AIProviderSettings = { provider: platform.provider, apiKey: platform.apiKey, model: platform.model, baseUrl: platform.baseUrl, temperature: settings?.aiTemperature ?? null };
+    return { provider: createAIProvider(s), settings: s, origin: platform.origin, temperature: settings?.aiTemperature ?? null };
   }
   return { provider: null, settings: { provider: "none" }, origin: "none", temperature: null };
 }
@@ -66,17 +68,14 @@ export async function resolveAIProvider(db: DbClient, organizationId: string): P
 export async function requireAIProvider(db: DbClient, organizationId: string): Promise<ResolvedAI & { provider: AIProvider }> {
   const resolved = await resolveAIProvider(db, organizationId);
   if (!resolved.provider) {
-    throw new ConfigurationError("AI is not configured. Add an AI provider and API key in Settings > AI (or set AI_PROVIDER / AI_API_KEY).");
+    throw new ConfigurationError("AI is not configured for this workspace. The CNEX AI team activates it from the OS-Panel (Providers & keys).");
   }
   return resolved as ResolvedAI & { provider: AIProvider };
 }
 
-export function resolveEmbeddingProvider(): EmbeddingProvider | null {
-  const env = getEnv();
-  if (env.AI_EMBEDDING_PROVIDER === "openai") {
-    const apiKey = env.AI_EMBEDDING_API_KEY ?? (env.AI_PROVIDER === "openai" ? env.AI_API_KEY : undefined);
-    if (!apiKey) return null;
-    return new OpenAIEmbeddingProvider({ apiKey, model: env.AI_EMBEDDING_MODEL ?? undefined, baseUrl: env.AI_PROVIDER === "openai" ? env.AI_BASE_URL : undefined });
-  }
-  return null;
+/** Embedding provider from the platform configuration (OS-Panel, falling back to AI_EMBEDDING_* env). */
+export async function resolveEmbeddingProvider(db: DbClient): Promise<EmbeddingProvider | null> {
+  const e = (await getPlatformConfig(db)).embeddings;
+  if (e.provider !== "openai" || !e.apiKey) return null;
+  return new OpenAIEmbeddingProvider({ apiKey: e.apiKey, model: e.model ?? undefined, baseUrl: e.baseUrl ?? undefined });
 }

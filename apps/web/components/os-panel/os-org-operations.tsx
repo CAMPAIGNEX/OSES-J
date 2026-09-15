@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api-client";
 import { useQuery } from "@/lib/hooks/use-query";
@@ -24,7 +25,7 @@ interface AISettings {
   baseUrl: string | null;
   hasApiKey: boolean;
   apiKeyPreview: string | null;
-  platformDefault: { provider: string; model: string | null } | null;
+  platformDefault: { provider: string; model: string | null; origin: "platform" | "environment" | null } | null;
   temperature: number;
 }
 
@@ -72,7 +73,7 @@ export function OsOrgOperations({ organizationId }: { organizationId: string }) 
       <OsPanel title="Discovery provider (Apify)" actions={s ? <OsBadge tone={s.apify.configured ? "green" : "yellow"}>{s.apify.configured ? "ready" : "not ready"}</OsBadge> : undefined}>
         <p className="mb-3 text-[12px] text-[#9ca3af]">
           Token: {s?.apify.tokenPreview ? <span className="font-mono text-white">{s.apify.tokenPreview}</span> : <span className="text-bauhaus-yellow">none</span>}
-          {s?.apify.origin ? ` (${s.apify.origin})` : ""} · {s?.apify.providerConfigs ?? 0} enabled Actor configurations · discovery {s?.apify.enabled ? "enabled" : "disabled"} for this workspace
+          {s?.apify.origin ? ` (${s.apify.origin === "organization" ? "workspace override" : `platform default · ${s.apify.origin}`})` : ""} · {s?.apify.providerConfigs ?? 0} discovery Actors · discovery {s?.apify.enabled ? "enabled" : "disabled"} for this workspace · platform token in <Link href="/os-panel/platform" className="underline">Providers &amp; keys</Link>
         </p>
         <div className="flex flex-wrap items-center gap-2">
           <OsInput type="password" value={apifyToken} onChange={(e) => setApifyToken(e.target.value)} placeholder="apify_api_…" className="w-80" autoComplete="off" />
@@ -94,7 +95,7 @@ export function OsOrgOperations({ organizationId }: { organizationId: string }) 
 
       <OsPanel title="AI provider" actions={a ? <OsBadge tone={a.ready ? "green" : "yellow"}>{a.ready ? "ready" : "not ready"}</OsBadge> : undefined}>
         <p className="mb-3 text-[12px] text-[#9ca3af]">
-          Platform default: {a?.platformDefault ? <span className="text-white">{a.platformDefault.provider} ({a.platformDefault.model ?? "default model"})</span> : <span className="text-bauhaus-yellow">none (set AI_PROVIDER / AI_API_KEY on the server)</span>} · workspace key: {a?.hasApiKey ? <span className="font-mono text-white">{a.apiKeyPreview}</span> : "none"}
+          Platform default: {a?.platformDefault ? <span className="text-white">{a.platformDefault.provider} ({a.platformDefault.model ?? "default model"}){a.platformDefault.origin === "environment" ? " · from server env" : ""}</span> : <span className="text-bauhaus-yellow">none</span>} (<Link href="/os-panel/platform" className="underline">Providers &amp; keys</Link>) · workspace override key: {a?.hasApiKey ? <span className="font-mono text-white">{a.apiKeyPreview}</span> : "none"}
         </p>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           <label className="block">
@@ -178,7 +179,7 @@ export function OsOrgOperations({ organizationId }: { organizationId: string }) 
         </div>
       </OsPanel>
 
-      <OsPanel title="Discovery Actors (workspace overrides)">
+      <OsPanel title="Discovery Actors · workspace overrides (platform defaults in Providers & keys)">
         <div data-template="classic" className="dark">
           <ProvidersSettings organizationId={organizationId} />
         </div>

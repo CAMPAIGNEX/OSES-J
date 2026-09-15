@@ -7,7 +7,7 @@
 - `AnthropicProvider`: official `@anthropic-ai/sdk`, default model `claude-opus-5`; JSON output through a forced tool call with the requested schema.
 - `OpenAICompatibleProvider`: `POST /chat/completions` for OpenAI or any compatible endpoint (`json_schema` response format when supported, JSON mode otherwise).
 
-Resolution order: organization settings (AI Assistant > Behaviour & limits, key encrypted) > environment (`AI_PROVIDER`, `AI_API_KEY`, `AI_MODEL`, `AI_BASE_URL`) > none. When no provider is available every AI action returns a clear `NOT_CONFIGURED` error and the rest of the product keeps working.
+Resolution order: workspace override (OS-Panel → Organization → Operations, key encrypted) > platform provider (OS-Panel → Providers & keys, key encrypted) > environment (`AI_PROVIDER`, `AI_API_KEY`, `AI_MODEL`, `AI_BASE_URL`) > none. Members never configure providers; they only choose tone and language. When no provider is available every AI action returns a clear `NOT_CONFIGURED` error and the rest of the product keeps working.
 
 ## Context building (`packages/ai/src/context.ts`)
 

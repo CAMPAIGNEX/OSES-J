@@ -70,11 +70,22 @@ export async function graphRequest<T>(path: string, options: { method?: "GET" | 
   return json;
 }
 
-export function buildOAuthUrl(redirectUri: string, state: string): string {
+/** Meta app credentials, resolved by callers from the platform configuration (OS-Panel, env fallback). */
+export interface MetaAppCredentials {
+  appId: string | null;
+  appSecret: string | null;
+}
+
+function requireMetaApp(creds: MetaAppCredentials): { appId: string; appSecret: string } {
+  if (!creds.appId || !creds.appSecret) throw new ProviderError("meta", "The Meta app is not configured. The CNEX AI team sets it up in the OS-Panel (Providers & keys).", { code: "META_NOT_CONFIGURED", status: 503, errorClass: "USER_ACTION_REQUIRED" });
+  return { appId: creds.appId, appSecret: creds.appSecret };
+}
+
+export function buildOAuthUrl(creds: MetaAppCredentials, redirectUri: string, state: string): string {
   const env = getEnv();
-  if (!env.META_APP_ID) throw new ProviderError("meta", "META_APP_ID is not configured", { code: "META_NOT_CONFIGURED", status: 503, errorClass: "USER_ACTION_REQUIRED" });
+  const { appId } = requireMetaApp(creds);
   const url = new URL(`https://www.facebook.com/${env.META_GRAPH_VERSION}/dialog/oauth`);
-  url.searchParams.set("client_id", env.META_APP_ID);
+  url.searchParams.set("client_id", appId);
   url.searchParams.set("redirect_uri", redirectUri);
   url.searchParams.set("state", state);
   url.searchParams.set("scope", META_SCOPES.join(","));
@@ -82,16 +93,15 @@ export function buildOAuthUrl(redirectUri: string, state: string): string {
   return url.toString();
 }
 
-export async function exchangeCodeForToken(code: string, redirectUri: string): Promise<MetaTokenResponse> {
-  const env = getEnv();
-  if (!env.META_APP_ID || !env.META_APP_SECRET) throw new ProviderError("meta", "Meta app credentials are not configured", { code: "META_NOT_CONFIGURED", status: 503, errorClass: "USER_ACTION_REQUIRED" });
-  return graphRequest<MetaTokenResponse>("/oauth/access_token", { query: { client_id: env.META_APP_ID, client_secret: env.META_APP_SECRET, redirect_uri: redirectUri, code } });
+export async function exchangeCodeForToken(creds: MetaAppCredentials, code: string, redirectUri: string): Promise<MetaTokenResponse> {
+  const { appId, appSecret } = requireMetaApp(creds);
+  return graphRequest<MetaTokenResponse>("/oauth/access_token", { query: { client_id: appId, client_secret: appSecret, redirect_uri: redirectUri, code } });
 }
 
-export async function exchangeForLongLivedToken(shortLivedToken: string): Promise<MetaTokenResponse> {
-  const env = getEnv();
+export async function exchangeForLongLivedToken(creds: MetaAppCredentials, shortLivedToken: string): Promise<MetaTokenResponse> {
+  const { appId, appSecret } = requireMetaApp(creds);
   return graphRequest<MetaTokenResponse>("/oauth/access_token", {
-    query: { grant_type: "fb_exchange_token", client_id: env.META_APP_ID, client_secret: env.META_APP_SECRET, fb_exchange_token: shortLivedToken },
+    query: { grant_type: "fb_exchange_token", client_id: appId, client_secret: appSecret, fb_exchange_token: shortLivedToken },
   });
 }
 

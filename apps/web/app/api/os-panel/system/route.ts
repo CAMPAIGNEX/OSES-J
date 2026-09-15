@@ -1,3 +1,4 @@
+import { getPlatformConfig } from "@oses/database";
 import { checkEnv, getEnv } from "@oses/shared";
 import { withApi } from "@/lib/server/api";
 
@@ -15,6 +16,7 @@ export const GET = withApi(
     } catch (err) {
       dbError = (err as Error).message;
     }
+    const platform = await getPlatformConfig(db);
     const [queued, running, failed24h, oldestQueued, devices, connections, lastJob] = await Promise.all([
       db.automationJob.count({ where: { status: "QUEUED" } }),
       db.automationJob.count({ where: { status: "RUNNING" } }),
@@ -30,10 +32,12 @@ export const GET = withApi(
       database: { ok: !dbError, latencyMs: dbLatencyMs, error: dbError },
       queue: { queued, running, failed24h, oldestQueuedAt: oldestQueued?.scheduledAt ?? null, lastJob },
       providers: {
-        aiDefault: env.AI_PROVIDER !== "none" && Boolean(env.AI_API_KEY) ? `${env.AI_PROVIDER} (${env.AI_MODEL ?? "default model"})` : null,
-        apifyDefault: Boolean(env.APIFY_API_TOKEN),
-        meta: Boolean(env.META_APP_ID && env.META_APP_SECRET),
-        metaWebhookVerify: Boolean(env.META_WEBHOOK_VERIFY_TOKEN),
+        aiDefault: platform.ai.provider !== "none" && platform.ai.apiKey ? `${platform.ai.provider} (${platform.ai.model ?? "default model"}) · ${platform.ai.origin}` : null,
+        apifyDefault: Boolean(platform.apify.token),
+        apifyOrigin: platform.apify.origin,
+        meta: Boolean(platform.meta.appId && platform.meta.appSecret),
+        metaOrigin: platform.meta.origin,
+        metaWebhookVerify: Boolean(platform.meta.webhookVerifyToken),
         superAdminBootstrap: Boolean(env.SUPER_ADMIN_EMAILS),
         storageDir: env.STORAGE_DIR,
       },

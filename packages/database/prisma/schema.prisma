@@ -544,6 +544,34 @@ model OrganizationSettings {
   @@map("organization_settings")
 }
 
+/// Platform-wide provider credentials and defaults, managed by CNEX AI operators from the OS-Panel.
+/// A single row (id = "platform"). Values here are what every workspace uses unless the workspace has
+/// its own override; environment variables (APIFY_API_TOKEN, AI_*, META_*) are only the bootstrap fallback.
+model PlatformSettings {
+  id                       String   @id @default("platform") @db.VarChar(20)
+  // Discovery / enrichment (Apify)
+  apifyTokenEncrypted      String?  @db.Text
+  apifyEnabled             Boolean  @default(true)
+  // AI provider used by every workspace without its own key
+  aiProvider               String?  @db.VarChar(40)
+  aiModel                  String?  @db.VarChar(120)
+  aiBaseUrl                String?  @db.VarChar(500)
+  aiApiKeyEncrypted        String?  @db.Text
+  // Embeddings for the knowledge base
+  embeddingProvider        String?  @db.VarChar(40)
+  embeddingModel           String?  @db.VarChar(120)
+  embeddingApiKeyEncrypted String?  @db.Text
+  // Meta app (Facebook Login, Graph API, webhooks)
+  metaAppId                String?  @db.VarChar(80)
+  metaAppSecretEncrypted   String?  @db.Text
+  metaWebhookVerifyToken   String?  @db.VarChar(200)
+  updatedByUserId          String?  @db.Char(36)
+  createdAt                DateTime @default(now()) @db.DateTime(3)
+  updatedAt                DateTime @updatedAt @db.DateTime(3)
+
+  @@map("platform_settings")
+}
+
 // ---------------------------------------------------------------------------
 // Discovery
 // ---------------------------------------------------------------------------
