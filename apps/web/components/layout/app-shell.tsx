@@ -6,6 +6,7 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from "
 import Image from "next/image";
 import { BarChart3, Bot, Building2, FileText, Inbox, LayoutDashboard, LogOut, Megaphone, Menu as MenuIcon, Moon, Search, Settings, Sun, Trash2, TrendingUp, Users, Bookmark, ShieldCheck } from "@/components/ui/icons";
 import { api } from "@/lib/api-client";
+import { applyTheme } from "@/lib/theme";
 import { Avatar, cn } from "@/components/ui/primitives";
 
 export interface ShellSession {
@@ -43,12 +44,7 @@ function useTheme() {
   const toggle = () => {
     const next = !dark;
     setDark(next);
-    document.documentElement.classList.toggle("dark", next);
-    try {
-      localStorage.setItem("oses-theme", next ? "dark" : "light");
-    } catch {
-      /* ignore */
-    }
+    applyTheme(next ? "dark" : "light");
   };
   return { dark, toggle };
 }

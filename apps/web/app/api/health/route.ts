@@ -11,7 +11,8 @@ export async function GET(): Promise<Response> {
   }
   try {
     await db.$queryRaw`SELECT 1`;
-    return NextResponse.json({ ok: true, db: "up", mode: getEnv().JOB_RUNNER_MODE, latencyMs: Date.now() - started });
+    const env = getEnv();
+    return NextResponse.json({ ok: true, db: "up", mode: env.JOB_RUNNER_MODE, operatorsConfigured: Boolean(env.SUPER_ADMIN_EMAILS), latencyMs: Date.now() - started });
   } catch (err) {
     return NextResponse.json({ ok: false, db: "down", error: (err as Error).message, hint: "Check DATABASE_URL (host, user, password, database name) and that remote access is allowed for this database." }, { status: 503 });
   }

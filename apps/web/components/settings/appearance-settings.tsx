@@ -5,6 +5,7 @@ import { Check, Moon, Sun } from "@/components/ui/icons";
 import { api } from "@/lib/api-client";
 import { useQuery } from "@/lib/hooks/use-query";
 import { normalizeTemplate, TEMPLATE_COOKIE, UI_TEMPLATES, type UiTemplate } from "@/lib/templates";
+import { applyTheme } from "@/lib/theme";
 import { Button, Card, CardHeader, Skeleton, cn } from "@/components/ui/primitives";
 import { useToast } from "@/components/ui/overlay";
 
@@ -100,12 +101,7 @@ export function AppearanceSettings() {
   function toggleMode() {
     const next = !dark;
     setDark(next);
-    document.documentElement.classList.toggle("dark", next);
-    try {
-      localStorage.setItem("oses-theme", next ? "dark" : "light");
-    } catch {
-      /* ignore */
-    }
+    applyTheme(next ? "dark" : "light");
   }
 
   return (

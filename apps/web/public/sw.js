@@ -1,6 +1,6 @@
 /* OSES-J service worker: makes the installed app feel native (instant shell, offline notice).
    Static assets are cached; API responses and pages are always network-first and never stored stale. */
-const VERSION = "oses-sw-v1";
+const VERSION = "oses-sw-v2";
 const STATIC = `${VERSION}-static`;
 const OFFLINE_URL = "/offline";
 
