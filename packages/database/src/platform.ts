@@ -1,4 +1,4 @@
-import { createLogger, decryptSecret, getEnv } from "@oses/shared";
+import { aiProviderConfigured, aiProviderPreset, createLogger, decryptSecret, getEnv } from "@oses/shared";
 import type { PlatformSettings } from "../generated/prisma/client";
 import type { DbClient } from "./client";
 
@@ -8,7 +8,8 @@ const log = createLogger("db.platform");
 export const PLATFORM_SETTINGS_ID = "platform";
 
 export type ConfigOrigin = "platform" | "environment";
-export type PlatformAIProviderKey = "anthropic" | "openai" | "openai_compatible" | "none";
+/** A key from the shared AI_PROVIDER_PRESETS catalogue, or "none". */
+export type PlatformAIProviderKey = string;
 
 /**
  * Effective platform-wide configuration: what the OS-Panel row says, falling back to environment
@@ -16,7 +17,7 @@ export type PlatformAIProviderKey = "anthropic" | "openai" | "openai_compatible"
  */
 export interface PlatformConfig {
   apify: { token: string | null; enabled: boolean; origin: ConfigOrigin | null };
-  ai: { provider: PlatformAIProviderKey; apiKey: string | null; model: string | null; baseUrl: string | null; origin: ConfigOrigin | null };
+  ai: { provider: PlatformAIProviderKey; apiKey: string | null; model: string | null; baseUrl: string | null; origin: ConfigOrigin | null; /** provider + key (or key-less local provider) present */ configured: boolean };
   embeddings: { provider: "openai" | "none"; apiKey: string | null; model: string | null; baseUrl: string | null; origin: ConfigOrigin | null };
   /** Google Programmable Search: the search-engine strategy without an Apify Actor (100 free queries a day). */
   google: { apiKey: string | null; cseId: string | null; origin: ConfigOrigin | null };
@@ -74,13 +75,13 @@ export function buildPlatformConfig(row: PlatformSettings | null): PlatformConfi
   const rowProvider = (row?.aiProvider ?? null) as PlatformAIProviderKey | null;
   let ai: PlatformConfig["ai"];
   if (rowProvider === "none") {
-    ai = { provider: "none", apiKey: null, model: null, baseUrl: null, origin: "platform" };
-  } else if (rowProvider && aiKey) {
-    ai = { provider: rowProvider, apiKey: aiKey, model: row?.aiModel ?? null, baseUrl: row?.aiBaseUrl ?? null, origin: "platform" };
-  } else if (env.AI_PROVIDER !== "none" && env.AI_API_KEY) {
-    ai = { provider: env.AI_PROVIDER, apiKey: env.AI_API_KEY, model: env.AI_MODEL ?? null, baseUrl: env.AI_BASE_URL ?? null, origin: "environment" };
+    ai = { provider: "none", apiKey: null, model: null, baseUrl: null, origin: "platform", configured: false };
+  } else if (rowProvider && aiProviderPreset(rowProvider) && aiProviderConfigured(rowProvider, aiKey)) {
+    ai = { provider: rowProvider, apiKey: aiKey, model: row?.aiModel ?? null, baseUrl: row?.aiBaseUrl ?? null, origin: "platform", configured: true };
+  } else if (env.AI_PROVIDER !== "none" && aiProviderConfigured(env.AI_PROVIDER, env.AI_API_KEY)) {
+    ai = { provider: env.AI_PROVIDER, apiKey: env.AI_API_KEY ?? null, model: env.AI_MODEL ?? null, baseUrl: env.AI_BASE_URL ?? null, origin: "environment", configured: true };
   } else {
-    ai = { provider: "none", apiKey: null, model: null, baseUrl: null, origin: null };
+    ai = { provider: "none", apiKey: null, model: null, baseUrl: null, origin: null, configured: false };
   }
 
   let embeddings: PlatformConfig["embeddings"];

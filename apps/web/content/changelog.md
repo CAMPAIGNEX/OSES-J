@@ -5,6 +5,8 @@ updated: 2026-09-15
 
 ## 2026-09-15 · All hunted leads, in-app instructions, forgiving city names
 
+- AI provider choice for the CNEX AI team now covers Claude, ChatGPT, Gemini, Grok, DeepSeek, Qwen, Mistral, NVIDIA, Groq, Together, OpenRouter, self-hosted Ollama / LM Studio and any custom endpoint.
+- Classic and Neo templates use tighter corners on cards and controls.
 - Search-engine strategy can run on Google's official Custom Search API (set by the CNEX AI team) instead of a scraping Actor: free daily quota, no Apify cost for that step.
 - **Saved Leads → All hunted leads**: every lead ever found for your workspace, filterable by the search that found it.
 - Saving leads works on MySQL 8 hosts (fixed a collation error that made every search end with "No leads found").

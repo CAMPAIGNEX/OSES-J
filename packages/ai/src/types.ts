@@ -1,4 +1,5 @@
 import type { z } from "zod";
+import { AI_PROVIDER_PRESETS } from "@oses/shared";
 
 /**
  * Provider-agnostic AI contracts. Business logic (sales agent, knowledge base) only depends on these.
@@ -55,16 +56,14 @@ export interface EmbeddingProvider {
   embed(texts: string[]): Promise<number[][]>;
 }
 
+/** `provider` is a key from the shared AI_PROVIDER_PRESETS catalogue ("anthropic", "openai", "google", "xai", ..., "ollama") or "none". */
 export interface AIProviderSettings {
-  provider: "anthropic" | "openai" | "openai_compatible" | "none";
+  provider: string;
   apiKey?: string | null;
   model?: string | null;
   baseUrl?: string | null;
   temperature?: number | null;
 }
 
-export const DEFAULT_MODELS: Record<Exclude<AIProviderSettings["provider"], "none">, string> = {
-  anthropic: "claude-opus-5",
-  openai: "gpt-4.1",
-  openai_compatible: "",
-};
+/** Default model per provider key, taken from the shared catalogue. */
+export const DEFAULT_MODELS: Record<string, string> = Object.fromEntries(AI_PROVIDER_PRESETS.map((p) => [p.key, p.defaultModel]));

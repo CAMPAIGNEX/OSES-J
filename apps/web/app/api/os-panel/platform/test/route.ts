@@ -3,7 +3,7 @@ import { ApifyClient } from "@oses/apify";
 import { getPlatformConfig } from "@oses/database";
 import { googleCseSearch } from "@oses/discovery";
 import { graphRequest } from "@oses/messaging";
-import { errorMessage } from "@oses/shared";
+import { aiProviderConfigured, errorMessage } from "@oses/shared";
 import { platformTestSchema } from "@oses/validation";
 import { withApi } from "@/lib/server/api";
 
@@ -30,7 +30,7 @@ export const POST = withApi(
           : platform.ai.provider !== "none"
             ? { provider: platform.ai.provider, apiKey: platform.ai.apiKey, model: platform.ai.model, baseUrl: platform.ai.baseUrl }
             : null;
-        if (!settings || !settings.apiKey) return { ok: false, error: "No AI provider and key to test" };
+        if (!settings || !aiProviderConfigured(settings.provider, settings.apiKey)) return { ok: false, error: "No AI provider and key to test" };
         const provider = createAIProvider(settings);
         if (!provider) return { ok: false, error: "Unknown AI provider" };
         const result = await provider.generate({ system: "You are a connectivity check. Reply with the single word OK.", messages: [{ role: "user", content: "ping" }], maxTokens: 8, temperature: 0, purpose: "platform-test" });

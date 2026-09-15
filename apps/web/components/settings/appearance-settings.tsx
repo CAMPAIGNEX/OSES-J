@@ -16,8 +16,9 @@ function TemplatePreview({ id }: { id: UiTemplate }) {
       {id === "neo" && <div className="app-backdrop" style={{ position: "absolute" }} />}
       <div className="flex h-[132px]">
         <div data-ui="sidebar" className="flex w-[42%] flex-col gap-1.5 border-r border-default bg-surface p-2">
-          <div className="flex items-center">
-            <span className="h-2 w-14 rounded bg-brand-500/80" />
+          <div className="flex items-center gap-1.5">
+            <span data-ui="brand-mark" className="h-4 w-4 rounded-md bg-brand-500" />
+            <span className="h-1.5 w-10 rounded bg-brand-500/80" />
           </div>
           <span data-ui="nav-link" aria-current="page" className="nav-active mt-1 block h-4 w-full rounded-md px-1 text-[7px] font-semibold leading-4">
             Dashboard

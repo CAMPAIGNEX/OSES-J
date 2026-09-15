@@ -1,5 +1,5 @@
 import { getOrCreateSettings, getPlatformConfig, writeAudit, type PlatformConfig } from "@oses/database";
-import { decryptSecret, encryptSecret, ForbiddenError, getEnv, maskSecret } from "@oses/shared";
+import { aiProviderConfigured, decryptSecret, encryptSecret, ForbiddenError, getEnv, maskSecret } from "@oses/shared";
 import { aiSettingsSchema } from "@oses/validation";
 import { withApi } from "@/lib/server/api";
 
@@ -13,10 +13,10 @@ function view(s: Awaited<ReturnType<typeof getOrCreateSettings>>, operator: bool
       keyPreview = "(unreadable)";
     }
   }
-  const platformDefault = platform.ai.provider !== "none" && platform.ai.apiKey ? { provider: platform.ai.provider, model: platform.ai.model, origin: platform.ai.origin } : null;
+  const platformDefault = platform.ai.configured ? { provider: platform.ai.provider, model: platform.ai.model, origin: platform.ai.origin } : null;
   return {
     /** Whether AI features work for this workspace (own key or platform default) */
-    ready: Boolean(s.aiApiKeyEncrypted) || (s.aiProvider !== "none" && platformDefault !== null),
+    ready: aiProviderConfigured(s.aiProvider, s.aiApiKeyEncrypted) || (s.aiProvider !== "none" && platformDefault !== null),
     provider: operator ? (s.aiProvider ?? "platform_default") : undefined,
     model: operator ? s.aiModel : undefined,
     baseUrl: operator ? s.aiBaseUrl : undefined,

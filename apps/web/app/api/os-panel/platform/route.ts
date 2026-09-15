@@ -1,5 +1,5 @@
 import { buildPlatformConfig, getOrCreatePlatformSettings, invalidatePlatformConfig, type PlatformSettings } from "@oses/database";
-import { decryptSecret, encryptSecret, getEnv, maskSecret } from "@oses/shared";
+import { aiProviderConfigured, decryptSecret, encryptSecret, getEnv, maskSecret } from "@oses/shared";
 import { platformSettingsSchema } from "@oses/validation";
 import { withApi } from "@/lib/server/api";
 import { osAudit } from "@/lib/server/os-panel";
@@ -36,8 +36,8 @@ function view(row: PlatformSettings) {
       baseUrl: row.aiBaseUrl,
       hasApiKey: Boolean(row.aiApiKeyEncrypted),
       apiKeyPreview: preview(row.aiApiKeyEncrypted),
-      effective: { provider: effective.ai.provider, model: effective.ai.model, origin: effective.ai.origin, configured: effective.ai.provider !== "none" && Boolean(effective.ai.apiKey) },
-      environmentFallback: env.AI_PROVIDER !== "none" && Boolean(env.AI_API_KEY) ? `${env.AI_PROVIDER}${env.AI_MODEL ? ` (${env.AI_MODEL})` : ""}` : null,
+      effective: { provider: effective.ai.provider, model: effective.ai.model, origin: effective.ai.origin, configured: effective.ai.configured },
+      environmentFallback: env.AI_PROVIDER !== "none" && aiProviderConfigured(env.AI_PROVIDER, env.AI_API_KEY) ? `${env.AI_PROVIDER}${env.AI_MODEL ? ` (${env.AI_MODEL})` : ""}` : null,
     },
     embeddings: {
       provider: row.embeddingProvider ?? "",

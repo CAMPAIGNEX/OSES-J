@@ -1,3 +1,4 @@
+import { AI_PROVIDER_KEYS } from "./ai-providers";
 import { z } from "zod";
 
 /**
@@ -43,7 +44,7 @@ export const envSchema = z.object({
   WORKER_CONCURRENCY: intWithDefault(2),
   WORKER_POLL_INTERVAL_MS: intWithDefault(3000),
 
-  AI_PROVIDER: z.enum(["anthropic", "openai", "openai_compatible", "none"]).default("none"),
+  AI_PROVIDER: z.enum([...AI_PROVIDER_KEYS, "none"]).default("none"),
   AI_API_KEY: optionalString,
   AI_MODEL: optionalString,
   AI_BASE_URL: optionalString,

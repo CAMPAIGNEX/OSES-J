@@ -68,7 +68,7 @@ describe("platform configuration (OS-Panel row over environment fallback)", () =
       }),
     );
     expect(cfg.apify).toEqual({ token: "apify_panel", enabled: true, origin: "platform" });
-    expect(cfg.ai).toEqual({ provider: "anthropic", apiKey: "sk-ant-panel", model: "claude-opus-5", baseUrl: null, origin: "platform" });
+    expect(cfg.ai).toEqual({ provider: "anthropic", apiKey: "sk-ant-panel", model: "claude-opus-5", baseUrl: null, origin: "platform", configured: true });
     expect(cfg.meta).toEqual({ appId: "999", appSecret: "meta-secret", webhookVerifyToken: "panel-verify", origin: "platform" });
   });
 
@@ -84,6 +84,12 @@ describe("platform configuration (OS-Panel row over environment fallback)", () =
     expect(cfg.embeddings).toEqual({ provider: "openai", apiKey: "sk-chat", model: "text-embedding-3-small", baseUrl: null, origin: "platform" });
   });
 
+  it("treats local providers as configured without a key and rejects unknown provider keys", () => {
+    expect(buildPlatformConfig(row({ aiProvider: "ollama", aiModel: "llama3.1", aiBaseUrl: "http://10.0.0.5:11434/v1" })).ai).toMatchObject({ provider: "ollama", apiKey: null, configured: true, origin: "platform" });
+    expect(buildPlatformConfig(row({ aiProvider: "deepseek", aiApiKeyEncrypted: encryptSecret("sk-ds", KEY) })).ai).toMatchObject({ provider: "deepseek", apiKey: "sk-ds", configured: true });
+    expect(buildPlatformConfig(row({ aiProvider: "deepseek" })).ai.configured).toBe(false);
+    expect(buildPlatformConfig(row({ aiProvider: "not-a-provider", aiApiKeyEncrypted: encryptSecret("x", KEY) })).ai.configured).toBe(false);
+  });
   it("reads the Google search API from the row before the environment", () => {
     withEnv({ GOOGLE_API_KEY: "env-key", GOOGLE_CSE_ID: "env-cx" });
     expect(buildPlatformConfig(null).google).toEqual({ apiKey: "env-key", cseId: "env-cx", origin: "environment" });

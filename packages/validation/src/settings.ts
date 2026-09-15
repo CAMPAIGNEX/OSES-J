@@ -1,3 +1,4 @@
+import { AI_PROVIDER_KEYS } from "@oses/shared";
 import { z } from "zod";
 import { hhmmSchema, optionalTrimmed, optionalUrl, timezoneSchema } from "./common";
 
@@ -40,7 +41,7 @@ export const messagingSettingsSchema = z.object({
 export type MessagingSettingsInput = z.infer<typeof messagingSettingsSchema>;
 
 export const aiSettingsSchema = z.object({
-  provider: z.enum(["anthropic", "openai", "openai_compatible", "platform_default", "none"]).optional(),
+  provider: z.enum([...AI_PROVIDER_KEYS, "platform_default", "none"]).optional(),
   model: z.string().trim().max(120).optional().nullable(),
   baseUrl: optionalUrl.optional(),
   /** Plain-text key; encrypted before storage. Empty string clears it. */

@@ -7,6 +7,7 @@ import { useQuery } from "@/lib/hooks/use-query";
 import { formatDateTime } from "@/lib/format";
 import { useToast } from "@/components/ui/overlay";
 import { ProvidersSettings } from "@/components/settings/settings-pages";
+import { AiProviderFields } from "./ai-provider-fields";
 import { OsBadge, OsButton, OsInput, OsPageHeader, OsPanel, OsSelect } from "./os-shell";
 
 type Origin = "platform" | "environment" | null;
@@ -196,30 +197,17 @@ export function OsPlatform() {
               {s.ai.environmentFallback ? ` · server environment fallback: ${s.ai.environmentFallback}` : " · no environment fallback"}
             </p>
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              <label className="block">
-                <FieldLabel>Provider</FieldLabel>
-                <OsSelect value={ai.provider} onChange={(e) => setAi((f) => ({ ...f, provider: e.target.value }))} className="mt-1 w-full">
-                  <option value="">Not set (use server environment)</option>
-                  <option value="anthropic">Anthropic (Claude)</option>
-                  <option value="openai">OpenAI</option>
-                  <option value="openai_compatible">OpenAI-compatible endpoint</option>
-                  <option value="none">Disabled for the whole platform</option>
-                </OsSelect>
-              </label>
-              <label className="block">
-                <FieldLabel>Model</FieldLabel>
-                <OsInput value={ai.model} onChange={(e) => setAi((f) => ({ ...f, model: e.target.value }))} placeholder={ai.provider === "openai" ? "gpt-5" : "claude-opus-5"} className="mt-1 w-full" />
-              </label>
-              <label className="block">
-                <FieldLabel>API key {s.ai.hasApiKey ? "(blank keeps the saved key)" : ""}</FieldLabel>
-                <OsInput type="password" value={ai.apiKey} onChange={(e) => setAi((f) => ({ ...f, apiKey: e.target.value }))} placeholder={s.ai.hasApiKey ? "••••••••" : "sk-…"} className="mt-1 w-full" autoComplete="off" />
-              </label>
-              {ai.provider === "openai_compatible" && (
-                <label className="block">
-                  <FieldLabel>Base URL</FieldLabel>
-                  <OsInput value={ai.baseUrl} onChange={(e) => setAi((f) => ({ ...f, baseUrl: e.target.value }))} placeholder="https://openrouter.ai/api/v1" className="mt-1 w-full" />
-                </label>
-              )}
+              <AiProviderFields
+                value={ai}
+                onChange={setAi}
+                hasSavedKey={s.ai.hasApiKey}
+                extraOptions={
+                  <>
+                    <option value="">Not set (use server environment)</option>
+                    <option value="none">Disabled for the whole platform</option>
+                  </>
+                }
+              />
             </div>
             <div className="mt-3 flex flex-wrap gap-2">
               <OsButton tone="primary" disabled={busy !== null} onClick={() => void save("Platform AI provider saved", { aiProvider: ai.provider, aiModel: ai.model || null, aiBaseUrl: ai.baseUrl || null, ...(ai.apiKey ? { aiApiKey: ai.apiKey } : {}) }, () => setAi((f) => ({ ...f, apiKey: "" })))}>

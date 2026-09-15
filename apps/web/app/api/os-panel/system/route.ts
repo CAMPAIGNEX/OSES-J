@@ -36,7 +36,7 @@ export const GET = withApi(
       database: { ok: !dbError, latencyMs: dbLatencyMs, error: dbError, version: dbVersion, sqlMode: dbSqlMode },
       queue: { queued, running, failed24h, oldestQueuedAt: oldestQueued?.scheduledAt ?? null, lastJob },
       providers: {
-        aiDefault: platform.ai.provider !== "none" && platform.ai.apiKey ? `${platform.ai.provider} (${platform.ai.model ?? "default model"}) · ${platform.ai.origin}` : null,
+        aiDefault: platform.ai.configured ? `${platform.ai.provider} (${platform.ai.model ?? "default model"}) · ${platform.ai.origin}` : null,
         apifyDefault: Boolean(platform.apify.token),
         apifyOrigin: platform.apify.origin,
         meta: Boolean(platform.meta.appId && platform.meta.appSecret),

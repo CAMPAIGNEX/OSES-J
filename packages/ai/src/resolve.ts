@@ -1,8 +1,8 @@
 import { getPlatformConfig, type DbClient } from "@oses/database";
-import { ConfigurationError, createLogger, decryptSecret, getEnv } from "@oses/shared";
+import { aiProviderConfigured, aiProviderPreset, ConfigurationError, createLogger, decryptSecret, getEnv } from "@oses/shared";
 import { AnthropicProvider } from "./providers/anthropic";
 import { OpenAICompatibleProvider, OpenAIEmbeddingProvider } from "./providers/openai-compatible";
-import { DEFAULT_MODELS, type AIProvider, type AIProviderSettings, type EmbeddingProvider } from "./types";
+import type { AIProvider, AIProviderSettings, EmbeddingProvider } from "./types";
 
 const log = createLogger("ai.resolve");
 
@@ -13,18 +13,23 @@ export interface ResolvedAI {
   temperature: number | null;
 }
 
-/** Build a provider from explicit settings (used by the resolver and by tests). */
+/**
+ * Build a provider from explicit settings (used by the resolver and by tests). Anthropic uses its own API;
+ * every other catalogue entry (OpenAI, Gemini, Grok, DeepSeek, Qwen, Mistral, NVIDIA, Groq, Together,
+ * OpenRouter, Ollama, LM Studio, custom) is an OpenAI-compatible endpoint at a preset base URL.
+ */
 export function createAIProvider(settings: AIProviderSettings): AIProvider | null {
-  switch (settings.provider) {
-    case "anthropic":
-      return new AnthropicProvider({ apiKey: settings.apiKey ?? "", model: settings.model || DEFAULT_MODELS.anthropic });
-    case "openai":
-      return new OpenAICompatibleProvider({ key: "openai", apiKey: settings.apiKey ?? "", model: settings.model || DEFAULT_MODELS.openai, baseUrl: settings.baseUrl ?? undefined });
-    case "openai_compatible":
-      return new OpenAICompatibleProvider({ key: "openai_compatible", apiKey: settings.apiKey ?? "", model: settings.model ?? "", baseUrl: settings.baseUrl ?? undefined, supportsJsonSchema: false });
-    default:
-      return null;
-  }
+  const preset = aiProviderPreset(settings.provider);
+  if (!preset) return null;
+  if (preset.api === "anthropic") return new AnthropicProvider({ apiKey: settings.apiKey ?? "", model: settings.model || preset.defaultModel });
+  return new OpenAICompatibleProvider({
+    key: preset.key,
+    // Local servers accept any bearer value; a placeholder keeps the request shape valid.
+    apiKey: settings.apiKey || (preset.keyOptional ? "local" : ""),
+    model: settings.model || preset.defaultModel,
+    baseUrl: settings.baseUrl || preset.baseUrl || undefined,
+    supportsJsonSchema: preset.supportsJsonSchema,
+  });
 }
 
 /**
@@ -46,10 +51,10 @@ export async function resolveAIProvider(db: DbClient, organizationId: string): P
     where: { organizationId },
     select: { aiProvider: true, aiModel: true, aiBaseUrl: true, aiApiKeyEncrypted: true, aiTemperature: true },
   });
-  const orgProvider = settings?.aiProvider as AIProviderSettings["provider"] | "platform_default" | null | undefined;
-  if (orgProvider && orgProvider !== "platform_default" && orgProvider !== "none" && settings?.aiApiKeyEncrypted) {
+  const orgProvider = settings?.aiProvider as string | null | undefined;
+  if (settings && orgProvider && orgProvider !== "platform_default" && orgProvider !== "none" && (settings.aiApiKeyEncrypted || aiProviderConfigured(orgProvider, null))) {
     try {
-      const apiKey = decryptSecret(settings.aiApiKeyEncrypted, env.ENCRYPTION_KEY);
+      const apiKey = settings.aiApiKeyEncrypted ? decryptSecret(settings.aiApiKeyEncrypted, env.ENCRYPTION_KEY) : null;
       const s: AIProviderSettings = { provider: orgProvider, apiKey, model: settings.aiModel, baseUrl: settings.aiBaseUrl, temperature: settings.aiTemperature };
       return { provider: createAIProvider(s), settings: s, origin: "organization", temperature: settings.aiTemperature };
     } catch (err) {
@@ -58,7 +63,7 @@ export async function resolveAIProvider(db: DbClient, organizationId: string): P
   }
   if (orgProvider === "none") return { provider: null, settings: { provider: "none" }, origin: "none", temperature: null };
   const platform = (await getPlatformConfig(db)).ai;
-  if (platform.provider !== "none" && platform.apiKey && platform.origin) {
+  if (platform.configured && platform.origin) {
     const s: AIProviderSettings = { provider: platform.provider, apiKey: platform.apiKey, model: platform.model, baseUrl: platform.baseUrl, temperature: settings?.aiTemperature ?? null };
     return { provider: createAIProvider(s), settings: s, origin: platform.origin, temperature: settings?.aiTemperature ?? null };
   }

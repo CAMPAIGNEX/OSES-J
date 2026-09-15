@@ -79,8 +79,11 @@ export function AppShell({ session, children }: { session: ShellSession; childre
   const sidebar = (
     <aside data-ui="sidebar" className="flex h-full w-[248px] flex-col border-r border-default bg-surface">
       <div className="flex h-14 items-center gap-2.5 px-5">
-        <Link href="/dashboard" className="flex items-center" aria-label="OSES-J home">
-          <Image src="/brand/oses-j-wordmark.svg" alt="OSES-J" width={132} height={18} className="h-[18px] w-auto dark:brightness-0 dark:invert" priority />
+        <Link href="/dashboard" className="flex items-center gap-2.5" aria-label="OSES-J home">
+          <span data-ui="brand-mark" className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-500 text-white">
+            <Image src="/brand/oses-j-mark.svg" alt="" width={20} height={20} className="h-5 w-5 brightness-0 invert" priority />
+          </span>
+          <Image src="/brand/oses-j-wordmark.svg" alt="OSES-J" width={118} height={16} className="h-4 w-auto dark:brightness-0 dark:invert" priority />
         </Link>
       </div>
       {nav}

@@ -1,3 +1,4 @@
+import { AI_PROVIDER_KEYS } from "@oses/shared";
 import { z } from "zod";
 import { optionalUrl } from "./common";
 
@@ -45,7 +46,7 @@ export const platformSettingsSchema = z
   .object({
     apifyToken: z.string().trim().max(500).optional(),
     apifyEnabled: z.boolean().optional(),
-    aiProvider: z.enum(["anthropic", "openai", "openai_compatible", "none", ""]).optional(),
+    aiProvider: z.enum([...AI_PROVIDER_KEYS, "none", ""]).optional(),
     aiModel: z.string().trim().max(120).optional().nullable(),
     aiBaseUrl: optionalUrl.optional(),
     aiApiKey: z.string().trim().max(500).optional(),
@@ -68,7 +69,7 @@ export const platformTestSchema = z.object({
   google: z.object({ apiKey: z.string().trim().max(200).optional(), cseId: z.string().trim().max(80).optional() }).optional(),
   ai: z
     .object({
-      provider: z.enum(["anthropic", "openai", "openai_compatible"]),
+      provider: z.enum(AI_PROVIDER_KEYS),
       model: z.string().trim().max(120).optional().nullable(),
       baseUrl: optionalUrl.optional(),
       apiKey: z.string().trim().max(500).optional(),

@@ -6,6 +6,7 @@ import { api } from "@/lib/api-client";
 import { useQuery } from "@/lib/hooks/use-query";
 import { useToast } from "@/components/ui/overlay";
 import { ProvidersSettings } from "@/components/settings/settings-pages";
+import { AiProviderFields } from "./ai-provider-fields";
 import { OsBadge, OsButton, OsInput, OsPanel, OsSelect } from "./os-shell";
 
 interface Status {
@@ -98,30 +99,17 @@ export function OsOrgOperations({ organizationId }: { organizationId: string }) 
           Platform default: {a?.platformDefault ? <span className="text-white">{a.platformDefault.provider} ({a.platformDefault.model ?? "default model"}){a.platformDefault.origin === "environment" ? " · from server env" : ""}</span> : <span className="text-bauhaus-yellow">none</span>} (<Link href="/os-panel/platform" className="underline">Providers &amp; keys</Link>) · workspace override key: {a?.hasApiKey ? <span className="font-mono text-white">{a.apiKeyPreview}</span> : "none"}
         </p>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          <label className="block">
-            <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-[#6b7280]">Provider</span>
-            <OsSelect value={ai.provider} onChange={(e) => setAi((f) => ({ ...f, provider: e.target.value }))} className="mt-1 w-full">
-              <option value="platform_default">Platform default</option>
-              <option value="anthropic">Anthropic (Claude)</option>
-              <option value="openai">OpenAI</option>
-              <option value="openai_compatible">OpenAI-compatible endpoint</option>
-              <option value="none">Disabled for this workspace</option>
-            </OsSelect>
-          </label>
-          <label className="block">
-            <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-[#6b7280]">Model</span>
-            <OsInput value={ai.model} onChange={(e) => setAi((f) => ({ ...f, model: e.target.value }))} placeholder="claude-opus-5" className="mt-1 w-full" />
-          </label>
-          <label className="block">
-            <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-[#6b7280]">API key {a?.hasApiKey ? "(leave blank to keep)" : ""}</span>
-            <OsInput type="password" value={ai.apiKey} onChange={(e) => setAi((f) => ({ ...f, apiKey: e.target.value }))} placeholder={a?.hasApiKey ? "••••••••" : "sk-…"} className="mt-1 w-full" autoComplete="off" />
-          </label>
-          {ai.provider === "openai_compatible" && (
-            <label className="block lg:col-span-2">
-              <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-[#6b7280]">Base URL</span>
-              <OsInput value={ai.baseUrl} onChange={(e) => setAi((f) => ({ ...f, baseUrl: e.target.value }))} placeholder="https://openrouter.ai/api/v1" className="mt-1 w-full" />
-            </label>
-          )}
+          <AiProviderFields
+            value={ai}
+            onChange={(next) => setAi((f) => ({ ...f, ...next }))}
+            hasSavedKey={Boolean(a?.hasApiKey)}
+            extraOptions={
+              <>
+                <option value="platform_default">Platform default</option>
+                <option value="none">Disabled for this workspace</option>
+              </>
+            }
+          />
           <label className="block">
             <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-[#6b7280]">Temperature {ai.temperature.toFixed(2)}</span>
             <input type="range" min={0} max={1} step={0.05} value={ai.temperature} onChange={(e) => setAi((f) => ({ ...f, temperature: Number(e.target.value) }))} className="mt-2 w-full accent-[#f7c948]" />

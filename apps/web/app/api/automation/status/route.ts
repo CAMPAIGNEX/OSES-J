@@ -18,7 +18,7 @@ export const GET = withApi(async (ctx) => {
   ]);
   const operator = ctx.isOperator;
   const providerConfigs = resolved.discovery.length;
-  const platformAI = platform.ai.provider !== "none" && platform.ai.apiKey ? `${platform.ai.provider} (platform default)` : null;
+  const platformAI = platform.ai.configured ? `${platform.ai.provider} (platform default)` : null;
   // Members see readiness only; provider details, previews and job limits are operator information (OS-Panel).
   return {
     mode: operator ? env.JOB_RUNNER_MODE : undefined,
