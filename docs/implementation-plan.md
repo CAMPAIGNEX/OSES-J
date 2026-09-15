@@ -53,20 +53,26 @@ docs                Architecture and setup documentation
 
 ## 3. Phase status
 
+_Updated 2026-09-15._ Phases 1-12 are the product scope from the specification; 13-15 were added while shipping (design system, operator control room, mobile app experience). "Built" means implemented, type-checked and covered by the unit / integration suites; "hardening" lists what still needs real-world verification before it can be called production-proven.
+
 | Phase | Scope | Status |
 |---|---|---|
-| 1 Foundation | monorepo, auth, org model, dashboard shell, navigation, settings shell | in progress |
-| 2 Lead discovery | search UI, criteria, discovery service, Apify, normalization, dedupe, results, save | planned |
-| 3 Client CRM | Add to Business, CID, client list/profile, tags, notes, trash/restore | planned |
-| 4 Enrichment | website extraction, source tracking, entity resolution | planned |
-| 5 Messaging foundation | conversations, messages, jobs, scheduling, inbox, manual mode | planned |
-| 6 Browser extension | MV3 extension, pairing, job claim, IG composer detection, result reporting | planned |
-| 7 Meta integrations | OAuth connect, token storage, webhooks, inbound sync, outbound where supported | planned |
-| 8 Apify messaging provider | actor config, job submission, monitoring, result processing | planned |
-| 9 AI assistant | instructions, TXT upload, knowledge base, generation, intents, summaries, action logs | planned |
-| 10 Autopilot | modes, auto‑reply/follow‑up, campaigns, timezone logic, escalation, pause/stop | planned |
-| 11 Analytics | performance dashboard with date ranges and interactive charts | planned |
-| 12 Competitor / trend analysis | reuse discovery + content normalization + AI reports | planned |
+| 1 Foundation | monorepo, auth, org model, dashboard shell, navigation, settings | **built** |
+| 2 Lead discovery | search UI, criteria, discovery service, Apify, normalization, dedupe, results, save | **built** · hardening: run against a live Apify token and verify each Actor's current schema |
+| 3 Client CRM | Add to Business, CID, client list/profile, tags, notes, trash/restore | **built** |
+| 4 Enrichment | website extraction, source tracking, entity resolution | **built** |
+| 5 Messaging foundation | conversations, messages, jobs, scheduling, inbox, manual mode | **built** |
+| 6 Browser extension | MV3 extension, pairing, job claim, IG composer detection, result reporting | **built** · hardening: Instagram/Facebook DOM selectors need re-checking on the live sites; not on the Chrome Web Store (load unpacked) |
+| 7 Meta integrations | OAuth connect, token storage, webhooks, inbound sync, outbound where supported | **built** · hardening: needs a Meta app with App Review for messaging permissions |
+| 8 Apify messaging provider | actor config, job submission, monitoring, result processing | **built** · hardening: depends on a DM Actor being configured (none is the default) |
+| 9 AI assistant | instructions, TXT upload, knowledge base, generation, intents, summaries, action logs | **built** · hardening: prompt quality review on real conversations |
+| 10 Autopilot | modes, auto-reply/follow-up, campaigns, timezone logic, escalation, pause/stop | **built** · hardening: run for days on a pilot workspace before enabling widely |
+| 11 Analytics | performance dashboard with date ranges and interactive charts | **built** |
+| 12 Competitor / trend analysis | reuse discovery + content normalization + AI reports | **built** |
+| 13 Design system & public site | icons, fonts, Classic / Bauhaus Mix / Neo templates, website, manual, changelog | **built** |
+| 14 OS-Panel (operators) | organisations, users, jobs, audit, system, per-workspace operations, platform Providers & keys | **built** |
+| 15 Mobile app experience | PWA manifest + service worker, bottom tab bar, native-sized controls, bottom sheets, offline page | **built** · hardening: install on real iOS / Android devices and check every screen |
+| 16 Production pilot | live keys in OS-Panel, first real workspace, real searches and sends, monitoring | **next** |
 
 ## 4. Non‑negotiable rules carried into code
 
