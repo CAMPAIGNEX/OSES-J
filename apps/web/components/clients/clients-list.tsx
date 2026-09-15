@@ -11,6 +11,7 @@ import { PageHeader } from "@/components/layout/app-shell";
 import { Badge, Button, Card, EmptyState, Field, Input, Select, StatusBadge, Textarea } from "@/components/ui/primitives";
 import { DataTable, Pagination, type Column } from "@/components/ui/data";
 import { Dialog, useToast } from "@/components/ui/overlay";
+import { FeatureGuide } from "@/components/layout/feature-guide";
 
 interface ClientRow {
   id: string;
@@ -97,6 +98,7 @@ export function ClientsList() {
   return (
     <div className="animate-in">
       <PageHeader title="Clients" description="Every prospect you added to your business, with a permanent client ID." actions={<Button onClick={() => setCreating(true)} icon={<Plus className="h-4 w-4" />}>New client</Button>} />
+      <FeatureGuide id="clients" />
       <Card className="mb-4" padded={false}>
         <div className="flex flex-wrap items-center gap-2 p-3">
           <div className="relative min-w-[220px] flex-1">

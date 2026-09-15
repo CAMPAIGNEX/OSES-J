@@ -10,6 +10,7 @@ import { formatDateTime, formatCompact } from "@/lib/format";
 import { PageHeader } from "@/components/layout/app-shell";
 import { Badge, Button, Card, CardHeader, EmptyState, Field, Input, Select, Skeleton, StatusBadge } from "@/components/ui/primitives";
 import { useToast } from "@/components/ui/overlay";
+import { FeatureGuide } from "@/components/layout/feature-guide";
 
 type Kind = "competitors" | "trends";
 interface Row { id: string; name: string | null; status: string; itemCount: number; createdAt: string; error: string | null; criteria: Record<string, unknown> }
@@ -44,6 +45,7 @@ export function AnalysisList({ kind }: { kind: Kind }) {
   return (
     <div className="animate-in">
       <PageHeader title={copy.title} description={copy.description} />
+      <FeatureGuide id={kind === "competitors" ? "competitors" : "trends"} />
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_380px]">
         <Card>
           <CardHeader title="Previous analyses" />

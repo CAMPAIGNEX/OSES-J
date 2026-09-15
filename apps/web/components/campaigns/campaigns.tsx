@@ -11,6 +11,7 @@ import { PageHeader } from "@/components/layout/app-shell";
 import { Badge, Button, Card, CardHeader, EmptyState, Field, Input, Select, Skeleton, StatusBadge, Switch, Textarea } from "@/components/ui/primitives";
 import { DataTable, KeyValue, type Column } from "@/components/ui/data";
 import { Dialog, useToast } from "@/components/ui/overlay";
+import { FeatureGuide } from "@/components/layout/feature-guide";
 
 interface CampaignRow { id: string; name: string; status: string; channel: string; audienceType: string; firstMessageMode: string; messagesPerDay: number; requireApproval: boolean; startAt: string | null; startedAt: string | null; createdAt: string; stats: Record<string, unknown> | null; _count: { leads: number } }
 
@@ -31,6 +32,7 @@ export function CampaignsList() {
   return (
     <div className="animate-in">
       <PageHeader title="Campaigns & Automations" description="Outreach sequences: first message plus scheduled follow-ups, within your working hours and daily limits." actions={<Button onClick={() => setCreating(true)} icon={<Plus className="h-4 w-4" />}>New campaign</Button>} />
+      <FeatureGuide id="campaigns" />
       <div className="card overflow-hidden" style={{ padding: 0 }}>
         <DataTable columns={columns} rows={list.data?.items ?? []} rowKey={(c) => c.id} loading={list.loading} onRowClick={(c) => router.push(`/campaigns/${c.id}`)} empty={<EmptyState icon={<Megaphone className="h-5 w-5" />} title="No campaigns yet" description="Create a campaign to contact a group of clients with AI-written first messages and automatic follow-ups." action={<Button size="sm" onClick={() => setCreating(true)}>New campaign</Button>} />} />
       </div>

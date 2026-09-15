@@ -11,7 +11,7 @@ updated: 2026-09-15
 Open **Search Leads** and describe the buyer in plain language. The parser understands:
 
 - **Product categories**: apparel, streetwear, sportswear, fitness, gym wear, hoodies, t-shirts, jerseys, tracksuits, hosiery, accessories and more.
-- **Locations**: cities, regions and countries in many spellings (`New York`, `NYC`, `Manchester, UK`, `Germany`).
+- **Locations**: cities, regions and countries in many spellings (`New York`, `newyork`, `NYC`, `Manchester, UK`, `Germany`); missing spaces and nicknames are understood.
 - **Recency hints**: words like `new` or `emerging` raise the weight of recently active accounts.
 
 Examples:
@@ -62,6 +62,12 @@ Within a search, the same account found twice is merged. Across searches, an exi
 After a search, leads missing followers or a bio are sent to profile enrichment; leads with a real website (link aggregators such as linktr.ee are skipped) but no contacts are sent to website extraction. Website extraction reads the home page and one contact/about page: structured data, `mailto:` and `tel:` links, WhatsApp links and visible text. Each extracted contact carries the page it came from.
 
 You can re-run enrichment from a lead or client profile at any time.
+
+## Hunted Leads, Saved Leads
+
+- **Hunted Leads** is every account OSES-J has ever found for your workspace, from every search, newest first. Filter by the search that found it, platform, place, followers, contacts or tag. Nothing is lost when you leave a results page.
+- **Saved Leads** is your shortlist: leads you marked with *Save* from a results page or from Hunted Leads.
+- From either list, **Add to Business** turns a lead into a client with a permanent CID.
 
 ## Search history and saved searches
 

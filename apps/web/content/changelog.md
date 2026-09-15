@@ -3,6 +3,13 @@ title: Changelog
 updated: 2026-09-15
 ---
 
+## 2026-09-15 · Hunted Leads, in-app instructions, forgiving city names
+
+- **Hunted Leads**: a new page with every lead ever found for your workspace, newest first, filterable by the search that found it.
+- Every feature page starts with a short "how to use this" guide (dismissible, with a link to the manual).
+- City names in any spelling (`newyork`, `NewYork`, `NYC`, `new york city`) are understood in the query and in the City field.
+- Search runs now say when leads could not be saved, instead of showing an empty page.
+
 ## 2026-09-15 · Platform providers & keys in the OS-Panel
 
 - Lead search: multi-word phrases are kept together ("gym accessories"), Instagram account search no longer receives the location text, Google queries target profile pages and turn post hits into their authors, and an empty result now explains what your filters excluded.

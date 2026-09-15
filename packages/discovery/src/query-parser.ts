@@ -1,4 +1,4 @@
-import { CITY_TZ, normalizeCountryCode, normalizeText, REGION_TZ, type Platform } from "@oses/shared";
+import { canonicalCity, canonicalCityKey, CITY_TZ, normalizeCountryCode, normalizeText, REGION_TZ, type Platform } from "@oses/shared";
 import { searchCriteriaSchema, type SearchCriteriaRequest } from "@oses/validation";
 import type { SearchCriteria } from "./types";
 
@@ -62,8 +62,8 @@ function resolvePlace(place: string): ParsedQuery["location"] {
       loc.country = part.trim();
       continue;
     }
-    if (CITY_TZ[key] && !loc.city) {
-      loc.city = titleCaseWords(part);
+    if (canonicalCityKey(part) && !loc.city) {
+      loc.city = canonicalCity(part);
       continue;
     }
     const regionCountry = Object.entries(REGION_TZ).find(([, regions]) => Boolean(regions[key]));
@@ -72,12 +72,12 @@ function resolvePlace(place: string): ParsedQuery["location"] {
       if (!loc.countryCode) loc.countryCode = regionCountry[0] ?? null;
       continue;
     }
-    if (!loc.city) loc.city = titleCaseWords(part);
+    if (!loc.city) loc.city = canonicalCity(part);
     else if (!loc.region) loc.region = titleCaseWords(part);
   }
   // A city implies its country when we know it (e.g. "New York" -> US) via the region tables.
   if (loc.city && !loc.countryCode) {
-    const cityKey = normalizeText(loc.city);
+    const cityKey = canonicalCityKey(loc.city) ?? normalizeText(loc.city);
     for (const [cc, regions] of Object.entries(REGION_TZ)) {
       if (regions[cityKey]) {
         loc.countryCode = cc;
@@ -132,8 +132,8 @@ export function parseQuery(query: string): ParsedQuery {
       const tail = words.slice(-take).join(" ").replace(/[.!?]+$/, "");
       const key = normalizeText(tail);
       const commaPlace = tail.includes(",") ? resolvePlace(tail) : null;
-      const knownComma = commaPlace ? (commaPlace.city ? Boolean(CITY_TZ[normalizeText(commaPlace.city)]) : Boolean(commaPlace.countryCode)) : false;
-      if (CITY_TZ[key] || normalizeCountryCode(tail) || knownComma) {
+      const knownComma = commaPlace ? (commaPlace.city ? Boolean(canonicalCityKey(commaPlace.city)) : Boolean(commaPlace.countryCode)) : false;
+      if (canonicalCityKey(key) || normalizeCountryCode(tail) || knownComma) {
         location = commaPlace && knownComma ? commaPlace : resolvePlace(tail);
         subject = words.slice(0, words.length - take).join(" ");
         break;
@@ -195,7 +195,7 @@ export function buildSearchCriteria(request: SearchCriteriaRequest): SearchCrite
       country: country ?? null,
       countryCode,
       region: input.region ?? parsed.location.region,
-      city: input.city ?? parsed.location.city,
+      city: canonicalCity(input.city) ?? parsed.location.city,
     },
     category: input.category ?? (parsed.categories[0] ?? null),
     limit: input.limit,

@@ -48,6 +48,14 @@ describe("query parser", () => {
     expect(tail.location).toMatchObject({ city: "Manchester", countryCode: "GB" });
     expect(tail.keywords).toEqual(["fitness apparel", "wholesale buyers"]);
   });
+  it("understands any spelling of a city: newyork, NewYork, NYC, new york city", () => {
+    for (const q of ["gym accessories brands in newyork", "gym accessories brands in NewYork", "gym accessories brands in NYC", "gym accessories brands in new york city"]) {
+      expect(parseQuery(q).location, q).toMatchObject({ city: "New York", countryCode: "US" });
+    }
+    const criteria = buildSearchCriteria({ query: "gym accessories brands", keywords: [], platform: "INSTAGRAM", city: "NewYork", country: "United States", limit: 10, strategy: "auto", filters: {}, enrich: false });
+    expect(criteria.location.city).toBe("New York");
+    expect(buildSearchCriteria({ query: "brands", keywords: [], platform: "INSTAGRAM", city: "Sialkot", limit: 10, strategy: "auto", filters: {}, enrich: false }).location.city).toBe("Sialkot");
+  });
   it("lets explicit form fields override parsed values", () => {
     const criteria = buildSearchCriteria({ query: "hoodie brands in Paris", keywords: [], platform: "BOTH", city: "Lyon", country: "France", limit: 20, strategy: "auto", filters: {}, enrich: true, minFollowers: 5000, maxFollowers: 100000 });
     expect(criteria.platforms).toEqual(["INSTAGRAM", "FACEBOOK"]);

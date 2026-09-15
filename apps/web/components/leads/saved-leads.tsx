@@ -9,11 +9,24 @@ import { PageHeader } from "@/components/layout/app-shell";
 import { Button, Card, EmptyState, Input, Select } from "@/components/ui/primitives";
 import { useToast } from "@/components/ui/overlay";
 import { LeadsTable, type LeadPage } from "./leads-table";
+import { FeatureGuide } from "@/components/layout/feature-guide";
 
-export function SavedLeads() {
+interface SearchRunOption {
+  id: string;
+  query: string;
+  createdAt: string;
+  totalNew?: number | null;
+}
+
+/**
+ * Two views over the same lead table: "saved" is the shortlist, "hunted" is every lead ever discovered
+ * for the workspace (newest first, filterable by the search that found it).
+ */
+export function SavedLeads({ mode = "saved" }: { mode?: "saved" | "hunted" }) {
   const router = useRouter();
   const params = useSearchParams();
   const toast = useToast();
+  const hunted = mode === "hunted";
   const [filters, setFilters] = useState({
     q: params.get("q") ?? "",
     platform: params.get("platform") ?? "",
@@ -24,11 +37,13 @@ export function SavedLeads() {
     hasEmail: params.get("hasEmail") === "true",
     hasPhone: params.get("hasPhone") === "true",
     hasWebsite: params.get("hasWebsite") === "true",
-    saved: params.get("saved") ?? "true",
+    saved: params.get("saved") ?? (hunted ? "" : "true"),
     added: params.get("added") ?? "",
-    sort: params.get("sort") ?? "score",
+    sort: params.get("sort") ?? (hunted ? "newest" : "score"),
     tag: params.get("tag") ?? "",
+    searchRunId: params.get("searchRunId") ?? "",
   });
+  const runs = useQuery<{ items: SearchRunOption[] }>(hunted ? "/api/leads/search?take=30" : null);
   const [applied, setApplied] = useState(filters);
   const [page, setPage] = useState(1);
   const [showFilters, setShowFilters] = useState(false);
@@ -56,6 +71,7 @@ export function SavedLeads() {
     added: applied.added,
     sort: applied.sort,
     tag: applied.tag,
+    searchRunId: applied.searchRunId,
   });
   const leads = useQuery<LeadPage>(`/api/leads${query}`);
   const set = <K extends keyof typeof filters>(k: K, v: (typeof filters)[K]) => setFilters((f) => ({ ...f, [k]: v }));
@@ -82,8 +98,8 @@ export function SavedLeads() {
   return (
     <div className="animate-in">
       <PageHeader
-        title={applied.saved === "true" ? "Saved Leads" : "All Leads"}
-        description="Everything you discovered, de-duplicated. Select leads to add them to your clients or export them."
+        title={hunted ? "Hunted Leads" : applied.saved === "true" ? "Saved Leads" : "All Leads"}
+        description={hunted ? "Every lead OSES-J has ever found for you, from every search, newest first. Save the good ones, add them to your business or export them." : "Your shortlist: leads you saved from searches or from Hunted Leads. Select leads to add them to your clients or export them."}
         actions={
           <>
             <Button variant="outline" onClick={() => void exportFiltered()} loading={exporting} icon={<Download className="h-4 w-4" />}>
@@ -95,17 +111,29 @@ export function SavedLeads() {
           </>
         }
       />
+      <FeatureGuide id={hunted ? "hunted-leads" : "saved-leads"} />
       <Card className="mb-4" padded={false}>
         <div className="flex flex-wrap items-center gap-2 p-3">
           <div className="relative min-w-[220px] flex-1">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-faint" />
             <Input value={filters.q} onChange={(e) => set("q", e.target.value)} placeholder="Search brand, username, bio, email…" className="pl-9" />
           </div>
-          <Select value={filters.saved} onChange={(e) => set("saved", e.target.value)} className="w-40">
-            <option value="true">Saved only</option>
-            <option value="">All discovered</option>
-            <option value="false">Not saved</option>
-          </Select>
+          {hunted ? (
+            <Select value={filters.searchRunId} onChange={(e) => set("searchRunId", e.target.value)} className="w-56">
+              <option value="">All searches</option>
+              {(runs.data?.items ?? []).map((r) => (
+                <option key={r.id} value={r.id}>
+                  {r.query.slice(0, 40)} · {new Date(r.createdAt).toLocaleDateString()}
+                </option>
+              ))}
+            </Select>
+          ) : (
+            <Select value={filters.saved} onChange={(e) => set("saved", e.target.value)} className="w-40">
+              <option value="true">Saved only</option>
+              <option value="">All discovered</option>
+              <option value="false">Not saved</option>
+            </Select>
+          )}
           <Select value={filters.platform} onChange={(e) => set("platform", e.target.value)} className="w-36">
             <option value="">All platforms</option>
             <option value="INSTAGRAM">Instagram</option>
@@ -144,7 +172,7 @@ export function SavedLeads() {
         loading={leads.loading}
         onChanged={() => void leads.refetch()}
         onPage={setPage}
-        emptyMessage={<EmptyState icon={<Bookmark className="h-5 w-5" />} title={applied.saved === "true" ? "No saved leads yet" : "No leads match these filters"} description="Run a search and click Save on the leads you want to keep." action={<Button href="/leads/search" size="sm">Search leads</Button>} />}
+        emptyMessage={<EmptyState icon={<Bookmark className="h-5 w-5" />} title={hunted ? (applied.q || applied.searchRunId || applied.platform ? "No leads match these filters" : "Nothing hunted yet") : applied.saved === "true" ? "No saved leads yet" : "No leads match these filters"} description={hunted ? "Every account a search finds appears here automatically." : "Run a search and click Save on the leads you want to keep."} action={<Button href="/leads/search" size="sm">Search leads</Button>} />}
       />
     </div>
   );

@@ -9,6 +9,7 @@ import { formatDateTime, titleCase } from "@/lib/format";
 import { PageHeader } from "@/components/layout/app-shell";
 import { Badge, Button, Card, CardHeader, Field, Input, Select, Skeleton, StatusBadge, Switch, Textarea, cn } from "@/components/ui/primitives";
 import { Dialog, Tabs, useToast } from "@/components/ui/overlay";
+import { FeatureGuide } from "@/components/layout/feature-guide";
 
 interface AISettings {
   /** AI is active for this workspace (set up by the CNEX AI team) */
@@ -103,6 +104,7 @@ export function AIAssistant() {
   return (
     <div className="animate-in">
       <PageHeader title="AI Assistant" description="Teach the AI about your company, decide what it may do on its own, and review everything it did." />
+      <FeatureGuide id="ai-assistant" />
       <Card className={cn("mb-5 border-2", s?.autopilotEnabled ? "border-brand-400" : "border-default")}>
         <div className="flex flex-wrap items-center gap-4">
           <div className={cn("flex h-14 w-14 items-center justify-center rounded-2xl", s?.autopilotEnabled ? "bg-brand-500 text-white" : "bg-surface-2 text-muted")}>

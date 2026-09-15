@@ -1,3 +1,4 @@
+export * from "./places";
 import { normalizeText } from "../text";
 import { isValidTimeZone } from "../time";
 import { CITY_TZ } from "./cities";

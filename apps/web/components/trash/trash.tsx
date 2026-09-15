@@ -9,6 +9,7 @@ import { PageHeader } from "@/components/layout/app-shell";
 import { Badge, Button, EmptyState, Select } from "@/components/ui/primitives";
 import { DataTable, Pagination, type Column } from "@/components/ui/data";
 import { ConfirmDialog, useToast } from "@/components/ui/overlay";
+import { FeatureGuide } from "@/components/layout/feature-guide";
 
 interface TrashRow { id: string; entityType: string; entityId: string; label: string; deletedAt: string; purgeAt: string }
 interface TrashPage { items: TrashRow[]; page: number; pageSize: number; total: number; totalPages: number }
@@ -56,6 +57,7 @@ export function TrashView() {
   return (
     <div className="animate-in">
       <PageHeader title="Trash" description="Deleted clients, leads, documents, campaigns and notes stay here for 7 days before they are permanently removed." actions={<Select value={type} onChange={(e) => { setType(e.target.value); setPage(1); }} className="w-40"><option value="">All types</option>{["CLIENT", "LEAD", "DOCUMENT", "CAMPAIGN", "NOTE", "CONVERSATION", "SAVED_SEARCH"].map((t) => <option key={t} value={t}>{titleCase(t)}</option>)}</Select>} />
+      <FeatureGuide id="trash" />
       <div className="card overflow-hidden" style={{ padding: 0 }}>
         <DataTable columns={columns} rows={trash.data?.items ?? []} rowKey={(r) => r.id} loading={trash.loading} empty={<EmptyState icon={<Trash2 className="h-5 w-5" />} title="Trash is empty" />} />
       </div>

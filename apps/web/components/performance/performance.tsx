@@ -8,6 +8,7 @@ import { formatNumber } from "@/lib/format";
 import { PageHeader } from "@/components/layout/app-shell";
 import { Button, Card, CardHeader, Input, Skeleton, cn } from "@/components/ui/primitives";
 import { StatCard } from "@/components/ui/data";
+import { FeatureGuide } from "@/components/layout/feature-guide";
 
 interface Perf {
   range: { from: string; to: string; preset: string };
@@ -36,7 +37,8 @@ export function PerformanceView() {
               <button key={k} type="button" onClick={() => setPreset(k)} className={cn("rounded-md px-2.5 py-1.5 text-[13px] font-medium", preset === k ? "bg-brand-500 text-white" : "text-muted hover:bg-surface-2")}>{label}</button>
             ))}
             {preset === "custom" && (
-              <span className="flex items-center gap-1"><Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="w-36" /><span className="text-faint">–</span><Input type="date" value={to} onChange={(e) => setTo(e.target.value)} className="w-36" /></span>
+              <span className="flex items-center gap-1"><Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="w-36" />
+      <FeatureGuide id="performance" /><span className="text-faint">–</span><Input type="date" value={to} onChange={(e) => setTo(e.target.value)} className="w-36" /></span>
             )}
           </div>
         }

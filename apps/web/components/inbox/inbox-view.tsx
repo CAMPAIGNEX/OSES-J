@@ -9,6 +9,7 @@ import { useQuery } from "@/lib/hooks/use-query";
 import { timeAgo } from "@/lib/format";
 import { Avatar, Badge, Input, Select, Skeleton, cn } from "@/components/ui/primitives";
 import { ConversationView } from "./conversation-view";
+import { FeatureGuide } from "@/components/layout/feature-guide";
 
 interface ConversationRow {
   id: string;
@@ -52,6 +53,7 @@ export function InboxView({ selectedId }: { selectedId?: string }) {
             <h1 className="text-base font-semibold">Inbox</h1>
             <span className="text-xs text-faint">{list.data?.total ?? 0} conversations</span>
           </div>
+          <FeatureGuide id="inbox" className="mb-2" />
           <div className="relative">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-faint" />
             <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search clients or messages" className="pl-9" />

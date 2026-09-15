@@ -10,6 +10,7 @@ import { PageHeader } from "@/components/layout/app-shell";
 import { Badge, Button, Card, EmptyState, Field, Input, Select, StatusBadge, Switch, cn } from "@/components/ui/primitives";
 import { DataTable, Pagination, type Column } from "@/components/ui/data";
 import { Dialog, useToast } from "@/components/ui/overlay";
+import { FeatureGuide } from "@/components/layout/feature-guide";
 
 interface Doc { id: string; name: string; originalName: string; mimeType: string; sizeBytes: number; kind: string; createdAt: string; client: { cid: string; brandName: string } | null; knowledgeDocument: { status: string; chunkCount: number; error: string | null } | null }
 interface DocPage { items: Doc[]; page: number; pageSize: number; total: number; totalPages: number }
@@ -37,6 +38,7 @@ export function DocumentsView() {
   return (
     <div className="animate-in">
       <PageHeader title="Documents" description="Catalogs, price lists, size charts and company profiles. Attach them to clients or add text files to the AI knowledge base." actions={<Button onClick={() => setUploadOpen(true)} icon={<Upload className="h-4 w-4" />}>Upload</Button>} />
+      <FeatureGuide id="documents" />
       <Card className="mb-4" padded={false}>
         <div className="flex flex-wrap gap-2 p-3">
           <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search documents" className="max-w-xs" />

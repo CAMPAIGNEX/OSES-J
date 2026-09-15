@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import Image from "next/image";
-import { BarChart3, Bot, Building2, FileText, Inbox, LayoutDashboard, LogOut, Megaphone, Menu as MenuIcon, Moon, Search, Settings, Sun, Trash2, TrendingUp, Users, Bookmark, ShieldCheck } from "@/components/ui/icons";
+import { BarChart3, Bot, Building2, FileText, History, Inbox, LayoutDashboard, LogOut, Megaphone, Menu as MenuIcon, Moon, Search, Settings, Sun, Trash2, TrendingUp, Users, Bookmark, ShieldCheck } from "@/components/ui/icons";
 import { api } from "@/lib/api-client";
 import { applyTheme } from "@/lib/theme";
 import { Avatar, cn } from "@/components/ui/primitives";
@@ -25,7 +25,8 @@ export function useSession(): ShellSession {
 const NAV: Array<{ href: string; label: string; icon: ReactNode; match?: (p: string) => boolean }> = [
   { href: "/dashboard", label: "Dashboard", icon: <LayoutDashboard className="h-4 w-4" /> },
   { href: "/leads/search", label: "Search Leads", icon: <Search className="h-4 w-4" />, match: (p) => p.startsWith("/leads/search") },
-  { href: "/leads/saved", label: "Saved Leads", icon: <Bookmark className="h-4 w-4" />, match: (p) => p.startsWith("/leads/saved") || /^\/leads\/(?!search|saved)[^/]+$/.test(p) },
+  { href: "/leads/hunted", label: "Hunted Leads", icon: <History className="h-4 w-4" />, match: (p) => p.startsWith("/leads/hunted") || /^\/leads\/(?!search|saved|hunted)[^/]+$/.test(p) },
+  { href: "/leads/saved", label: "Saved Leads", icon: <Bookmark className="h-4 w-4" />, match: (p) => p.startsWith("/leads/saved") },
   { href: "/clients", label: "Clients", icon: <Users className="h-4 w-4" /> },
   { href: "/inbox", label: "Inbox", icon: <Inbox className="h-4 w-4" /> },
   { href: "/ai-assistant", label: "AI Assistant", icon: <Bot className="h-4 w-4" /> },
