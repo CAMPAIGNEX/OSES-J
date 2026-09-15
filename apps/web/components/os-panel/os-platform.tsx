@@ -277,7 +277,7 @@ export function OsPlatform() {
               </OsButton>
             }
           >
-            <p className="mb-3 text-[12px] text-[#9ca3af]">With a token saved above and these rows in place, discovery, enrichment and content search work for every workspace. &ldquo;Add the recommended set&rdquo; creates the standard Actors (Google search for Instagram / Facebook, Instagram search, Facebook page search, hashtags, profile and Facebook page enrichment) and never touches rows you already have.</p>
+            <p className="mb-3 text-[12px] text-[#9ca3af]">With a token saved above and these rows in place, discovery, enrichment and content search work for every workspace. &ldquo;Add the recommended set&rdquo; creates the standard Actors (Google search for Instagram / Facebook, Instagram search, Facebook page search, hashtags, profile and Facebook page enrichment) and never touches rows you already have. Each seeded Actor is capped at $0.10 per run (editable per row); the cap is enforced by Apify for pay-per-event Actors.</p>
             <div data-template="classic" className="dark">
               <ProvidersSettings key={actorsVersion} scope="platform" />
             </div>
