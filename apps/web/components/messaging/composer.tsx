@@ -212,7 +212,7 @@ export function MessageComposer({ clientId, accounts, conversationId, kind = "fi
       {outcome && (
         <div className={cn("rounded-lg border p-3 text-[12px]", outcome.message.status === "UNAVAILABLE" || outcome.message.status === "FAILED" ? "border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-200" : "border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200")}>
           <p className="font-medium">
-            {outcome.message.status === "SENT" ? "Message recorded as sent" : outcome.message.status === "QUEUED" ? `Queued for ${outcome.send?.providerKey === "extension" ? "the browser extension" : outcome.send?.providerKey === "apify" ? "Apify automation" : "the official API"}` : "Message cannot be sent automatically"}
+            {outcome.message.status === "SENT" ? "Message recorded as sent" : outcome.message.status === "QUEUED" ? `Queued for ${outcome.send?.providerKey === "extension" ? "the browser extension" : outcome.send?.providerKey === "apify" ? "cloud automation" : "the official API"}` : "Message cannot be sent automatically"}
           </p>
           {outcome.decision?.reason && <p className="mt-0.5 opacity-80">{outcome.decision.reason}</p>}
           {outcome.decision?.considered?.length ? <p className="mt-1 opacity-70">Providers checked: {outcome.decision.considered.map((c) => `${c.providerKey} (${c.capability.canSend ? "ok" : c.capability.reason})`).join("; ")}</p> : null}

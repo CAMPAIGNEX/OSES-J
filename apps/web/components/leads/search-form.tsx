@@ -65,7 +65,7 @@ export function SearchForm() {
     setFields({});
     try {
       const res = await api<{ searchRunId: string; warnings: string[]; providersConfigured: number }>("/api/leads/search", { body: buildPayload() });
-      if (res.providersConfigured === 0) toast.warning("No discovery provider configured", res.warnings[0] ?? "Add an Apify token in Settings > Automation.");
+      if (res.providersConfigured === 0) toast.warning("Lead discovery is not active yet", res.warnings[0] ?? "Contact CNEX AI (info@cnexai.com) to activate it for your workspace.");
       router.push(`/leads/search/${res.searchRunId}`);
     } catch (err) {
       if (err instanceof ApiError) {
@@ -135,8 +135,8 @@ export function SearchForm() {
           <div className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-[13px] text-amber-800 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-200">
             <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
             <div>
-              <p className="font-medium">Discovery provider not configured</p>
-              <p>Searches need an Apify API token. Add it in <a href="/settings/automation" className="underline">Settings → Automation</a>, then choose the Actors in <a href="/settings/providers" className="underline">Settings → Providers</a>.</p>
+              <p className="font-medium">Lead discovery is not active yet</p>
+              <p>The CNEX AI team activates discovery for your workspace; check <a href="/settings/automation" className="underline">Settings → Automation → Services</a> or email <a href="mailto:info@cnexai.com" className="underline">info@cnexai.com</a> (WhatsApp +92 312 7233047).</p>
             </div>
           </div>
         )}

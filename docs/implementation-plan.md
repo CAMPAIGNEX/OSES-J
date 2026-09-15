@@ -74,6 +74,66 @@ _Updated 2026-09-15._ Phases 1-12 are the product scope from the specification; 
 | 15 Mobile app experience | PWA manifest + service worker, bottom tab bar, native-sized controls, bottom sheets, offline page | **built** · hardening: install on real iOS / Android devices and check every screen |
 | 16 Production pilot | live keys in OS-Panel, first real workspace, real searches and sends, monitoring | **next** |
 
+### Next phases (roadmap)
+
+Each phase lists its modules; a module is one shippable unit (branch, tests, manual page, changelog entry).
+
+**Phase 16 — Production pilot (now)**
+
+| Module | What it delivers | Where |
+|---|---|---|
+| 16.1 Live keys | Apify token, Anthropic key, recommended Actors entered in OS-Panel → Providers & keys on production | operator task |
+| 16.2 Actor schema verification | Run every recommended Actor once with the real token; adjust `packages/discovery/src/apify/adapters.ts` / `normalizers.ts` where an Actor's output changed | discovery |
+| 16.3 First workspace | Register the first exporter, company facts, instructions, knowledge base | onboarding |
+| 16.4 Data-quality audit | Review the first 200 leads: scores, contacts with sources, duplicates, cost per run | discovery / enrichment |
+| 16.5 Monitoring & alerts | `/api/health` polling, failed-job alert e-mail to admin@cnexai.com, OS-Panel job SLA view | automation / OS-Panel |
+| 16.6 Backups | Hostinger MySQL backup schedule + `STORAGE_DIR` backup, restore drill | operations |
+
+**Phase 17 — Full Instagram & Facebook data coverage (posts, reels, hashtags, groups)**
+
+| Module | What it delivers | Where |
+|---|---|---|
+| 17.1 Instagram Reels adapter | `apify/instagram-reel-scraper`: reels by profile and hashtag → content items + authors as leads | discovery adapters (CONTENT + DISCOVERY) |
+| 17.2 Instagram posts & comments | `apify/instagram-post-scraper` + `apify/instagram-comment-scraper`: engaged accounts (commenters, tagged brands) as leads | discovery adapters |
+| 17.3 Facebook posts & reels | `apify/facebook-posts-scraper`, `apify/facebook-reels-scraper`: page content + page discovery | discovery adapters |
+| 17.4 Facebook hashtag / keyword content | `apify/facebook-hashtag-scraper` for trend and competitor analysis on Facebook | discovery adapters |
+| 17.5 Facebook groups | `apify/facebook-groups-scraper`: posts and authors from public buyer / wholesale groups | discovery adapters |
+| 17.6 Content library | Store posts/reels with engagement metrics and media references on `ContentItem`; browse per lead / client | database, CRM UI |
+| 17.7 Analysis over all content | Competitor and trend reports use posts, reels and hashtags from both platforms | analysis |
+| 17.8 Cost controls | Per-run cost caps and per-workspace monthly budgets managed in OS-Panel; usage shown to operators | OS-Panel, automation |
+
+**Phase 18 — Messaging goes live**
+
+| Module | What it delivers | Where |
+|---|---|---|
+| 18.1 Meta App Review | Business verification and permissions (`pages_messaging`, `instagram_manage_messages`, …) so the official API works for every workspace | Meta process |
+| 18.2 Extension hardening | Re-check Instagram / Facebook DOM selectors, human-like delays, per-account safety caps | extension |
+| 18.3 Chrome Web Store listing | Signed, auto-updating extension instead of "load unpacked" | extension |
+| 18.4 WhatsApp Business channel | New `MessagingProvider` on the WhatsApp Cloud API (enriched phone numbers become a channel) | messaging |
+| 18.5 E-mail channel | SMTP / API sending for enriched e-mail addresses, threaded into the inbox | messaging |
+| 18.6 Account safety | Warm-up schedules, account health signals, automatic slow-down on warnings | messaging, automation |
+
+**Phase 19 — Scale & operations**
+
+| Module | What it delivers | Where |
+|---|---|---|
+| 19.1 Worker mode | `JOB_RUNNER_MODE=worker` on a VPS with the Redis/BullMQ queue driver | workers, automation |
+| 19.2 Observability | Log shipping, error alerts, job SLA dashboards in OS-Panel | OS-Panel |
+| 19.3 Plans & metering | Per-plan limits enforced from `UsageRecord`; invoices later | OS-Panel, billing |
+| 19.4 Data retention & GDPR | Workspace export / delete, data-subject requests | database, OS-Panel |
+| 19.5 Load testing | Search, inbox and job throughput under load | tests |
+
+**Phase 20 — Growth**
+
+| Module | What it delivers | Where |
+|---|---|---|
+| 20.1 Team collaboration | Assignments, mentions, shared inbox views | inbox |
+| 20.2 Multi-language AI | Urdu, Arabic, Spanish, … replies and instructions | ai |
+| 20.3 Quotes & proposals | Documents → quotes / PDF proposals sent from the inbox | documents, messaging |
+| 20.4 Integrations | Google Sheets / Excel sync, webhooks, CRM export | api |
+| 20.5 Native wrappers | Capacitor iOS / Android builds of the PWA with push notifications | mobile |
+| 20.6 Onboarding wizard | Guided first-run setup and in-app guide | web |
+
 ## 4. Non‑negotiable rules carried into code
 
 - Every business table has `organizationId`; every query is scoped through a request context.

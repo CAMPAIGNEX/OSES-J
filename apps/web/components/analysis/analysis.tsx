@@ -75,7 +75,7 @@ export function AnalysisList({ kind }: { kind: Kind }) {
               <Field label="Posts to collect"><Input type="number" min={10} max={500} value={form.limit} onChange={(e) => setForm({ ...form, limit: Number(e.target.value) })} /></Field>
             </div>
             <Button className="w-full" loading={loading} disabled={!form.keywords.trim() && !form.hashtags.trim()} onClick={() => void submit()} icon={<Sparkles className="h-4 w-4" />}>Run analysis</Button>
-            <p className="text-xs text-faint">Uses the configured Apify content Actor (Settings → Providers) and your AI provider for the report.</p>
+            <p className="text-xs text-faint">Uses the content data provider and the AI agent activated for your workspace (Settings → Automation → Services).</p>
           </div>
         </Card>
       </div>

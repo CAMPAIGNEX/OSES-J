@@ -165,6 +165,7 @@ export function recommendedProviderRows(): Array<{ domain: "DISCOVERY" | "ENRICH
     { domain: "DISCOVERY", platform: "INSTAGRAM", adapter: "search-engine-instagram", actorId: a["search-engine-instagram"]!.defaultActorId, priority: 1 },
     { domain: "DISCOVERY", platform: "FACEBOOK", adapter: "search-engine-facebook", actorId: a["search-engine-facebook"]!.defaultActorId, priority: 1 },
     { domain: "DISCOVERY", platform: "INSTAGRAM", adapter: "instagram-search", actorId: a["instagram-search"]!.defaultActorId, priority: 2 },
+    { domain: "DISCOVERY", platform: "FACEBOOK", adapter: "facebook-search", actorId: a["facebook-search"]!.defaultActorId, priority: 2 },
     { domain: "DISCOVERY", platform: "INSTAGRAM", adapter: "instagram-hashtag", actorId: a["instagram-hashtag"]!.defaultActorId, priority: 3 },
     { domain: "CONTENT", platform: "INSTAGRAM", adapter: "instagram-hashtag", actorId: a["instagram-hashtag"]!.defaultActorId, priority: 1 },
     { domain: "ENRICHMENT", platform: "INSTAGRAM", adapter: "instagram-profile", actorId: a["instagram-profile"]!.defaultActorId, priority: 1 },

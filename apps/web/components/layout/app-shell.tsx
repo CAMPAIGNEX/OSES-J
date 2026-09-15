@@ -25,7 +25,7 @@ export function useSession(): ShellSession {
 const NAV: Array<{ href: string; label: string; icon: ReactNode; match?: (p: string) => boolean }> = [
   { href: "/dashboard", label: "Dashboard", icon: <LayoutDashboard className="h-4 w-4" /> },
   { href: "/leads/search", label: "Search Leads", icon: <Search className="h-4 w-4" />, match: (p) => p.startsWith("/leads/search") },
-  { href: "/leads/saved", label: "Saved Leads", icon: <Bookmark className="h-4 w-4" />, match: (p) => p.startsWith("/leads/saved") || /^\/leads\/[^/]+$/.test(p) },
+  { href: "/leads/saved", label: "Saved Leads", icon: <Bookmark className="h-4 w-4" />, match: (p) => p.startsWith("/leads/saved") || /^\/leads\/(?!search|saved)[^/]+$/.test(p) },
   { href: "/clients", label: "Clients", icon: <Users className="h-4 w-4" /> },
   { href: "/inbox", label: "Inbox", icon: <Inbox className="h-4 w-4" /> },
   { href: "/ai-assistant", label: "AI Assistant", icon: <Bot className="h-4 w-4" /> },
